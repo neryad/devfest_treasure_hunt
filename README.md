@@ -8,6 +8,8 @@ ranking en vivo y compiten por el premio final.
 > **Estado:** MVP demo con datos mock 100% locales (sin servidor, sin
 > Firebase). Arquitectura preparada para migrar a Firebase sin tocar la UI.
 
+> **🔗 Demo funcional:** [demo-dev-tesoros.netlify.app](https://demo-dev-tesoros.netlify.app/)
+
 ---
 
 ## Características del demo
