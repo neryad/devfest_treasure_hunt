@@ -99,6 +99,20 @@ La UI nunca toca almacenamiento.
 
 > El modo demo del escáner permite simular cualquier QR desde el listado.
 
+## Capturas
+
+Registro de participante | Dashboard del participante | Modal de tesoro encontrado
+|---|---|---|
+| ![Registro](assets/screenShootDemo/register.png) | ![Dashboard](assets/screenShootDemo/home.png) | ![Tesoro encontrado](assets/screenShootDemo/find-modal.png) |
+
+Mis tesoros | Pistas desbloqueadas | Ranking en vivo
+|---|---|---|
+| ![Mis tesoros](assets/screenShootDemo/tesoros.png) | ![Pistas](assets/screenShootDemo/pistas.png) | ![Ranking](assets/screenShootDemo/ranking.png) |
+
+Panel admin
+|---|
+| ![Panel admin](assets/screenShootDemo/admin-panel.png) |
+
 ## Tests
 
 ```bash
