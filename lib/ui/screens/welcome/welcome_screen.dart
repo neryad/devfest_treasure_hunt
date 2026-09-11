@@ -31,22 +31,22 @@ class WelcomeScreen extends StatelessWidget {
               children: [
                 const _BrandLogo(),
                 const SizedBox(height: 20),
-                Text(
-                  event?.name ?? 'DevFest',
+                const Text(
+                  'DevFest Master',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const Text(
-                  'Treasure Hunt',
+                  'Conquista los 8 Gimnasios',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.secondary,
+                    color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -65,10 +65,9 @@ class WelcomeScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          event?.description ??
-                              'Encuentra todos los tesoros escondidos.',
-                          style: const TextStyle(
+                        const Text(
+                          'Conquista los 8 Gimnasios Tecnológicos del DevFest y conviértete en DevFest Master.',
+                          style: TextStyle(
                             fontSize: 15,
                             color: AppColors.textPrimary,
                             height: 1.4,
@@ -77,36 +76,48 @@ class WelcomeScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         const _HowItWorksRow(
                           icon: Icons.qr_code_scanner_rounded,
-                          text: 'Escanea los QR o introduce los códigos para '
-                              'descubrirlos.',
+                          text: 'Escanea el QR del gimnasio o introduce el código para '
+                              'acceder al reto.',
                         ),
                         const SizedBox(height: 12),
                         const _HowItWorksRow(
                           icon: Icons.tips_and_updates_rounded,
-                          text: 'Cada tesoro desbloquea una pista hacia otro.',
+                          text: 'Resuelve el reto: trivia, acertijo o código. ¡Gana puntos y medallas!',
                         ),
                         const SizedBox(height: 12),
                         const _HowItWorksRow(
                           icon: Icons.emoji_events_rounded,
-                          text: 'Encuentra todos antes que los demás y podrás '
-                              'ganar el premio.',
+                          text: 'Completa los 8 gimnasios y alcanza el título de DevFest Master.',
                         ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                const Text(
+                  'Elige tu avatar',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const _AvatarPicker(),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: const [
                     StatusPill(
-                      label: '${controller.totalTreasures} tesoros',
+                      label: '8 Gimnasios',
                       color: AppColors.amber,
                       icon: Icons.explore_rounded,
                     ),
-                    const SizedBox(width: 10),
-                    const StatusPill(
-                      label: 'Sin orden obligatorio',
+                    SizedBox(width: 10),
+                    StatusPill(
+                      label: '6 tipos de reto',
                       color: AppColors.secondary,
                       icon: Icons.alt_route_rounded,
                     ),
@@ -122,7 +133,7 @@ class WelcomeScreen extends StatelessWidget {
                     );
                   },
                   icon: const Icon(Icons.flag_rounded),
-                  label: const Text('Comenzar aventura'),
+                  label: const Text('¡Comenzar aventura!'),
                 ),
                 const SizedBox(height: 12),
                 TextButton.icon(
@@ -199,6 +210,49 @@ class _HowItWorksRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AvatarPicker extends StatefulWidget {
+  const _AvatarPicker();
+
+  @override
+  State<_AvatarPicker> createState() => _AvatarPickerState();
+}
+
+class _AvatarPickerState extends State<_AvatarPicker> {
+  String _selected = '😎';
+  static const _avatars = ['😎', '🦊', '🐉'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: _avatars.map((emoji) {
+        final isSelected = emoji == _selected;
+        return GestureDetector(
+          onTap: () => setState(() => _selected = emoji),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : AppColors.surface,
+              border: Border.all(
+                color: isSelected ? AppColors.primary : AppColors.surfaceAlt,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: Text(
+              emoji,
+              style: const TextStyle(fontSize: 32),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
