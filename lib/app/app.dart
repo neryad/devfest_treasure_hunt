@@ -64,7 +64,7 @@ class _DevFestAppState extends State<DevFestApp> {
     return AppScope(
       controller: _controller,
       child: MaterialApp(
-        title: 'DevFest Treasure Hunt',
+        title: 'DevFest Master',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark(),
         home: const SessionGate(),
