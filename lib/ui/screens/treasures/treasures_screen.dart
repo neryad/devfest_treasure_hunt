@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/status_pill.dart';
+import '../../../domain/entities/gym_challenge.dart';
 import '../../../domain/entities/treasure_item.dart';
 import '../../../state/app_scope.dart';
+import '../challenge/challenge_screen.dart';
 
-/// "Mis tesoros": everything split into found vs pending.
-/// Pending treasures never spoil their description or location; they only
+/// "Mis Gimnasios": everything split into conquered vs pending.
+/// Pending gyms never spoil their description or location; they only
 /// show a number so the participant understands how much is left.
 class TreasuresScreen extends StatelessWidget {
   const TreasuresScreen({super.key});
@@ -31,13 +33,13 @@ class TreasuresScreen extends StatelessWidget {
           pending: pending.length,
         ),
         Text(
-          'Encontrados',
+          'Conquistados',
           style: _sectionStyle,
         ),
         if (found.isEmpty) _EmptyFoundCard(),
         for (final t in found) _TreasureTile(treasure: t, revealed: true),
         const SizedBox(height: 20),
-        Text('Pendientes', style: _sectionStyle),
+        Text('Por conquistar', style: _sectionStyle),
         for (final t in pending) _TreasureTile(treasure: t, revealed: false),
         const SizedBox(height: 20),
       ],
@@ -63,7 +65,7 @@ class _Summary extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
-        '$found encontrados · $pending pendientes · $total total',
+        '$found conquistados · $pending pendientes · $total total',
         style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
       ),
     );
@@ -80,6 +82,14 @@ class _TreasureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
+        onTap: () {
+          if (revealed) return; // Already conquered
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => ChallengeScreen(gym: treasure),
+            ),
+          );
+        },
         leading: CircleAvatar(
           backgroundColor: (revealed ? AppColors.success : AppColors.surfaceAlt)
               .withValues(alpha: 0.25),
@@ -93,30 +103,68 @@ class _TreasureTile extends StatelessWidget {
                   ),
                 ),
         ),
-        title: Text(
-          revealed ? treasure.title : 'Tesoro #${treasure.order.toString().padLeft(2, '0')}',
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
+        title: Row(
+          children: [
+            if (treasure.track != null)
+              Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  treasure.track!,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            Expanded(
+              child: Text(
+                revealed
+                    ? (treasure.gymName ?? treasure.title)
+                    : 'Gimnasio #${treasure.order.toString().padLeft(2, '0')}',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
         ),
         subtitle: revealed
             ? Text(
                 treasure.locationDescription,
                 style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
               )
-            : const Text(
-                '???',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textSecondary,
-                ),
+            : Row(
+                children: [
+                  Icon(
+                    _getChallengeTypeIcon(treasure.challengeType),
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${treasure.pointValue} pts',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
         trailing: revealed
             ? null
             : (treasure.isActive
-                ? const StatusPill(label: 'Disponible', color: AppColors.secondary)
+                ? StatusPill(
+                    label: _getChallengeTypeName(treasure.challengeType),
+                    color: AppColors.primary,
+                  )
                 : const StatusPill(
                     label: 'No disponible',
                     color: AppColors.danger,
@@ -124,6 +172,40 @@ class _TreasureTile extends StatelessWidget {
                   )),
       ),
     );
+  }
+
+  IconData _getChallengeTypeIcon(ChallengeType type) {
+    switch (type) {
+      case ChallengeType.qr:
+        return Icons.qr_code_rounded;
+      case ChallengeType.trivia:
+        return Icons.quiz_rounded;
+      case ChallengeType.riddle:
+        return Icons.lightbulb_outline_rounded;
+      case ChallengeType.code:
+        return Icons.code_rounded;
+      case ChallengeType.completion:
+        return Icons.location_on_rounded;
+      case ChallengeType.social:
+        return Icons.people_rounded;
+    }
+  }
+}
+
+String _getChallengeTypeName(ChallengeType type) {
+  switch (type) {
+    case ChallengeType.qr:
+      return 'QR';
+    case ChallengeType.trivia:
+      return 'Trivia';
+    case ChallengeType.riddle:
+      return 'Acertijo';
+    case ChallengeType.code:
+      return 'Código';
+    case ChallengeType.completion:
+      return 'Presencial';
+    case ChallengeType.social:
+      return 'Social';
   }
 }
 
