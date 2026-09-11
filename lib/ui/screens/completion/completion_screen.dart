@@ -23,7 +23,7 @@ class CompletionScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF2A1B00), AppColors.backgroundGradientTop],
+            colors: [Color(0xFF3D2E00), AppColors.backgroundGradientTop],
           ),
         ),
         child: SafeArea(
@@ -155,7 +155,7 @@ class _TrophyAnimation extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
-            colors: [AppColors.amber, Color(0xFF8A5A00)],
+            colors: [AppColors.amber, Color(0xFFB8860B)],
           ),
           boxShadow: [
             BoxShadow(
