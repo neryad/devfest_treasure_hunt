@@ -47,6 +47,7 @@ class _DevFestAppState extends State<DevFestApp> {
       participantRepository: repo,
       leaderboardRepository: repo,
       eventRepository: repo,
+      attemptRepository: repo,
       resetStore: widget.repository.resetStore,
     );
     _controller.initialize();

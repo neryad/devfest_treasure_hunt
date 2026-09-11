@@ -10,7 +10,9 @@ import '../domain/entities/treasure_item.dart';
 import '../domain/repositories/event_repository.dart';
 import '../domain/repositories/leaderboard_repository.dart';
 import '../domain/repositories/participant_repository.dart';
+import '../domain/repositories/attempt_repository.dart';
 import '../domain/repositories/treasure_repository.dart';
+import '../domain/use_cases/complete_challenge_use_case.dart';
 import '../domain/use_cases/discover_treasure_use_case.dart';
 import '../domain/use_cases/leaderboard_use_case.dart';
 import '../domain/use_cases/start_participant_use_case.dart';
@@ -28,6 +30,7 @@ class AppController extends ChangeNotifier {
     required LeaderboardRepository leaderboardRepository,
     required EventRepository eventRepository,
     Future<void> Function()? resetStore,
+    AttemptRepository? attemptRepository,
     this.enableElapsedTicker = true,
   })  : _treasureRepository = treasureRepository,
         _participantRepository = participantRepository {
@@ -39,6 +42,13 @@ class AppController extends ChangeNotifier {
     _leaderboardUseCase = LeaderboardUseCase(leaderboardRepository);
     _eventRepository = eventRepository;
     _resetStore = resetStore;
+    _completeChallengeUseCase = attemptRepository != null
+        ? CompleteChallengeUseCase(
+            treasureRepository: treasureRepository,
+            participantRepository: participantRepository,
+            attemptRepository: attemptRepository,
+          )
+        : null;
   }
 
   final TreasureRepository _treasureRepository;
@@ -50,6 +60,7 @@ class AppController extends ChangeNotifier {
   late final DiscoverTreasureUseCase _discoverUseCase;
   late final StartParticipantUseCase _startUseCase;
   late final LeaderboardUseCase _leaderboardUseCase;
+  late final CompleteChallengeUseCase? _completeChallengeUseCase;
 
   bool _initializing = true;
   Event? _event;
@@ -102,6 +113,9 @@ class AppController extends ChangeNotifier {
     }
     return null;
   }
+
+  CompleteChallengeUseCase? get completeChallengeUseCase =>
+      _completeChallengeUseCase;
 
   TreasureItem? treasureById(String id) {
     for (final t in _treasures) {
