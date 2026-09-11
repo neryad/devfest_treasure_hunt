@@ -71,6 +71,8 @@ class AppController extends ChangeNotifier {
   final Set<String> _consultedClues = {};
   Timer? _ticker;
   String? _lastError;
+  ChallengeResult? _lastChallengeResult;
+  DateTime? _cooldownStart;
 
   bool get initializing => _initializing;
   Event? get event => _event;
@@ -79,6 +81,21 @@ class AppController extends ChangeNotifier {
   List<Participant> get participants => _participants;
   List<LeaderboardEntry> get leaderboard => _leaderboard;
   String? get lastError => _lastError;
+  ChallengeResult? get lastChallengeResult => _lastChallengeResult;
+
+  bool get isOnCooldown {
+    final start = _cooldownStart;
+    if (start == null) return false;
+    return DateTime.now().difference(start) < CompleteChallengeUseCase.cooldownDuration;
+  }
+
+  Duration get cooldownRemaining {
+    final start = _cooldownStart;
+    if (start == null) return Duration.zero;
+    final elapsed = DateTime.now().difference(start);
+    final remaining = CompleteChallengeUseCase.cooldownDuration - elapsed;
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
 
   int get totalTreasures => _treasures.length;
   int get discoveredCount => _participant?.discoveredCount ?? 0;
@@ -235,8 +252,42 @@ class AppController extends ChangeNotifier {
     }
     _participant = null;
     _consultedClues.clear();
+    _lastChallengeResult = null;
+    _cooldownStart = null;
     await _reloadStaticData();
     await _reloadLeaderboard();
+    notifyListeners();
+  }
+
+  Future<void> submitChallenge(String gymId, String answer) async {
+    final participant = _participant;
+    if (participant == null || _completeChallengeUseCase == null) return;
+    final result = await _completeChallengeUseCase.execute(
+      participantId: participant.id,
+      gymId: gymId,
+      answer: answer,
+    );
+    _lastChallengeResult = result;
+    if (!result.isSuccess && result.cooldownRemaining != null) {
+      _cooldownStart = DateTime.now();
+    }
+    if (result.isSuccess) {
+      _participant = _participant?.copyWith(
+        discoveredTreasureIds: [
+          ...(_participant?.discoveredTreasureIds ?? []),
+          gymId,
+        ],
+        points: result.totalPoints ?? _participant?.points ?? 0,
+        medals: result.medals ?? _participant?.medals ?? 0,
+      );
+      await _reloadLeaderboard();
+    }
+    notifyListeners();
+  }
+
+  void clearChallengeResult() {
+    _lastChallengeResult = null;
+    _cooldownStart = null;
     notifyListeners();
   }
 
