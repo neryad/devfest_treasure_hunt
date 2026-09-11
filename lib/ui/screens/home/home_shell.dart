@@ -22,7 +22,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
-  static const _titles = ['Inicio', 'Mis tesoros', 'Mis pistas', 'Ranking'];
+  static const _titles = ['Inicio', 'Gimnasios', 'Retos', 'Ranking'];
 
   void _openFindSheet() {
     showModalBottomSheet<void>(
@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const Padding(
               padding: EdgeInsets.only(bottom: 8),
               child: Text(
-                'Encuentra un tesoro',
+                'Encuentra un Gimnasio',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Icon(Icons.qr_code_scanner_rounded,
                     color: Colors.white),
               ),
-              title: const Text('Escanear QR'),
+              title: const Text('Escanear QR del Gimnasio'),
               subtitle: const Text('Usa la cámara o el modo demo'),
               onTap: () {
                 Navigator.of(sheetContext).pop();
@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 backgroundColor: AppColors.secondary,
                 child: Icon(Icons.keyboard_rounded, color: Colors.black87),
               ),
-              title: const Text('Introducir código'),
+              title: const Text('Introducir código del Gimnasio'),
               subtitle: const Text('Escribe el código manual'),
               onTap: () {
                 Navigator.of(sheetContext).pop();
@@ -118,11 +118,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.explore_rounded),
-              label: 'Tesoros',
+              label: 'Gimnasios',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.tips_and_updates_rounded),
-              label: 'Pistas',
+              label: 'Retos',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.leaderboard_rounded),
@@ -135,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           icon: const Icon(Icons.search_rounded),
-          label: const Text('Encontrar tesoro'),
+          label: const Text('Escanear QR'),
         ),
       ),
     );
