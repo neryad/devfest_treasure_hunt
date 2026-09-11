@@ -11,6 +11,9 @@ class Participant {
     this.completedAt,
     this.status = ParticipantStatus.active,
     this.discoveredTreasureIds = const [],
+    this.points = 0,
+    this.medals = 0,
+    this.avatarEmoji,
   });
 
   final String id;
@@ -22,15 +25,29 @@ class Participant {
 
   /// Ids of the treasures already found, in discovery order.
   final List<String> discoveredTreasureIds;
+  final int points;
+  final int medals;
+  final String? avatarEmoji;
 
   int get discoveredCount => discoveredTreasureIds.length;
 
   bool get isCompleted => status == ParticipantStatus.completed;
 
+  String get level {
+    if (medals >= 8) return 'DevFest Master';
+    if (medals >= 7) return 'Lead Engineer';
+    if (medals >= 5) return 'Senior Dev';
+    if (medals >= 3) return 'Developer';
+    return 'Aprendiz Tech';
+  }
+
   Participant copyWith({
     List<String>? discoveredTreasureIds,
     ParticipantStatus? status,
     DateTime? completedAt,
+    int? points,
+    int? medals,
+    String? avatarEmoji,
   }) =>
       Participant(
         id: id,
@@ -41,6 +58,9 @@ class Participant {
         status: status ?? this.status,
         discoveredTreasureIds:
             discoveredTreasureIds ?? this.discoveredTreasureIds,
+        points: points ?? this.points,
+        medals: medals ?? this.medals,
+        avatarEmoji: avatarEmoji ?? this.avatarEmoji,
       );
 
   Map<String, dynamic> toJson() => {
@@ -51,6 +71,9 @@ class Participant {
         'completedAt': completedAt?.toIso8601String(),
         'status': status.name,
         'discoveredTreasureIds': discoveredTreasureIds,
+        'points': points,
+        'medals': medals,
+        'avatarEmoji': avatarEmoji,
       };
 
   factory Participant.fromJson(Map<String, dynamic> json) => Participant(
@@ -68,6 +91,9 @@ class Participant {
         discoveredTreasureIds: (json['discoveredTreasureIds'] as List? ?? const [])
             .map((e) => e as String)
             .toList(),
+        points: json['points'] as int? ?? 0,
+        medals: json['medals'] as int? ?? 0,
+        avatarEmoji: json['avatarEmoji'] as String?,
       );
 
   static List<Participant> listFromJson(String json) => (jsonDecode(json) as List)
