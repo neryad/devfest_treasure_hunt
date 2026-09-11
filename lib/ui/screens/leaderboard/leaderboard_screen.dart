@@ -54,8 +54,8 @@ class _RankRow extends StatelessWidget {
 
     final medal = switch (position) {
       1 => const Icon(Icons.emoji_events_rounded, color: AppColors.amber),
-      2 => const Icon(Icons.workspace_premium_rounded, color: Color(0xFFCDD3E6)),
-      3 => const Icon(Icons.workspace_premium_rounded, color: Color(0xFFB47927)),
+      2 => const Icon(Icons.workspace_premium_rounded, color: Color(0xFFB0B0B0)),
+      3 => const Icon(Icons.workspace_premium_rounded, color: Color(0xFFC17900)),
       _ => Text(
           '$position',
           style: const TextStyle(
