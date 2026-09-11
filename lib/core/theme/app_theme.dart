@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-/// Palette for a modern tech/gamified DevFest experience.
+/// GDG (Google Developer Groups) official brand palette.
 abstract final class AppColors {
-  static const background = Color(0xFF0A0E21);
-  static const backgroundGradientTop = Color(0xFF141B3F);
-  static const surface = Color(0xFF171E44);
-  static const surfaceAlt = Color(0xFF20285A);
-  static const primary = Color(0xFF7C6CFF);
-  static const primarySoft = Color(0xFF9B8FFF);
-  static const secondary = Color(0xFF00E0C6);
-  static const amber = Color(0xFFFFB020);
-  static const danger = Color(0xFFFF6B6B);
-  static const success = Color(0xFF4CD964);
-  static const textPrimary = Color(0xFFF2F4FF);
-  static const textSecondary = Color(0xFFAAB2D9);
+  static const background = Color(0xFF1E1E1E);
+  static const backgroundGradientTop = Color(0xFF2D2D2D);
+  static const surface = Color(0xFF2D2D2D);
+  static const surfaceAlt = Color(0xFF3C4043);
+  static const primary = Color(0xFF4285F4);
+  static const primarySoft = Color(0xFF57CAFF);
+  static const secondary = Color(0xFF34A853);
+  static const amber = Color(0xFFF9AB00);
+  static const danger = Color(0xFFEA4335);
+  static const success = Color(0xFF34A853);
+  static const textPrimary = Color(0xFFFFFFFF);
+  static const textSecondary = Color(0xFFB0B0B0);
 }
 
 abstract final class AppTheme {
@@ -22,9 +22,9 @@ abstract final class AppTheme {
       primary: AppColors.primary,
       onPrimary: Colors.white,
       secondary: AppColors.secondary,
-      onSecondary: const Color(0xFF06231F),
+      onSecondary: Colors.white,
       tertiary: AppColors.amber,
-      onTertiary: const Color(0xFF2B1A00),
+      onTertiary: AppColors.background,
       surface: AppColors.surface,
       onSurface: AppColors.textPrimary,
       error: AppColors.danger,
@@ -51,7 +51,7 @@ abstract final class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0x222A3A75)),
+          side: const BorderSide(color: Color(0x33FFFFFF)),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -89,7 +89,7 @@ abstract final class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0x224A5BCF)),
+          borderSide: const BorderSide(color: Color(0x33FFFFFF)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -110,7 +110,7 @@ abstract final class AppTheme {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      dividerTheme: const DividerThemeData(color: Color(0x224A5BCF)),
+      dividerTheme: const DividerThemeData(color: Color(0x33FFFFFF)),
     );
   }
 }
