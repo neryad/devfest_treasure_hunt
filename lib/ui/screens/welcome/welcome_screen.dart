@@ -154,7 +154,7 @@ class _BrandLogo extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.primary, Color(0xFF3B2FBF)],
+            colors: [AppColors.primary, Color(0xFF1A5FC9)],
           ),
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
