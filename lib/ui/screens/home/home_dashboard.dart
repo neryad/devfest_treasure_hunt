@@ -4,7 +4,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/stat_card.dart';
-import '../../../core/widgets/treasure_progress_bar.dart';
 import '../../../state/app_scope.dart';
 import '../clues/clues_screen.dart';
 import '../completion/completion_screen.dart';
@@ -23,8 +22,6 @@ class HomeDashboard extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final percent = (controller.progress * 100).round();
-    final remaining = controller.remaining;
     final position = controller.approximateRank;
     final clues = controller.buildClues();
     final unlockedClues = clues.where((c) => c.unlocked).length;
@@ -36,11 +33,12 @@ class HomeDashboard extends StatelessWidget {
         children: [
           _Greeting(name: participant.name, nickname: participant.nickname),
           const SizedBox(height: 16),
-          _ProgressHero(
-            found: controller.discoveredCount,
+          _PokedexPreview(
+            discovered: controller.discoveredCount,
             total: controller.totalTreasures,
-            percent: percent,
-            remaining: remaining,
+            medals: participant.medals,
+            level: participant.level,
+            points: participant.points,
           ),
           const SizedBox(height: 8),
           Row(
@@ -67,9 +65,9 @@ class HomeDashboard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: StatCard(
-                  label: 'Restantes',
-                  value: '$remaining',
-                  icon: Icons.pending_actions_rounded,
+                  label: 'Medallas',
+                  value: '${participant.medals}/8',
+                  icon: Icons.emoji_events_rounded,
                   accent: AppColors.amber,
                 ),
               ),
@@ -165,18 +163,20 @@ class _Greeting extends StatelessWidget {
   }
 }
 
-class _ProgressHero extends StatelessWidget {
-  const _ProgressHero({
-    required this.found,
+class _PokedexPreview extends StatelessWidget {
+  const _PokedexPreview({
+    required this.discovered,
     required this.total,
-    required this.percent,
-    required this.remaining,
+    required this.medals,
+    required this.level,
+    required this.points,
   });
 
-  final int found;
+  final int discovered;
   final int total;
-  final int percent;
-  final int remaining;
+  final int medals;
+  final String level;
+  final int points;
 
   @override
   Widget build(BuildContext context) {
@@ -186,35 +186,54 @@ class _ProgressHero extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '$found / $total encontrados',
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 10),
-            TreasureProgressBar(progress: found / total, total: total, height: 12),
-            const SizedBox(height: 10),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Icon(Icons.emoji_events_rounded, color: AppColors.amber, size: 24),
+                const SizedBox(width: 8),
                 Text(
-                  '$percent%',
+                  level,
                   style: const TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: AppColors.amber,
                   ),
                 ),
-                const Spacer(),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Badge row
+            Row(
+              children: List.generate(total, (i) {
+                final isEarned = i < medals;
+                return Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(right: i < total - 1 ? 6 : 0),
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: isEarned ? AppColors.secondary : AppColors.surfaceAlt,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Text(
-                  remaining == 0
-                      ? '¡Todo completado! 🏆'
-                      : 'Te faltan $remaining tesoros',
+                  '$medals/$total medallas',
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  '$points puntos',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
                   ),
                 ),
               ],
