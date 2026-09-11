@@ -1,3 +1,4 @@
+import '../../domain/entities/attempt.dart';
 import '../../domain/entities/discovery.dart';
 import '../../domain/entities/event.dart';
 import '../../domain/entities/participant.dart';
@@ -27,11 +28,13 @@ class MockLocalDataSource implements AppDataSource {
   static const _participantsKey = 'devfest.participants.v1';
   static const _discoveriesKey = 'devfest.discoveries.v1';
   static const _currentParticipantKey = 'devfest.currentParticipant.v1';
+  static const _kAttempts = 'devfest.attempts.v1';
 
   late Event _event;
   late List<TreasureItem> _treasures;
   late List<Participant> _participants;
   late List<Discovery> _discoveries;
+  List<Attempt> _attempts = [];
   String? _currentParticipantId;
   bool _loaded = false;
 
@@ -124,6 +127,25 @@ class MockLocalDataSource implements AppDataSource {
   }
 
   @override
+  Future<List<Attempt>> loadAttempts() async {
+    if (_storage != null) {
+      final raw = await _storage!.read(_kAttempts);
+      if (raw != null) {
+        _attempts = Attempt.listFromJson(raw);
+      }
+    }
+    return List.unmodifiable(_attempts);
+  }
+
+  @override
+  Future<void> saveAttempt(Attempt attempt) async {
+    _attempts = [..._attempts, attempt];
+    if (_storage != null) {
+      await _storage!.write(_kAttempts, Attempt.listToJson(_attempts));
+    }
+  }
+
+  @override
   Future<String?> getCurrentParticipantId() async => _currentParticipantId;
 
   @override
@@ -144,12 +166,14 @@ class MockLocalDataSource implements AppDataSource {
     _treasures = MockData.buildTreasures();
     _participants = seedData ? MockData.buildSeedParticipants() : <Participant>[];
     _discoveries = seedData ? _seedDiscoveries(_participants) : <Discovery>[];
+    _attempts = [];
     _currentParticipantId = null;
     final storage = _storage;
     if (storage == null) return;
     await storage.remove(_treasuresKey);
     await storage.remove(_participantsKey);
     await storage.remove(_discoveriesKey);
+    await storage.remove(_kAttempts);
     await storage.remove(_currentParticipantKey);
   }
 
