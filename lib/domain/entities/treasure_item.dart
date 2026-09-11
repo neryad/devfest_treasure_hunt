@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'gym_challenge.dart';
+
 /// Visual state of a treasure from the participant's point of view.
 ///
 /// - [TreasureStatus.locked]: the treasure exists but is not relevant yet
@@ -22,6 +24,11 @@ class TreasureItem {
     this.order = 0,
     this.isActive = true,
     this.createdAt,
+    this.challengeType = ChallengeType.qr,
+    this.challenge,
+    this.gymName,
+    this.track,
+    this.pointValue = 10,
   });
 
   final String id;
@@ -55,7 +62,29 @@ class TreasureItem {
 
   final DateTime? createdAt;
 
-  TreasureItem copyWith({bool? isActive}) =>
+  /// Type of challenge this gym presents.
+  final ChallengeType challengeType;
+
+  /// The actual challenge data (question, options, answer, etc.).
+  final GymChallenge? challenge;
+
+  /// Display name for the gym.
+  final String? gymName;
+
+  /// Track/theme this gym belongs to.
+  final String? track;
+
+  /// Base points for completing this gym.
+  final int pointValue;
+
+  TreasureItem copyWith({
+    bool? isActive,
+    ChallengeType? challengeType,
+    GymChallenge? challenge,
+    String? gymName,
+    String? track,
+    int? pointValue,
+  }) =>
       TreasureItem(
         id: id,
         title: title,
@@ -68,6 +97,11 @@ class TreasureItem {
         order: order,
         isActive: isActive ?? this.isActive,
         createdAt: createdAt,
+        challengeType: challengeType ?? this.challengeType,
+        challenge: challenge ?? this.challenge,
+        gymName: gymName ?? this.gymName,
+        track: track ?? this.track,
+        pointValue: pointValue ?? this.pointValue,
       );
 
   Map<String, dynamic> toJson() => {
@@ -82,6 +116,22 @@ class TreasureItem {
         'order': order,
         'isActive': isActive,
         'createdAt': createdAt?.toIso8601String(),
+        'challengeType': challengeType.name,
+        'challenge': challenge != null
+            ? {
+                'type': challenge!.type.name,
+                'question': challenge!.question,
+                'options': challenge!.options,
+                'correctAnswer': challenge!.correctAnswer,
+                'hint': challenge!.hint,
+                'codeSnippet': challenge!.codeSnippet,
+                'timeLimitSeconds': challenge!.timeLimitSeconds,
+                'points': challenge!.points,
+              }
+            : null,
+        'gymName': gymName,
+        'track': track,
+        'pointValue': pointValue,
       };
 
   factory TreasureItem.fromJson(Map<String, dynamic> json) => TreasureItem(
@@ -98,6 +148,31 @@ class TreasureItem {
         createdAt: json['createdAt'] != null
             ? DateTime.tryParse(json['createdAt'] as String)
             : null,
+        challengeType: ChallengeType.values.firstWhere(
+          (e) => e.name == json['challengeType'],
+          orElse: () => ChallengeType.qr,
+        ),
+        challenge: json['challenge'] != null
+            ? GymChallenge(
+                type: ChallengeType.values.firstWhere(
+                  (e) => e.name == json['challenge']['type'],
+                  orElse: () => ChallengeType.qr,
+                ),
+                question: json['challenge']['question'] as String?,
+                options: (json['challenge']['options'] as List<dynamic>?)
+                    ?.map((e) => e as String)
+                    .toList(),
+                correctAnswer: json['challenge']['correctAnswer'] as String?,
+                hint: json['challenge']['hint'] as String?,
+                codeSnippet: json['challenge']['codeSnippet'] as String?,
+                timeLimitSeconds:
+                    json['challenge']['timeLimitSeconds'] as int? ?? 60,
+                points: json['challenge']['points'] as int? ?? 10,
+              )
+            : null,
+        gymName: json['gymName'] as String?,
+        track: json['track'] as String?,
+        pointValue: json['pointValue'] as int? ?? 10,
       );
 
   static List<TreasureItem> listFromJson(String json) => (jsonDecode(json) as List)
