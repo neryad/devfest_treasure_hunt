@@ -12,7 +12,6 @@ import '../completion/completion_screen.dart';
 import '../discovery/manual_code_screen.dart';
 import '../discovery/qr_scanner_screen.dart';
 
-
 /// "Inicio" tab: the participant's adventure overview.
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({super.key});
@@ -58,9 +57,7 @@ class HomeDashboard extends StatelessWidget {
               Expanded(
                 child: StatCard(
                   label: 'Posición',
-                  value: position == null
-                      ? '—'
-                      : '#$position',
+                  value: position == null ? '—' : '#$position',
                   icon: Icons.leaderboard_rounded,
                   accent: AppColors.primarySoft,
                 ),
@@ -192,17 +189,6 @@ class _PokedexPreview extends StatelessWidget {
     Color(0xFF5CDB6D), // Community - Green
   ];
 
-  static const _trackIcons = [
-    Icons.phone_android_rounded,
-    Icons.psychology_rounded,
-    Icons.cloud_rounded,
-    Icons.shield_rounded,
-    Icons.language_rounded,
-    Icons.rocket_launch_rounded,
-    Icons.mic_rounded,
-    Icons.groups_rounded,
-  ];
-
   @override
   Widget build(BuildContext context) {
     final progress = total > 0 ? (medals / total).clamp(0.0, 1.0) : 0.0;
@@ -228,7 +214,11 @@ class _PokedexPreview extends StatelessWidget {
                       color: AppColors.amber.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.military_tech_rounded, color: AppColors.amber, size: 22),
+                    child: const Icon(
+                      Icons.military_tech_rounded,
+                      color: AppColors.amber,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -236,7 +226,10 @@ class _PokedexPreview extends StatelessWidget {
                     children: [
                       const Text(
                         'Rango de Entrenador',
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       Text(
                         level,
@@ -251,7 +244,10 @@ class _PokedexPreview extends StatelessWidget {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
@@ -274,9 +270,20 @@ class _PokedexPreview extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(total > 0 ? total : 8, (i) {
               final isEarned = i < medals;
-              final color = i < _trackColors.length ? _trackColors[i] : AppColors.primary;
+              final color = i < _trackColors.length
+                  ? _trackColors[i]
+                  : AppColors.primary;
               final track = i < _trackColors.length
-                  ? ['android', 'ia', 'cloud', 'security', 'web', 'startup', 'speaker', 'community'][i]
+                  ? [
+                      'android',
+                      'ia',
+                      'cloud',
+                      'security',
+                      'web',
+                      'startup',
+                      'speaker',
+                      'community',
+                    ][i]
                   : 'android';
               final medalPath = getMedalAssetPath(track);
 
@@ -313,7 +320,7 @@ class _PokedexPreview extends StatelessWidget {
                               ? Image.asset(
                                   medalPath,
                                   fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => Icon(
+                                  errorBuilder: (_, _, _) => Icon(
                                     Icons.star_rounded,
                                     size: 14,
                                     color: color,
@@ -329,7 +336,7 @@ class _PokedexPreview extends StatelessWidget {
                                     child: Image.asset(
                                       medalPath,
                                       fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => const Icon(
+                                      errorBuilder: (_, _, _) => const Icon(
                                         Icons.lock_outline_rounded,
                                         size: 14,
                                         color: AppColors.textMuted,
@@ -341,7 +348,6 @@ class _PokedexPreview extends StatelessWidget {
                       ),
                     ),
                   ),
-
                 ),
               );
             }),
@@ -356,7 +362,9 @@ class _PokedexPreview extends StatelessWidget {
               value: progress,
               minHeight: 6,
               backgroundColor: AppColors.surfaceAlt,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.secondary),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.secondary,
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -386,7 +394,6 @@ class _PokedexPreview extends StatelessWidget {
   }
 }
 
-
 class _CompletedBanner extends StatelessWidget {
   const _CompletedBanner();
 
@@ -398,8 +405,11 @@ class _CompletedBanner extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            const Icon(Icons.emoji_events_rounded,
-                color: AppColors.amber, size: 32),
+            const Icon(
+              Icons.emoji_events_rounded,
+              color: AppColors.amber,
+              size: 32,
+            ),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
@@ -477,8 +487,10 @@ class _ActionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.textSecondary),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
             ],
           ),
         ),

@@ -17,6 +17,10 @@ import '../domain/use_cases/discover_treasure_use_case.dart';
 import '../domain/use_cases/leaderboard_use_case.dart';
 import '../domain/use_cases/start_participant_use_case.dart';
 
+const _cooldownDuration = Duration(minutes: 5);
+const _adminUser = 'admin';
+const _adminPassword = 'devfest2026';
+
 /// Single state container for the demo.
 ///
 /// Screens read state and call actions here; they never touch repositories
@@ -32,8 +36,8 @@ class AppController extends ChangeNotifier {
     Future<void> Function()? resetStore,
     AttemptRepository? attemptRepository,
     this.enableElapsedTicker = true,
-  })  : _treasureRepository = treasureRepository,
-        _participantRepository = participantRepository {
+  }) : _treasureRepository = treasureRepository,
+       _participantRepository = participantRepository {
     _discoverUseCase = DiscoverTreasureUseCase(
       treasureRepository: treasureRepository,
       participantRepository: participantRepository,
@@ -73,6 +77,7 @@ class AppController extends ChangeNotifier {
   String? _lastError;
   ChallengeResult? _lastChallengeResult;
   DateTime? _cooldownStart;
+  bool _adminSignedIn = false;
 
   bool get initializing => _initializing;
   Event? get event => _event;
@@ -82,18 +87,19 @@ class AppController extends ChangeNotifier {
   List<LeaderboardEntry> get leaderboard => _leaderboard;
   String? get lastError => _lastError;
   ChallengeResult? get lastChallengeResult => _lastChallengeResult;
+  bool get adminSignedIn => _adminSignedIn;
 
   bool get isOnCooldown {
     final start = _cooldownStart;
     if (start == null) return false;
-    return DateTime.now().difference(start) < CompleteChallengeUseCase.cooldownDuration;
+    return DateTime.now().difference(start) < _cooldownDuration;
   }
 
   Duration get cooldownRemaining {
     final start = _cooldownStart;
     if (start == null) return Duration.zero;
     final elapsed = DateTime.now().difference(start);
-    final remaining = CompleteChallengeUseCase.cooldownDuration - elapsed;
+    final remaining = _cooldownDuration - elapsed;
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
@@ -134,6 +140,18 @@ class AppController extends ChangeNotifier {
   CompleteChallengeUseCase? get completeChallengeUseCase =>
       _completeChallengeUseCase;
 
+  bool signInAdmin(String user, String password) {
+    final valid = user.trim() == _adminUser && password == _adminPassword;
+    _adminSignedIn = valid;
+    notifyListeners();
+    return valid;
+  }
+
+  void signOutAdmin() {
+    _adminSignedIn = false;
+    notifyListeners();
+  }
+
   TreasureItem? treasureById(String id) {
     for (final t in _treasures) {
       if (t.id == id) return t;
@@ -155,12 +173,14 @@ class AppController extends ChangeNotifier {
       ..sort((a, b) => a.order.compareTo(b.order));
     final discovered = _participant?.discoveredTreasureIds ?? const [];
     return sorted
-        .map((t) => Clue(
-              treasureId: t.id,
-              text: t.clue,
-              unlocked: discovered.contains(t.id),
-              consulted: _consultedClues.contains(t.id),
-            ))
+        .map(
+          (t) => Clue(
+            treasureId: t.id,
+            text: t.clue,
+            unlocked: discovered.contains(t.id),
+            consulted: _consultedClues.contains(t.id),
+          ),
+        )
         .toList();
   }
 
@@ -194,7 +214,8 @@ class AppController extends ChangeNotifier {
   Future<DiscoverTreasureResult> discoverByCode(String code) async {
     if (_participant == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.participantNotFound);
+        DiscoverFailure.participantNotFound,
+      );
     }
     final treasure = await _treasureRepository.getByCode(code);
     return _runDiscovery(treasure);
@@ -203,7 +224,8 @@ class AppController extends ChangeNotifier {
   Future<DiscoverTreasureResult> discoverByQrValue(String value) async {
     if (_participant == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.participantNotFound);
+        DiscoverFailure.participantNotFound,
+      );
     }
     final treasure = await _treasureRepository.getByQrValue(value);
     return _runDiscovery(treasure);
@@ -212,7 +234,8 @@ class AppController extends ChangeNotifier {
   Future<DiscoverTreasureResult> discoverByTreasureId(String treasureId) async {
     if (_participant == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.participantNotFound);
+        DiscoverFailure.participantNotFound,
+      );
     }
     final treasure = await _treasureRepository.getTreasure(treasureId);
     return _runDiscovery(treasure);
@@ -221,7 +244,8 @@ class AppController extends ChangeNotifier {
   Future<DiscoverTreasureResult> _runDiscovery(TreasureItem? treasure) async {
     if (treasure == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.treasureNotFound);
+        DiscoverFailure.treasureNotFound,
+      );
     }
     final participant = _participant!;
     final result = await _discoverUseCase.execute(
@@ -241,6 +265,37 @@ class AppController extends ChangeNotifier {
     await _treasureRepository.setTreasureActive(id, active);
     await _reloadStaticData();
     notifyListeners();
+  }
+
+  Future<bool> grantMedal({
+    required String participantId,
+    required String gymId,
+  }) async {
+    final participant = await _participantRepository.getParticipant(
+      participantId,
+    );
+    final gym = await _treasureRepository.getTreasure(gymId);
+    if (participant == null || gym == null || !gym.isActive) return false;
+    if (participant.discoveredTreasureIds.contains(gymId)) return false;
+
+    final updatedTreasures = [...participant.discoveredTreasureIds, gymId];
+    final allTreasures = await _treasureRepository.getTreasures();
+    final completed = updatedTreasures.length >= allTreasures.length;
+    final updated = participant.copyWith(
+      discoveredTreasureIds: updatedTreasures,
+      points: participant.points + (gym.challenge?.points ?? gym.pointValue),
+      medals: updatedTreasures.length,
+      status: completed ? ParticipantStatus.completed : participant.status,
+      completedAt: completed ? DateTime.now() : participant.completedAt,
+    );
+
+    await _participantRepository.updateParticipant(updated);
+    if (_participant?.id == participantId) {
+      _participant = updated;
+    }
+    await _reloadLeaderboard();
+    notifyListeners();
+    return true;
   }
 
   Future<void> resetDemo() async {

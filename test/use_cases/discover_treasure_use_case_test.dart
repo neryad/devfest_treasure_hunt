@@ -32,11 +32,16 @@ void main() {
   test('discovers treasures in ANY order without errors', () async {
     final pid = await createParticipant('Laura');
 
-    // Random-ish order: 4 -> 1 -> 7 -> 3 (3 is inactive, skipped) -> 2.
-    final r1 = await useCase.execute(participantId: pid, treasureId: 'treasure-004');
-    final r2 = await useCase.execute(participantId: pid, treasureId: 'treasure-001');
-    final r3 = await useCase.execute(participantId: pid, treasureId: 'treasure-007');
-    final r4 = await useCase.execute(participantId: pid, treasureId: 'treasure-002');
+    final r1 = await useCase.execute(participantId: pid, treasureId: 'gym-web');
+    final r2 = await useCase.execute(
+      participantId: pid,
+      treasureId: 'gym-android',
+    );
+    final r3 = await useCase.execute(
+      participantId: pid,
+      treasureId: 'gym-speaker',
+    );
+    final r4 = await useCase.execute(participantId: pid, treasureId: 'gym-ia');
 
     expect(r1.isSuccess, isTrue);
     expect(r2.isSuccess, isTrue);
@@ -47,37 +52,41 @@ void main() {
     expect(participant!.discoveredCount, 4);
     // Discoveries were registered in the exact order attempted.
     expect(participant.discoveredTreasureIds, [
-      'treasure-004',
-      'treasure-001',
-      'treasure-007',
-      'treasure-002',
+      'gym-web',
+      'gym-android',
+      'gym-speaker',
+      'gym-ia',
     ]);
   });
 
   test('inactive treasure is rejected and NOT registered', () async {
     final pid = await createParticipant('Diego');
 
+    await repository.setTreasureActive('gym-security', false);
+
     final result = await useCase.execute(
       participantId: pid,
-      treasureId: 'treasure-003',
+      treasureId: 'gym-security',
     );
 
     expect(result.failure, DiscoverFailure.notActive);
     final participant = await repository.getParticipant(pid);
     expect(participant!.discoveredCount, 0);
-    final discoveries =
-        await dataSource.loadDiscoveries();
-    expect(
-      discoveries.where((d) => d.participantId == pid),
-      isEmpty,
-    );
+    final discoveries = await dataSource.loadDiscoveries();
+    expect(discoveries.where((d) => d.participantId == pid), isEmpty);
   });
 
   test('the same treasure cannot be discovered twice', () async {
     final pid = await createParticipant('Ana');
 
-    final first = await useCase.execute(participantId: pid, treasureId: 'treasure-005');
-    final second = await useCase.execute(participantId: pid, treasureId: 'treasure-005');
+    final first = await useCase.execute(
+      participantId: pid,
+      treasureId: 'gym-startup',
+    );
+    final second = await useCase.execute(
+      participantId: pid,
+      treasureId: 'gym-startup',
+    );
 
     expect(first.isSuccess, isTrue);
     expect(second.failure, DiscoverFailure.alreadyDiscovered);
@@ -88,14 +97,17 @@ void main() {
   test('a treasure with unknown id is reported as not found', () async {
     final pid = await createParticipant('Isaac');
 
-    final result = await useCase.execute(participantId: pid, treasureId: 'treasure-999');
+    final result = await useCase.execute(
+      participantId: pid,
+      treasureId: 'treasure-999',
+    );
     expect(result.failure, DiscoverFailure.treasureNotFound);
   });
 
   test('unknown participant cannot discover anything', () async {
     final result = await useCase.execute(
       participantId: 'nobody',
-      treasureId: 'treasure-001',
+      treasureId: 'gym-android',
     );
     expect(result.failure, DiscoverFailure.participantNotFound);
   });
@@ -103,23 +115,17 @@ void main() {
   test('discovering every treasure completes the participant', () async {
     final pid = await createParticipant('Carlos');
 
-    // The admin must have activated every treasure for the run to be
-    // completable: proves the demo can toggle availability too.
-    await repository.setTreasureActive('treasure-003', true);
-
     final ids = MockData.buildTreasures().map((t) => t.id).toList();
     // Deliberately shuffled to prove the order does not matter.
     final shuffled = [
-      'treasure-009',
-      'treasure-002',
-      'treasure-010',
-      'treasure-001',
-      'treasure-008',
-      'treasure-004',
-      'treasure-006',
-      'treasure-005',
-      'treasure-007',
-      'treasure-003',
+      'gym-speaker',
+      'gym-ia',
+      'gym-community',
+      'gym-android',
+      'gym-cloud',
+      'gym-web',
+      'gym-startup',
+      'gym-security',
     ];
 
     DiscoverTreasureResult? last;
@@ -139,7 +145,10 @@ void main() {
   test('a successful discovery unlocks a clue on the result', () async {
     final pid = await createParticipant('Valeria');
 
-    final result = await useCase.execute(participantId: pid, treasureId: 'treasure-001');
+    final result = await useCase.execute(
+      participantId: pid,
+      treasureId: 'gym-android',
+    );
     expect(result.isSuccess, isTrue);
     expect(result.clue, isNotEmpty);
   });

@@ -7,7 +7,6 @@ import '../../../domain/entities/treasure_item.dart';
 import '../../../state/app_scope.dart';
 import '../challenge/challenge_screen.dart';
 
-
 class PokedexScreen extends StatelessWidget {
   const PokedexScreen({super.key});
 
@@ -34,7 +33,7 @@ class PokedexScreen extends StatelessWidget {
           nickname: nickname,
           level: level,
           medals: medals,
-          total: gyms.length > 0 ? gyms.length : 8,
+          total: gyms.isNotEmpty ? gyms.length : 8,
           points: points,
         ),
         const SizedBox(height: 24),
@@ -69,7 +68,9 @@ class PokedexScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Text(
                 '$medals / ${gyms.length}',
@@ -153,7 +154,7 @@ class PokedexScreen extends StatelessWidget {
                       child: Image.asset(
                         medalPath,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Icon(
+                        errorBuilder: (_, _, _) => Icon(
                           _getTrackIcon(gym.track),
                           size: 36,
                           color: trackColor,
@@ -234,7 +235,11 @@ class PokedexScreen extends StatelessWidget {
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.verified_rounded, color: AppColors.secondary, size: 24),
+                    Icon(
+                      Icons.verified_rounded,
+                      color: AppColors.secondary,
+                      size: 24,
+                    ),
                     SizedBox(width: 10),
                     Text(
                       '¡Medalla Conquistada!',
@@ -362,6 +367,8 @@ class PokedexScreen extends StatelessWidget {
         return 'Reto Presencial';
       case ChallengeType.social:
         return 'Reto Social';
+      case ChallengeType.miniGame:
+        return 'Mini Juego';
     }
   }
 }
@@ -396,7 +403,10 @@ class _TrainerCard extends StatelessWidget {
           colors: [Color(0xFF2E3856), Color(0xFF1B2236)],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.4), width: 1.5),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.4),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.2),
@@ -459,7 +469,10 @@ class _TrainerCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.amber.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
@@ -496,7 +509,9 @@ class _TrainerCard extends StatelessWidget {
                 value: progress,
                 minHeight: 8,
                 backgroundColor: AppColors.surfaceAlt,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.secondary),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.secondary,
+                ),
               ),
             ),
             const SizedBox(height: 14),
@@ -518,7 +533,9 @@ class _TrainerCard extends StatelessWidget {
                 _TrainerStat(
                   icon: Icons.military_tech_rounded,
                   label: 'Rango',
-                  value: medals == total ? 'Master 🏆' : '${(progress * 100).toInt()}%',
+                  value: medals == total
+                      ? 'Master 🏆'
+                      : '${(progress * 100).toInt()}%',
                   color: AppColors.secondary,
                 ),
               ],
@@ -554,7 +571,10 @@ class _TrainerStat extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 10,
+                color: AppColors.textSecondary,
+              ),
             ),
             Text(
               value,
@@ -640,7 +660,7 @@ class _GymBadgeCard extends StatelessWidget {
                           ? Image.asset(
                               medalPath,
                               fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => Icon(
+                              errorBuilder: (_, _, _) => Icon(
                                 PokedexScreen._getTrackIcon(gym.track),
                                 size: 28,
                                 color: trackColor,
@@ -656,7 +676,7 @@ class _GymBadgeCard extends StatelessWidget {
                                 child: Image.asset(
                                   medalPath,
                                   fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => Icon(
+                                  errorBuilder: (_, _, _) => Icon(
                                     PokedexScreen._getTrackIcon(gym.track),
                                     size: 28,
                                     color: AppColors.textMuted,
@@ -675,7 +695,9 @@ class _GymBadgeCard extends StatelessWidget {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isEarned ? AppColors.secondary : AppColors.surfaceAlt,
+                      color: isEarned
+                          ? AppColors.secondary
+                          : AppColors.surfaceAlt,
                       border: Border.all(color: AppColors.surface, width: 1.5),
                     ),
                     child: Icon(
@@ -697,14 +719,17 @@ class _GymBadgeCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: isEarned ? AppColors.textPrimary : AppColors.textSecondary,
+                color: isEarned
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: (isEarned ? trackColor : AppColors.surfaceAlt).withValues(alpha: 0.2),
+                color: (isEarned ? trackColor : AppColors.surfaceAlt)
+                    .withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(

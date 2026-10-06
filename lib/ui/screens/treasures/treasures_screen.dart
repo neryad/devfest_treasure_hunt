@@ -20,9 +20,11 @@ class TreasuresScreen extends StatelessWidget {
       ..sort((a, b) => a.order.compareTo(b.order));
 
     final found = treasures.where(
-        (t) => controller.statusOf(t) == TreasureStatus.discovered);
-    final pending = treasures
-        .where((t) => controller.statusOf(t) != TreasureStatus.discovered);
+      (t) => controller.statusOf(t) == TreasureStatus.discovered,
+    );
+    final pending = treasures.where(
+      (t) => controller.statusOf(t) != TreasureStatus.discovered,
+    );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
@@ -32,10 +34,7 @@ class TreasuresScreen extends StatelessWidget {
           total: treasures.length,
           pending: pending.length,
         ),
-        Text(
-          'Conquistados',
-          style: _sectionStyle,
-        ),
+        Text('Conquistados', style: _sectionStyle),
         if (found.isEmpty) _EmptyFoundCard(),
         for (final t in found) _TreasureTile(treasure: t, revealed: true),
         const SizedBox(height: 20),
@@ -47,14 +46,18 @@ class TreasuresScreen extends StatelessWidget {
   }
 
   TextStyle get _sectionStyle => const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w800,
-        color: AppColors.textPrimary,
-      );
+    fontSize: 16,
+    fontWeight: FontWeight.w800,
+    color: AppColors.textPrimary,
+  );
 }
 
 class _Summary extends StatelessWidget {
-  const _Summary({required this.found, required this.total, required this.pending});
+  const _Summary({
+    required this.found,
+    required this.total,
+    required this.pending,
+  });
 
   final int found;
   final int total;
@@ -85,9 +88,7 @@ class _TreasureTile extends StatelessWidget {
         onTap: () {
           if (revealed) return; // Already conquered
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ChallengeScreen(gym: treasure),
-            ),
+            MaterialPageRoute(builder: (_) => ChallengeScreen(gym: treasure)),
           );
         },
         leading: CircleAvatar(
@@ -139,7 +140,10 @@ class _TreasureTile extends StatelessWidget {
         subtitle: revealed
             ? Text(
                 treasure.locationDescription,
-                style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textSecondary,
+                ),
               )
             : Row(
                 children: [
@@ -161,15 +165,15 @@ class _TreasureTile extends StatelessWidget {
         trailing: revealed
             ? null
             : (treasure.isActive
-                ? StatusPill(
-                    label: _getChallengeTypeName(treasure.challengeType),
-                    color: AppColors.primary,
-                  )
-                : const StatusPill(
-                    label: 'No disponible',
-                    color: AppColors.danger,
-                    icon: Icons.lock_rounded,
-                  )),
+                  ? StatusPill(
+                      label: _getChallengeTypeName(treasure.challengeType),
+                      color: AppColors.primary,
+                    )
+                  : const StatusPill(
+                      label: 'No disponible',
+                      color: AppColors.danger,
+                      icon: Icons.lock_rounded,
+                    )),
       ),
     );
   }
@@ -188,6 +192,8 @@ class _TreasureTile extends StatelessWidget {
         return Icons.location_on_rounded;
       case ChallengeType.social:
         return Icons.people_rounded;
+      case ChallengeType.miniGame:
+        return Icons.sports_esports_rounded;
     }
   }
 }
@@ -206,6 +212,8 @@ String _getChallengeTypeName(ChallengeType type) {
       return 'Presencial';
     case ChallengeType.social:
       return 'Social';
+    case ChallengeType.miniGame:
+      return 'Mini juego';
   }
 }
 
@@ -220,14 +228,16 @@ class _EmptyFoundCard extends StatelessWidget {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.explore_rounded,
-                  color: AppColors.primarySoft, size: 40),
+              Icon(
+                Icons.explore_rounded,
+                color: AppColors.primarySoft,
+                size: 40,
+              ),
               SizedBox(height: 10),
               Text(
                 'Aún no has encontrado ninguno.\n¡Sal a explorar!',
                 textAlign: TextAlign.center,
-                style:
-                    TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
             ],
           ),

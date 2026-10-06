@@ -33,42 +33,39 @@ void main() {
     await tester.pumpWidget(
       AppScope(
         controller: controller,
-        child: const MaterialApp(
-          home: SessionGate(),
-        ),
+        child: const MaterialApp(home: SessionGate()),
       ),
     );
     await tester.pump();
   }
 
   Future<void> registerDemoUser(WidgetTester tester) async {
-    await tester.ensureVisible(find.text('Comenzar aventura'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Comenzar aventura'));
+    await tester.ensureVisible(find.widgetWithText(TextFormField, 'Tu Nombre'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Registro de participante'), findsOneWidget);
-
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nombre'), 'Demo User');
+      find.widgetWithText(TextFormField, 'Tu Nombre'),
+      'Demo User',
+    );
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nickname / Alias'), 'demo_user');
-    await tester.tap(find.text('Iniciar aventura'));
+      find.widgetWithText(TextFormField, 'Nickname / Alias para el Ranking'),
+      'demo_user',
+    );
+    await tester.tap(find.text('¡Comenzar aventura!'));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('welcome → register → dashboard shows 0/10', (tester) async {
+  testWidgets('welcome → register → dashboard shows 0/8', (tester) async {
     await pumpApp(tester);
 
-    expect(find.text('DevFest 2026'), findsOneWidget);
-    expect(find.text('Treasure Hunt'), findsOneWidget);
-    expect(find.text('Comenzar aventura'), findsOneWidget);
+    expect(find.text('DevFest Master'), findsOneWidget);
+    expect(find.text('¡Comenzar aventura!'), findsOneWidget);
 
     await registerDemoUser(tester);
 
     expect(find.text('Tu aventura'), findsOneWidget);
-    expect(find.text('0 / 10 encontrados'), findsOneWidget);
-    expect(find.text('Encontrar tesoro'), findsOneWidget);
+    expect(find.text('0 de 8 medallas conseguidas'), findsOneWidget);
+    expect(find.text('Escanear QR'), findsOneWidget);
   });
 
   testWidgets('dashboard reflects discoveries in any order', (tester) async {
@@ -76,36 +73,38 @@ void main() {
     await registerDemoUser(tester);
 
     // Discover outer-of-order treasures through the controller.
-    final first = await controller.discoverByTreasureId('treasure-007');
+    final first = await controller.discoverByTreasureId('gym-speaker');
     expect(first.isSuccess, isTrue);
     await tester.pump();
 
-    expect(find.text('1 / 10 encontrados'), findsOneWidget);
+    expect(find.text('1 de 8 medallas conseguidas'), findsOneWidget);
 
-    await controller.discoverByTreasureId('treasure-002');
+    await controller.discoverByTreasureId('gym-ia');
     await tester.pump();
 
-    expect(find.text('2 / 10 encontrados'), findsOneWidget);
+    expect(find.text('2 de 8 medallas conseguidas'), findsOneWidget);
 
     // The inactive treasure must be rejected.
-    final result =
-        await controller.discoverByTreasureId('treasure-003');
+    await controller.setTreasureActive('gym-security', false);
+    final result = await controller.discoverByTreasureId('gym-security');
     expect(result.failure, DiscoverFailure.notActive);
     await tester.pump();
 
-    expect(find.text('2 / 10 encontrados'), findsOneWidget);
+    expect(find.text('2 de 8 medallas conseguidas'), findsOneWidget);
   });
 
-  testWidgets('clues tab unlocks when a treasure is discovered', (tester) async {
+  testWidgets('clues tab unlocks when a treasure is discovered', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await registerDemoUser(tester);
 
-    await controller.discoverByTreasureId('treasure-001');
+    await controller.discoverByTreasureId('gym-android');
     await tester.pump();
 
-    await tester.tap(find.text('Pistas'));
+    await tester.tap(find.text('Retos'));
     await tester.pumpAndSettle();
 
-    expect(find.text('1 de 10 pistas desbloqueadas'), findsOneWidget);
+    expect(find.text('1 de 8 pistas desbloqueadas'), findsOneWidget);
   });
 }

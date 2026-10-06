@@ -7,9 +7,7 @@ import '../../../core/widgets/stat_card.dart';
 import '../../../core/widgets/status_pill.dart';
 import '../../../state/app_scope.dart';
 
-/// DEMO admin panel: metrics, ranking, treasure availability toggles and the
-/// participant list. No real auth — the whole point is showing how the event
-/// would be controlled.
+/// Staff panel: metrics, ranking, gym availability toggles and participant ops.
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
@@ -20,11 +18,13 @@ class AdminDashboardScreen extends StatelessWidget {
     final participants = controller.participants;
     final completed = participants.where((p) => p.isCompleted).length;
     final active = participants.length - completed;
-    final activeTreasures = controller.treasures.where((t) => t.isActive).length;
+    final activeTreasures = controller.treasures
+        .where((t) => t.isActive)
+        .length;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Panel admin · Demo'),
+        title: const Text('Panel Staff'),
         actions: [
           IconButton(
             tooltip: 'Resetear datos demo',
@@ -226,8 +226,7 @@ class _TreasureManagement extends StatelessWidget {
               discoverCount: controller.participants
                   .where((p) => p.discoveredTreasureIds.contains(t.id))
                   .length,
-              onChanged: (v) =>
-                  controller.setTreasureActive(t.id, v),
+              onChanged: (v) => controller.setTreasureActive(t.id, v),
             ),
         ],
       ),
@@ -259,8 +258,10 @@ class _TreasureRow extends StatelessWidget {
         icon: isActive ? Icons.check_circle_rounded : Icons.lock_rounded,
       ),
       title: Text(title, style: const TextStyle(fontSize: 13.5)),
-      subtitle: Text('Descubrimientos: $discoverCount',
-          style: const TextStyle(fontSize: 12)),
+      subtitle: Text(
+        'Descubrimientos: $discoverCount',
+        style: const TextStyle(fontSize: 12),
+      ),
       trailing: Switch(
         value: isActive,
         onChanged: onChanged,
@@ -274,12 +275,28 @@ class _ParticipantsList extends StatelessWidget {
   const _ParticipantsList();
 
   @override
+  Widget build(BuildContext context) => const _ParticipantsListBody();
+}
+
+class _ParticipantsListBody extends StatefulWidget {
+  const _ParticipantsListBody();
+
+  @override
+  State<_ParticipantsListBody> createState() => _ParticipantsListBodyState();
+}
+
+class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
+  String _query = '';
+
+  @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final sorted = List.of(controller.participants)
       ..sort((a, b) {
-        final byCount = b.discoveredCount.compareTo(a.discoveredCount);
-        if (byCount != 0) return byCount;
+        final byPoints = b.points.compareTo(a.points);
+        if (byPoints != 0) return byPoints;
+        final byMedals = b.discoveredCount.compareTo(a.discoveredCount);
+        if (byMedals != 0) return byMedals;
         final aT = a.isCompleted
             ? a.completedAt!.difference(a.startedAt)
             : DateTime.now().difference(a.startedAt);
@@ -288,11 +305,28 @@ class _ParticipantsList extends StatelessWidget {
             : DateTime.now().difference(b.startedAt);
         return aT.compareTo(bT);
       });
+    final filtered = sorted.where((p) {
+      final q = _query.trim().toLowerCase();
+      if (q.isEmpty) return true;
+      return p.name.toLowerCase().contains(q) ||
+          p.nickname.toLowerCase().contains(q);
+    }).toList();
 
     return Card(
       child: Column(
         children: [
-          for (final p in sorted)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+            child: TextField(
+              key: const Key('admin-participant-search'),
+              decoration: const InputDecoration(
+                labelText: 'Buscar participante',
+                prefixIcon: Icon(Icons.search_rounded),
+              ),
+              onChanged: (value) => setState(() => _query = value),
+            ),
+          ),
+          for (final p in filtered)
             ListTile(
               dense: true,
               leading: CircleAvatar(
@@ -300,15 +334,22 @@ class _ParticipantsList extends StatelessWidget {
                 backgroundColor: AppColors.surfaceAlt,
                 child: Text(
                   p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
-              title: Text('${p.name} (${p.nickname})',
-                  style: const TextStyle(fontSize: 13.5)),
+              title: Text(
+                '${p.name} (${p.nickname})',
+                style: const TextStyle(fontSize: 13.5),
+              ),
               subtitle: Text(
-                formatElapsed(p.isCompleted
-                    ? p.completedAt!.difference(p.startedAt)
-                    : DateTime.now().difference(p.startedAt)),
+                formatElapsed(
+                  p.isCompleted
+                      ? p.completedAt!.difference(p.startedAt)
+                      : DateTime.now().difference(p.startedAt),
+                ),
                 style: const TextStyle(fontSize: 12),
               ),
               trailing: Row(
@@ -325,14 +366,125 @@ class _ParticipantsList extends StatelessWidget {
                   const SizedBox(width: 8),
                   StatusPill(
                     label: p.isCompleted ? 'Completado' : 'En progreso',
-                    color:
-                        p.isCompleted ? AppColors.success : AppColors.secondary,
+                    color: p.isCompleted
+                        ? AppColors.success
+                        : AppColors.secondary,
                   ),
                 ],
               ),
+              onTap: () => _showParticipantDetail(context, p.id),
+            ),
+          if (filtered.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Sin participantes encontrados'),
             ),
         ],
       ),
     );
+  }
+
+  void _showParticipantDetail(BuildContext context, String participantId) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final controller = AppScope.of(context);
+            final participant = controller.participants.firstWhere(
+              (p) => p.id == participantId,
+            );
+            final treasures = List.of(controller.treasures)
+              ..sort((a, b) => a.order.compareTo(b.order));
+            final missing = treasures
+                .where((t) => !participant.discoveredTreasureIds.contains(t.id))
+                .toList();
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Detalle de participante',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${participant.name} (${participant.nickname})',
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${participant.points} pts · ${participant.medals}/${controller.totalTreasures} medallas',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final treasure in missing)
+                          OutlinedButton(
+                            onPressed: () async {
+                              await controller.grantMedal(
+                                participantId: participant.id,
+                                gymId: treasure.id,
+                              );
+                              setSheetState(() {});
+                            },
+                            child: Text(
+                              'Otorgar ${_adminGymLabel(treasure.track, treasure.gymName ?? treasure.title)}',
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (missing.isEmpty)
+                      const Text(
+                        'Todas las medallas fueron otorgadas.',
+                        style: TextStyle(color: AppColors.secondary),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _adminGymLabel(String? track, String fallback) {
+    switch (track) {
+      case 'android':
+        return 'Android';
+      case 'ia':
+        return 'IA';
+      case 'security':
+        return 'Security';
+      case 'web':
+        return 'Web';
+      case 'startup':
+        return 'Startup';
+      case 'cloud':
+        return 'Cloud';
+      case 'speaker':
+        return 'Speaker';
+      case 'community':
+        return 'Community';
+    }
+    return fallback;
   }
 }

@@ -8,7 +8,7 @@ import '../../../domain/entities/gym_challenge.dart';
 import '../../../domain/entities/treasure_item.dart';
 import '../../../domain/use_cases/complete_challenge_use_case.dart';
 import '../../../state/app_scope.dart';
-
+import 'startup_mini_game.dart';
 
 class ChallengeScreen extends StatefulWidget {
   const ChallengeScreen({super.key, required this.gym});
@@ -76,6 +76,11 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final result = controller.lastChallengeResult;
+    final canSubmit = challenge?.hasOptions == true
+        ? _selectedAnswer != null
+        : challenge?.requiresInput == true
+        ? _textController.text.trim().isNotEmpty
+        : true;
 
     // Show result screen if submitted
     if (_submitted && result != null) {
@@ -87,6 +92,30 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
       return _CooldownScreen(
         cooldownRemaining: controller.cooldownRemaining,
         gym: gym,
+      );
+    }
+
+    if (challenge?.isMiniGame == true) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(gym.gymName ?? gym.title),
+          leading: IconButton(
+            icon: const Icon(Icons.close_rounded),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: StartupMiniGame(
+              targetScore: challenge?.targetScore ?? 100,
+              onCompleted: () {
+                _selectedAnswer = challenge?.correctAnswer ?? 'RUNWAY-CLEARED';
+                _handleSubmit();
+              },
+            ),
+          ),
+        ),
       );
     }
 
@@ -123,7 +152,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             // Challenge type label
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceAlt,
                   borderRadius: BorderRadius.circular(20),
@@ -144,7 +176,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             if (challenge?.hasTimer == true) ...[
               Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: _secondsRemaining <= 10
                         ? AppColors.danger.withValues(alpha: 0.15)
@@ -183,6 +218,24 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                 ),
               ),
             const SizedBox(height: 20),
+
+            if (challenge?.hint != null) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  challenge!.hint!,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
 
             // Code snippet (if applicable)
             if (challenge?.codeSnippet != null)
@@ -234,7 +287,9 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                           option,
                           style: TextStyle(
                             fontSize: 15,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
                             color: isSelected
                                 ? AppColors.primary
                                 : AppColors.textPrimary,
@@ -251,9 +306,12 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
               Expanded(
                 child: TextField(
                   controller: _textController,
+                  onChanged: (_) => setState(() {}),
                   style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
-                    hintText: 'Escribe tu respuesta...',
+                    hintText: challenge?.type == ChallengeType.social
+                        ? 'Escribe el codigo recibido por DM...'
+                        : 'Escribe tu respuesta o codigo final...',
                     hintStyle: const TextStyle(color: AppColors.textSecondary),
                     filled: true,
                     fillColor: AppColors.surface,
@@ -265,27 +323,11 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                 ),
               ),
 
-            // Hint
-            if (challenge?.hint != null && !_submitted)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  '💡 ${challenge!.hint}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-
             const SizedBox(height: 16),
 
             // Submit button
             ElevatedButton(
-              onPressed: (_selectedAnswer != null || challenge?.requiresInput == true)
-                  ? _handleSubmit
-                  : null,
+              onPressed: canSubmit ? _handleSubmit : null,
               child: const Text('Enviar respuesta'),
             ),
           ],
@@ -331,6 +373,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         return 'Reto Presencial';
       case ChallengeType.social:
         return 'Reto Social';
+      case ChallengeType.miniGame:
+        return 'Mini Juego';
     }
   }
 }
@@ -352,8 +396,14 @@ class _ResultScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: success
-                ? [AppColors.secondary.withValues(alpha: 0.2), AppColors.background]
-                : [AppColors.danger.withValues(alpha: 0.2), AppColors.background],
+                ? [
+                    AppColors.secondary.withValues(alpha: 0.2),
+                    AppColors.background,
+                  ]
+                : [
+                    AppColors.danger.withValues(alpha: 0.2),
+                    AppColors.background,
+                  ],
           ),
         ),
         child: SafeArea(
@@ -377,12 +427,16 @@ class _ResultScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
-                                color: AppColors.secondary.withValues(alpha: 0.4),
+                                color: AppColors.secondary.withValues(
+                                  alpha: 0.4,
+                                ),
                                 width: 1.5,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.secondary.withValues(alpha: 0.35),
+                                  color: AppColors.secondary.withValues(
+                                    alpha: 0.35,
+                                  ),
                                   blurRadius: 36,
                                   spreadRadius: 2,
                                   offset: const Offset(0, 6),
@@ -394,7 +448,7 @@ class _ResultScreen extends StatelessWidget {
                               child: Image.asset(
                                 getMedalAssetPath(gym.track),
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Center(
+                                errorBuilder: (_, _, _) => const Center(
                                   child: Icon(
                                     Icons.emoji_events_rounded,
                                     size: 72,
@@ -423,7 +477,6 @@ class _ResultScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-
                   Text(
                     success ? '¡Medalla Conquistada!' : 'Respuesta Incorrecta',
                     style: TextStyle(
@@ -433,7 +486,6 @@ class _ResultScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-
 
                   if (success) ...[
                     Text(
@@ -462,7 +514,7 @@ class _ResultScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Intenta de nuevo en 5 minutos.',
+                      'Puedes intentarlo de nuevo inmediatamente.',
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -490,10 +542,7 @@ class _ResultScreen extends StatelessWidget {
 }
 
 class _CooldownScreen extends StatelessWidget {
-  const _CooldownScreen({
-    required this.cooldownRemaining,
-    required this.gym,
-  });
+  const _CooldownScreen({required this.cooldownRemaining, required this.gym});
 
   final Duration cooldownRemaining;
   final TreasureItem gym;
@@ -547,7 +596,10 @@ class _CooldownScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.danger.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),

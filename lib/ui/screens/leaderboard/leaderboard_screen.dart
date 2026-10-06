@@ -18,8 +18,10 @@ class LeaderboardScreen extends StatelessWidget {
 
     if (entries.isEmpty) {
       return const Center(
-        child: Text('Aún no hay participantes.',
-            style: TextStyle(color: AppColors.textSecondary)),
+        child: Text(
+          'Aún no hay participantes.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
       );
     }
 
@@ -51,18 +53,25 @@ class _RankRow extends StatelessWidget {
     final totalTreasures = entry.totalTreasures;
     final elapsed = entry.elapsed;
     final status = entry.status;
+    final points = entry.points;
 
     final medal = switch (position) {
       1 => const Icon(Icons.emoji_events_rounded, color: AppColors.amber),
-      2 => const Icon(Icons.workspace_premium_rounded, color: Color(0xFFB0B0B0)),
-      3 => const Icon(Icons.workspace_premium_rounded, color: Color(0xFFC17900)),
+      2 => const Icon(
+        Icons.workspace_premium_rounded,
+        color: Color(0xFFB0B0B0),
+      ),
+      3 => const Icon(
+        Icons.workspace_premium_rounded,
+        color: Color(0xFFC17900),
+      ),
       _ => Text(
-          '$position',
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            color: AppColors.textSecondary,
-          ),
+        '$position',
+        style: const TextStyle(
+          fontWeight: FontWeight.w800,
+          color: AppColors.textSecondary,
         ),
+      ),
     };
 
     return Card(
@@ -82,7 +91,9 @@ class _RankRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
-                      color: isMe ? AppColors.primarySoft : AppColors.textPrimary,
+                      color: isMe
+                          ? AppColors.primarySoft
+                          : AppColors.textPrimary,
                     ),
                   ),
                   Text(
@@ -100,11 +111,18 @@ class _RankRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '$discoveredCount/$totalTreasures',
+                  '$points pts',
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.amber,
+                    color: AppColors.primary,
+                  ),
+                ),
+                Text(
+                  '$discoveredCount/$totalTreasures medallas',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 Text(

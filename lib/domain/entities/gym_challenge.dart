@@ -1,11 +1,4 @@
-enum ChallengeType {
-  qr,          // Simple QR scan (no challenge screen)
-  trivia,      // Multiple choice question, 60s timer
-  riddle,      // Text riddle, answer is a code
-  code,        // Code snippet question, multiple choice
-  completion,  // Real-world action, admin verifies
-  social,      // Social interaction required
-}
+enum ChallengeType { qr, trivia, riddle, code, completion, social, miniGame }
 
 class GymChallenge {
   const GymChallenge({
@@ -16,7 +9,8 @@ class GymChallenge {
     this.hint,
     this.codeSnippet,
     this.timeLimitSeconds = 60,
-    this.points = 10,
+    this.points = 100,
+    this.targetScore,
   });
 
   final ChallengeType type;
@@ -27,8 +21,12 @@ class GymChallenge {
   final String? codeSnippet;
   final int timeLimitSeconds;
   final int points;
+  final int? targetScore;
 
-  bool get hasTimer => type == ChallengeType.trivia || type == ChallengeType.code;
-  bool get requiresInput => type == ChallengeType.riddle;
+  bool get hasTimer =>
+      type == ChallengeType.trivia || type == ChallengeType.code;
+  bool get requiresInput =>
+      type == ChallengeType.riddle || type == ChallengeType.social;
   bool get hasOptions => options != null && options!.isNotEmpty;
+  bool get isMiniGame => type == ChallengeType.miniGame;
 }

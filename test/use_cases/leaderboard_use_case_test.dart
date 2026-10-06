@@ -32,6 +32,8 @@ void main() {
     );
     final updated = p.copyWith(
       discoveredTreasureIds: discovered,
+      points: discovered.length * 100,
+      medals: discovered.length,
       status: completeInMinutes == null ? null : ParticipantStatus.completed,
       completedAt: completeInMinutes == null
           ? null
@@ -41,21 +43,24 @@ void main() {
     return updated;
   }
 
-  test('sorts by discovered count desc, then elapsed time asc', () async {
-    await add('p1', 'Ana', 30, ['a', 'b', 'c'], completeInMinutes: 20);
-    await add('p2', 'Pedro', 30, ['a', 'b', 'c'], completeInMinutes: 12);
-    await add('p3', 'Laura', 10, ['a']);
-    await add('p4', 'Sofía', 10, ['a', 'b', 'c', 'd']);
+  test(
+    'sorts by points desc, then discovered count, then elapsed time asc',
+    () async {
+      await add('p1', 'Ana', 30, ['a', 'b', 'c'], completeInMinutes: 20);
+      await add('p2', 'Pedro', 30, ['a', 'b', 'c'], completeInMinutes: 12);
+      await add('p3', 'Laura', 10, ['a']);
+      await add('p4', 'Sofía', 10, ['a', 'b', 'c', 'd']);
 
-    final board = await useCase.execute();
+      final board = await useCase.execute();
 
-    expect(board[0].participantId, 'p4'); // 4 treasures
-    // Both have 3; Pedro finished faster.
-    expect(board[1].participantId, 'p2');
-    expect(board[2].participantId, 'p1');
-    // Only 1 treasure.
-    expect(board[3].participantId, 'p3');
-  });
+      expect(board[0].participantId, 'p4'); // 4 treasures
+      // Both have 3; Pedro finished faster.
+      expect(board[1].participantId, 'p2');
+      expect(board[2].participantId, 'p1');
+      // Only 1 treasure.
+      expect(board[3].participantId, 'p3');
+    },
+  );
 
   test('positions are 1-based consecutive numbers', () async {
     await add('p1', 'Ana', 5, ['a', 'b']);
@@ -66,14 +71,16 @@ void main() {
     expect(board[1].position, 2);
   });
 
-  test('completed participants finish above in-progress ones with same count',
-      () async {
-    // Same count; a fast completion (2 min) outranks a longer running clock.
-    await add('p1', 'Ana', 20, ['a', 'b'], completeInMinutes: 2);
-    await add('p2', 'Pedro', 30, ['a', 'b']);
+  test(
+    'completed participants finish above in-progress ones with same count',
+    () async {
+      // Same count; a fast completion (2 min) outranks a longer running clock.
+      await add('p1', 'Ana', 20, ['a', 'b'], completeInMinutes: 2);
+      await add('p2', 'Pedro', 30, ['a', 'b']);
 
-    final board = await useCase.execute();
-    expect(board[0].participantId, 'p1');
-    expect(board[0].status, ParticipantStatus.completed);
-  });
+      final board = await useCase.execute();
+      expect(board[0].participantId, 'p1');
+      expect(board[0].status, ParticipantStatus.completed);
+    },
+  );
 }

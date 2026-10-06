@@ -62,8 +62,9 @@ class MockAppRepository
   @override
   Future<void> setTreasureActive(String id, bool active) async {
     final treasures = await _dataSource.loadTreasures();
-    final updated =
-        treasures.map((t) => t.id == id ? t.copyWith(isActive: active) : t).toList();
+    final updated = treasures
+        .map((t) => t.id == id ? t.copyWith(isActive: active) : t)
+        .toList();
     await _dataSource.saveTreasures(updated);
   }
 
@@ -100,8 +101,7 @@ class MockAppRepository
       _dataSource.saveParticipant(participant);
 
   @override
-  Future<List<Participant>> getParticipants() =>
-      _dataSource.loadParticipants();
+  Future<List<Participant>> getParticipants() => _dataSource.loadParticipants();
 
   @override
   Future<String?> getCurrentParticipantId() =>
@@ -135,10 +135,14 @@ class MockAppRepository
         totalTreasures: totalTreasures,
         elapsed: elapsed,
         status: p.status,
+        points: p.points,
       );
     }).toList();
 
     entries.sort((a, b) {
+      if (a.points != b.points) {
+        return b.points.compareTo(a.points);
+      }
       if (a.discoveredCount != b.discoveredCount) {
         return b.discoveredCount.compareTo(a.discoveredCount);
       }
@@ -155,6 +159,7 @@ class MockAppRepository
         elapsed: entries[i].elapsed,
         status: entries[i].status,
         position: i + 1,
+        points: entries[i].points,
       );
     }
     return entries;
@@ -174,7 +179,10 @@ class MockAppRepository
   }
 
   @override
-  Future<List<Attempt>> getAttemptsForGym(String participantId, String gymId) async {
+  Future<List<Attempt>> getAttemptsForGym(
+    String participantId,
+    String gymId,
+  ) async {
     final allAttempts = await _dataSource.loadAttempts();
     return allAttempts
         .where((a) => a.participantId == participantId && a.gymId == gymId)
