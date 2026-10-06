@@ -27,3 +27,27 @@ IconData treasureIconForKey(String key) {
       return Icons.explore_rounded;
   }
 }
+
+/// Returns the asset path for a given gym track.
+String getMedalAssetPath(String? track) {
+  switch (track) {
+    case 'android':
+      return 'assets/images/medallas/sandroidpng.png';
+    case 'ia':
+      return 'assets/images/medallas/ia.png';
+    case 'cloud':
+      return 'assets/images/medallas/cloud.png';
+    case 'security':
+      return 'assets/images/medallas/security.png';
+    case 'web':
+      return 'assets/images/medallas/web.png';
+    case 'startup':
+      return 'assets/images/medallas/empredimeinto.png';
+    case 'speaker':
+      return 'assets/images/medallas/spekar.png';
+    case 'community':
+      return 'assets/images/medallas/comunidad.png';
+    default:
+      return 'assets/images/medallas/sandroidpng.png';
+  }
+}

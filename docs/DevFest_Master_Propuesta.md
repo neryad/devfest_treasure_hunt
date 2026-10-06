@@ -10,9 +10,10 @@
 
 ---
 
-![DevFest Master — Conquista los 8 Gimnasios Tecnológicos](/Users/neryad/.gemini/antigravity/brain/83674728-a504-4548-b8f5-f2138910d2cd/devfest_master_banner.png)
+![DevFest Master — Conquista los 8 Gimnasios Tecnológicos](devfest_master_banner.png)
 
 ---
+
 
 ## El Punto de Partida
 

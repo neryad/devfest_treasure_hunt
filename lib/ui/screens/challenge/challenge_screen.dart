@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/treasure_icons.dart';
 import '../../../domain/entities/gym_challenge.dart';
 import '../../../domain/entities/treasure_item.dart';
 import '../../../domain/use_cases/complete_challenge_use_case.dart';
 import '../../../state/app_scope.dart';
+
 
 class ChallengeScreen extends StatefulWidget {
   const ChallengeScreen({super.key, required this.gym});
@@ -361,39 +363,77 @@ class _ResultScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Icon
+                  // Icon / Medal
                   TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0.3, end: 1),
-                    duration: const Duration(milliseconds: 600),
+                    duration: const Duration(milliseconds: 700),
                     curve: Curves.elasticOut,
                     builder: (_, scale, child) =>
                         Transform.scale(scale: scale, child: child),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: success
-                            ? AppColors.secondary.withValues(alpha: 0.15)
-                            : AppColors.danger.withValues(alpha: 0.15),
-                      ),
-                      child: Icon(
-                        success ? Icons.check_rounded : Icons.close_rounded,
-                        size: 64,
-                        color: success ? AppColors.secondary : AppColors.danger,
-                      ),
-                    ),
+                    child: success
+                        ? Container(
+                            width: 150,
+                            height: 180,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: AppColors.secondary.withValues(alpha: 0.4),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.secondary.withValues(alpha: 0.35),
+                                  blurRadius: 36,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(22),
+                              child: Image.asset(
+                                getMedalAssetPath(gym.track),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Center(
+                                  child: Icon(
+                                    Icons.emoji_events_rounded,
+                                    size: 72,
+                                    color: AppColors.amber,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.danger.withValues(alpha: 0.15),
+                              border: Border.all(
+                                color: AppColors.danger.withValues(alpha: 0.4),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.close_rounded,
+                              size: 64,
+                              color: AppColors.danger,
+                            ),
+                          ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
+
 
                   Text(
-                    success ? '¡Correcto!' : 'Incorrecto',
+                    success ? '¡Medalla Conquistada!' : 'Respuesta Incorrecta',
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 26,
                       fontWeight: FontWeight.w900,
                       color: success ? AppColors.secondary : AppColors.danger,
                     ),
                   ),
                   const SizedBox(height: 8),
+
 
                   if (success) ...[
                     Text(

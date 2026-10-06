@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/format.dart';
+import '../../../core/utils/treasure_icons.dart';
+
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/stat_card.dart';
 import '../../../state/app_scope.dart';
@@ -9,6 +11,7 @@ import '../clues/clues_screen.dart';
 import '../completion/completion_screen.dart';
 import '../discovery/manual_code_screen.dart';
 import '../discovery/qr_scanner_screen.dart';
+
 
 /// "Inicio" tab: the participant's adventure overview.
 class HomeDashboard extends StatelessWidget {
@@ -178,72 +181,211 @@ class _PokedexPreview extends StatelessWidget {
   final String level;
   final int points;
 
+  static const _trackColors = [
+    Color(0xFF4285F4), // Android - Blue
+    Color(0xFF57CAFF), // IA - Cyan
+    Color(0xFFF9AB00), // Cloud - Yellow
+    Color(0xFFEA4335), // Security - Red
+    Color(0xFF34A853), // Web - Green
+    Color(0xFFFF7DAF), // Startup - Pink
+    Color(0xFFFFD427), // Speaker - Amber
+    Color(0xFF5CDB6D), // Community - Green
+  ];
+
+  static const _trackIcons = [
+    Icons.phone_android_rounded,
+    Icons.psychology_rounded,
+    Icons.cloud_rounded,
+    Icons.shield_rounded,
+    Icons.language_rounded,
+    Icons.rocket_launch_rounded,
+    Icons.mic_rounded,
+    Icons.groups_rounded,
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.emoji_events_rounded, color: AppColors.amber, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  level,
+    final progress = total > 0 ? (medals / total).clamp(0.0, 1.0) : 0.0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.amber.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.military_tech_rounded, color: AppColors.amber, size: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Rango de Entrenador',
+                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      ),
+                      Text(
+                        level,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.amberSoft,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$points pts',
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.amber,
+                    color: AppColors.primarySoft,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Badge row
-            Row(
-              children: List.generate(total, (i) {
-                final isEarned = i < medals;
-                return Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(right: i < total - 1 ? 6 : 0),
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: isEarned ? AppColors.secondary : AppColors.surfaceAlt,
-                      borderRadius: BorderRadius.circular(4),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // --- 8 BADGES CIRCULAR ROW ---
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(total > 0 ? total : 8, (i) {
+              final isEarned = i < medals;
+              final color = i < _trackColors.length ? _trackColors[i] : AppColors.primary;
+              final track = i < _trackColors.length
+                  ? ['android', 'ia', 'cloud', 'security', 'web', 'startup', 'speaker', 'community'][i]
+                  : 'android';
+              final medalPath = getMedalAssetPath(track);
+
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: AspectRatio(
+                    aspectRatio: 0.85,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: isEarned
+                            ? color.withValues(alpha: 0.18)
+                            : AppColors.surfaceAlt.withValues(alpha: 0.5),
+                        border: Border.all(
+                          color: isEarned ? color : Colors.transparent,
+                          width: 1.2,
+                        ),
+                        boxShadow: isEarned
+                            ? [
+                                BoxShadow(
+                                  color: color.withValues(alpha: 0.35),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(2),
+                          child: isEarned
+                              ? Image.asset(
+                                  medalPath,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                    Icons.star_rounded,
+                                    size: 14,
+                                    color: color,
+                                  ),
+                                )
+                              : Opacity(
+                                  opacity: 0.35,
+                                  child: ColorFiltered(
+                                    colorFilter: const ColorFilter.mode(
+                                      Colors.grey,
+                                      BlendMode.saturation,
+                                    ),
+                                    child: Image.asset(
+                                      medalPath,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.lock_outline_rounded,
+                                        size: 14,
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
                   ),
-                );
-              }),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$medals/$total medallas',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
+
                 ),
-                Text(
-                  '$points puntos',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
+              );
+            }),
+          ),
+
+          const SizedBox(height: 14),
+
+          // --- PROGRESS BAR & LABELS ---
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: AppColors.surfaceAlt,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.secondary),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$medals de $total medallas conseguidas',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Text(
+                '${(progress * 100).toInt()}%',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.secondary,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
+
 
 class _CompletedBanner extends StatelessWidget {
   const _CompletedBanner();

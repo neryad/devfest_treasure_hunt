@@ -6,11 +6,12 @@ import '../clues/clues_screen.dart';
 import '../discovery/manual_code_screen.dart';
 import '../discovery/qr_scanner_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
-import '../treasures/treasures_screen.dart';
+import '../pokedex/pokedex_screen.dart';
 import 'home_dashboard.dart';
 
+
 /// Main shell for a participant with bottom navigation:
-/// Inicio · Tesoros · Pistas · Ranking, plus a highlighted CTA to find a
+/// Inicio · Gimnasios (Pokédex) · Retos · Ranking, plus a highlighted CTA to find a
 /// treasure (scan or manual code).
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,7 +23,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
-  static const _titles = ['Inicio', 'Gimnasios', 'Retos', 'Ranking'];
+  static const _titles = ['Inicio', 'Pokédex · Gimnasios', 'Retos & Pistas', 'Ranking'];
 
   void _openFindSheet() {
     showModalBottomSheet<void>(
@@ -64,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: const CircleAvatar(
                 backgroundColor: AppColors.secondary,
-                child: Icon(Icons.keyboard_rounded, color: Colors.black87),
+                child: Icon(Icons.keyboard_rounded, color: Colors.white),
               ),
               title: const Text('Introducir código del Gimnasio'),
               subtitle: const Text('Escribe el código manual'),
@@ -103,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
           index: _index,
           children: const [
             HomeDashboard(),
-            TreasuresScreen(),
+            PokedexScreen(),
             CluesScreen(),
             LeaderboardScreen(),
           ],
@@ -117,8 +118,8 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Inicio',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.explore_rounded),
-              label: 'Gimnasios',
+              icon: Icon(Icons.military_tech_rounded),
+              label: 'Pokédex',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.tips_and_updates_rounded),
@@ -130,6 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _openFindSheet,
           backgroundColor: AppColors.primary,
