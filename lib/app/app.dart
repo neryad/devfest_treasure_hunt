@@ -1,9 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
+import '../data/datasources/firebase_data_source.dart';
 import '../data/datasources/mock_local_data_source.dart';
 import '../data/local/shared_prefs_local_storage.dart';
 import '../data/repositories/mock_app_repository.dart';
+import '../firebase_options.dart';
 import '../state/app_controller.dart';
 import '../state/app_scope.dart';
 import '../ui/screens/root/session_gate.dart';
@@ -18,12 +21,25 @@ class AppDependencies {
 }
 
 Future<AppDependencies> buildAppDependencies() async {
-  final dataSource = MockLocalDataSource(storage: SharedPrefsLocalStorage());
-  await dataSource.initialize();
-  return AppDependencies(
-    repository: MockAppRepository(dataSource),
-    resetStore: dataSource.reset,
-  );
+  final storage = SharedPrefsLocalStorage();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    final dataSource = FirebaseDataSource(storage: storage);
+    await dataSource.initialize();
+    return AppDependencies(
+      repository: MockAppRepository(dataSource),
+      resetStore: dataSource.reset,
+    );
+  } catch (_) {
+    final dataSource = MockLocalDataSource(storage: storage);
+    await dataSource.initialize();
+    return AppDependencies(
+      repository: MockAppRepository(dataSource),
+      resetStore: dataSource.reset,
+    );
+  }
 }
 
 class DevFestApp extends StatefulWidget {

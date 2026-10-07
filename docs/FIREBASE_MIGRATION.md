@@ -1,5 +1,36 @@
 # Migración a Firebase
 
+## Estado actual del MVP Firebase
+
+La rama `feature/firebase-firestore-data` conecta la app al proyecto Firebase
+`devfest-master` usando Firestore Native en la ubicacion `nam5`.
+
+La app intenta usar `FirebaseDataSource` primero. Si Firebase falla durante la
+inicializacion, vuelve a `MockLocalDataSource` con `SharedPreferences` para no
+bloquear la demo.
+
+Estructura actual:
+
+```text
+events/devfest-2026
+events/devfest-2026/treasures/{treasureId}
+events/devfest-2026/participants/{participantId}
+events/devfest-2026/discoveries/{discoveryId}
+events/devfest-2026/attempts/{attemptId}
+```
+
+Al iniciar, si `events/devfest-2026` o `treasures` no existen, se siembran desde
+`MockData`. No se siembran participantes demo en Firebase.
+
+Reglas operativas del MVP:
+
+- Staff no edita preguntas ni respuestas desde el panel.
+- Los QR se generan fuera de la app usando los `qrValue` visibles en Panel Staff.
+- El ranking se calcula en cliente desde participantes.
+- Auth, roles, Cloud Functions y reglas estrictas quedan para el siguiente paso.
+- Firestore en test mode sirve para demo/desarrollo; antes del evento real se
+  deben aplicar reglas restrictivas.
+
 Este documento explica **exactamente** qué cambiar para pasar de
 `MockLocalDataSource` a un `FirebaseDataSource`. La UI, los viewmodels y la
 lógica de negocio **no cambian**.
