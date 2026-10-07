@@ -164,7 +164,10 @@ void main() {
     );
 
     expect(result.failure, DiscoverFailure.eventPaused);
+    expect(result.treasure, isNotNull);
     final participant = await repository.getParticipant(pid);
     expect(participant!.discoveredCount, 0);
+    final discoveries = await dataSource.loadDiscoveries();
+    expect(discoveries.where((d) => d.participantId == pid), isEmpty);
   });
 }

@@ -98,12 +98,13 @@ class CompleteChallengeUseCase {
       return ChallengeResult.failure(ChallengeFailure.participantNotFound);
     }
 
+    // 2. Check the event is not paused
     final event = await _eventRepository.getEvent();
     if (!event.active) {
       return ChallengeResult.failure(ChallengeFailure.eventPaused);
     }
 
-    // 2. Validate gym
+    // 3. Validate gym
     final gym = await _treasureRepository.getTreasure(gymId);
     if (gym == null) {
       return ChallengeResult.failure(ChallengeFailure.gymNotFound);
@@ -112,15 +113,15 @@ class CompleteChallengeUseCase {
       return ChallengeResult.failure(ChallengeFailure.notActive);
     }
 
-    // 3. Check if already completed
+    // 4. Check if already completed
     if (participant.discoveredTreasureIds.contains(gymId)) {
       return ChallengeResult.failure(ChallengeFailure.alreadyCompleted);
     }
 
-    // 4. Validate answer
+    // 5. Validate answer
     final correct = _validateAnswer(gym, answer);
 
-    // 5. Record attempt
+    // 6. Record attempt
     final attempt = Attempt(
       id: IdGenerator.discoveryId(),
       participantId: participantId,
@@ -144,7 +145,7 @@ class CompleteChallengeUseCase {
       _ => 0,
     };
 
-    // 6. Award points and mark as discovered
+    // 7. Award points and mark as discovered
     final updatedTreasures = [...participant.discoveredTreasureIds, gymId];
     final newMedals = updatedTreasures.length;
     final allTreasures = await _treasureRepository.getTreasures();

@@ -160,5 +160,10 @@ void main() {
     final participant = await repository.getParticipant(participantId);
     expect(participant!.points, 0);
     expect(participant.medals, 0);
+    final attempts = await repository.getAttemptCount(
+      participantId,
+      'gym-android',
+    );
+    expect(attempts, 0);
   });
 }

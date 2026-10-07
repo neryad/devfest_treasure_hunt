@@ -42,7 +42,8 @@ class DiscoverTreasureResult {
 /// ends here.
 ///
 /// No ordering rule exists: any active treasure can be discovered at any time.
-/// The only hard blocks are `isActive == false` and duplicate discoveries.
+/// The only hard blocks are `isActive == false`, a paused event,
+/// and duplicate discoveries.
 class DiscoverTreasureUseCase {
   DiscoverTreasureUseCase({
     required TreasureRepository treasureRepository,
