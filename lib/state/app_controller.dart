@@ -50,6 +50,7 @@ class AppController extends ChangeNotifier {
     _discoverUseCase = DiscoverTreasureUseCase(
       treasureRepository: treasureRepository,
       participantRepository: participantRepository,
+      eventRepository: eventRepository,
     );
     _startUseCase = StartParticipantUseCase(participantRepository);
     _leaderboardUseCase = LeaderboardUseCase(leaderboardRepository);
@@ -60,6 +61,7 @@ class AppController extends ChangeNotifier {
             treasureRepository: treasureRepository,
             participantRepository: participantRepository,
             attemptRepository: attemptRepository,
+            eventRepository: eventRepository,
           )
         : null;
   }

@@ -17,6 +17,7 @@ void main() {
       treasureRepository: repository,
       participantRepository: repository,
       attemptRepository: repository,
+      eventRepository: repository,
     );
   });
 
@@ -143,5 +144,21 @@ void main() {
     final completed = await repository.getParticipant(participantId);
     expect(completed!.status, ParticipantStatus.completed);
     expect(completed.points, 930);
+  });
+
+  test('paused event blocks challenge completion', () async {
+    final participantId = await createParticipant();
+    await repository.setEventActive(false);
+
+    final result = await useCase.execute(
+      participantId: participantId,
+      gymId: 'gym-android',
+      answer: 'AndroidManifest.xml',
+    );
+
+    expect(result.failure, ChallengeFailure.eventPaused);
+    final participant = await repository.getParticipant(participantId);
+    expect(participant!.points, 0);
+    expect(participant.medals, 0);
   });
 }

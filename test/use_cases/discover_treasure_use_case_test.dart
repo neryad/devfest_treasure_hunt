@@ -16,6 +16,7 @@ void main() {
     useCase = DiscoverTreasureUseCase(
       treasureRepository: repository,
       participantRepository: repository,
+      eventRepository: repository,
     );
   });
 
@@ -151,5 +152,19 @@ void main() {
     );
     expect(result.isSuccess, isTrue);
     expect(result.clue, isNotEmpty);
+  });
+
+  test('paused event blocks any discovery', () async {
+    final pid = await createParticipant('Paused');
+    await repository.setEventActive(false);
+
+    final result = await useCase.execute(
+      participantId: pid,
+      treasureId: 'gym-android',
+    );
+
+    expect(result.failure, DiscoverFailure.eventPaused);
+    final participant = await repository.getParticipant(pid);
+    expect(participant!.discoveredCount, 0);
   });
 }

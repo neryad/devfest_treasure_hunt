@@ -16,6 +16,8 @@ Future<void> handleDiscoveryResult(
         'Gimnasio no encontrado. Verifica el código o el QR.',
       DiscoverFailure.notActive =>
         'No disponible todavía: este gimnasio está desactivado.',
+      DiscoverFailure.eventPaused =>
+        'Evento pausado — reintenta en unos minutos.',
       DiscoverFailure.alreadyDiscovered => '¡Ya tienes esta medalla!',
       DiscoverFailure.participantNotFound =>
         'Necesitas registrarte antes de ganar medallas.',

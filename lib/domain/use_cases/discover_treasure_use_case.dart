@@ -2,6 +2,7 @@ import '../../core/utils/id_generator.dart';
 import '../../domain/entities/discovery.dart';
 import '../../domain/entities/participant.dart';
 import '../../domain/entities/treasure_item.dart';
+import '../../domain/repositories/event_repository.dart';
 import '../../domain/repositories/participant_repository.dart';
 import '../../domain/repositories/treasure_repository.dart';
 
@@ -10,6 +11,7 @@ enum DiscoverFailure {
   treasureNotFound,
   notActive,
   alreadyDiscovered,
+  eventPaused,
 }
 
 class DiscoverTreasureResult {
@@ -45,14 +47,18 @@ class DiscoverTreasureUseCase {
   DiscoverTreasureUseCase({
     required TreasureRepository treasureRepository,
     required ParticipantRepository participantRepository,
+    required EventRepository eventRepository,
   }) : // Keep public constructor names without leading underscores.
        // ignore: prefer_initializing_formals
        _treasureRepository = treasureRepository,
        // ignore: prefer_initializing_formals
-       _participantRepository = participantRepository;
+       _participantRepository = participantRepository,
+       // ignore: prefer_initializing_formals
+       _eventRepository = eventRepository;
 
   final TreasureRepository _treasureRepository;
   final ParticipantRepository _participantRepository;
+  final EventRepository _eventRepository;
 
   Future<DiscoverTreasureResult> execute({
     required String participantId,
@@ -71,6 +77,14 @@ class DiscoverTreasureUseCase {
     if (treasure == null) {
       return const DiscoverTreasureResult.failure(
         DiscoverFailure.treasureNotFound,
+      );
+    }
+
+    final event = await _eventRepository.getEvent();
+    if (!event.active) {
+      return DiscoverTreasureResult.failure(
+        DiscoverFailure.eventPaused,
+        treasure: treasure,
       );
     }
 

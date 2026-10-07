@@ -3,6 +3,7 @@ import '../entities/attempt.dart';
 import '../entities/participant.dart';
 import '../entities/treasure_item.dart';
 import '../repositories/attempt_repository.dart';
+import '../repositories/event_repository.dart';
 import '../repositories/participant_repository.dart';
 import '../repositories/treasure_repository.dart';
 
@@ -13,6 +14,7 @@ enum ChallengeFailure {
   alreadyCompleted,
   cooldownActive,
   invalidAnswer,
+  eventPaused,
 }
 
 class ChallengeResult {
@@ -62,17 +64,21 @@ class CompleteChallengeUseCase {
     required TreasureRepository treasureRepository,
     required ParticipantRepository participantRepository,
     required AttemptRepository attemptRepository,
+    required EventRepository eventRepository,
   }) : // Keep public constructor names without leading underscores.
        // ignore: prefer_initializing_formals
        _treasureRepository = treasureRepository,
        // ignore: prefer_initializing_formals
        _participantRepository = participantRepository,
        // ignore: prefer_initializing_formals
-       _attemptRepository = attemptRepository;
+       _attemptRepository = attemptRepository,
+       // ignore: prefer_initializing_formals
+       _eventRepository = eventRepository;
 
   final TreasureRepository _treasureRepository;
   final ParticipantRepository _participantRepository;
   final AttemptRepository _attemptRepository;
+  final EventRepository _eventRepository;
 
   static const baseCompletionPoints = 100;
   static const firstAttemptBonus = 30;
@@ -90,6 +96,11 @@ class CompleteChallengeUseCase {
     );
     if (participant == null) {
       return ChallengeResult.failure(ChallengeFailure.participantNotFound);
+    }
+
+    final event = await _eventRepository.getEvent();
+    if (!event.active) {
+      return ChallengeResult.failure(ChallengeFailure.eventPaused);
     }
 
     // 2. Validate gym
