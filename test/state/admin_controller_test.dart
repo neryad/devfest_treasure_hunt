@@ -87,4 +87,81 @@ void main() {
     expect(updated!.medals, 1);
     expect(updated.points, 100);
   });
+
+  test('staff can add points manually and refresh ranking', () async {
+    final participant = await repository.createParticipant(
+      id: 'participant-points-add',
+      name: 'Points Add',
+      nickname: 'points_add',
+      startedAt: DateTime.now(),
+    );
+    await controller.initialize();
+
+    final adjusted = await controller.adjustParticipantPoints(
+      participantId: participant.id,
+      delta: 50,
+    );
+
+    expect(adjusted, isTrue);
+    final updated = await repository.getParticipant(participant.id);
+    expect(updated!.points, 50);
+    expect(controller.participants.single.points, 50);
+    expect(controller.leaderboard.single.points, 50);
+  });
+
+  test('staff can subtract points manually', () async {
+    final participant = await repository.createParticipant(
+      id: 'participant-points-subtract',
+      name: 'Points Subtract',
+      nickname: 'points_subtract',
+      startedAt: DateTime.now(),
+    );
+    await controller.initialize();
+    await controller.adjustParticipantPoints(
+      participantId: participant.id,
+      delta: 80,
+    );
+
+    final adjusted = await controller.adjustParticipantPoints(
+      participantId: participant.id,
+      delta: -30,
+    );
+
+    expect(adjusted, isTrue);
+    final updated = await repository.getParticipant(participant.id);
+    expect(updated!.points, 50);
+    expect(controller.leaderboard.single.points, 50);
+  });
+
+  test('manual point adjustment cannot reduce total below zero', () async {
+    final participant = await repository.createParticipant(
+      id: 'participant-points-clamp',
+      name: 'Points Clamp',
+      nickname: 'points_clamp',
+      startedAt: DateTime.now(),
+    );
+    await controller.initialize();
+
+    final adjusted = await controller.adjustParticipantPoints(
+      participantId: participant.id,
+      delta: -100,
+    );
+
+    expect(adjusted, isTrue);
+    final updated = await repository.getParticipant(participant.id);
+    expect(updated!.points, 0);
+    expect(controller.leaderboard.single.points, 0);
+  });
+
+  test('manual point adjustment fails for missing participant', () async {
+    expect(
+      await controller.adjustParticipantPoints(
+        participantId: 'missing-participant',
+        delta: 50,
+      ),
+      isFalse,
+    );
+    expect(controller.participants, isEmpty);
+    expect(controller.leaderboard, isEmpty);
+  });
 }

@@ -453,6 +453,20 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
                       '${participant.points} pts · ${participant.medals}/${controller.totalTreasures} medallas',
                       style: const TextStyle(color: AppColors.textSecondary),
                     ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showPointAdjustmentDialog(
+                          context,
+                          participant.id,
+                          participant.points,
+                          setSheetState,
+                        ),
+                        icon: const Icon(Icons.add_chart_rounded),
+                        label: const Text('Ajustar puntos'),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Wrap(
                       spacing: 8,
@@ -485,6 +499,95 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
           },
         );
       },
+    );
+  }
+
+  Future<void> _showPointAdjustmentDialog(
+    BuildContext context,
+    String participantId,
+    int currentPoints,
+    StateSetter setSheetState,
+  ) async {
+    String? error;
+    String rawDelta = '';
+    int delta = 0;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final newTotal = (currentPoints + delta).clamp(0, 1 << 31);
+          return AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: const Text(
+              'Ajustar puntos',
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Puntos actuales: $currentPoints',
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const Key('admin-points-delta'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    signed: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Ajuste (+/-)',
+                    errorText: error,
+                  ),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      error = null;
+                      rawDelta = value.trim();
+                      delta = int.tryParse(value.trim()) ?? 0;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Nuevo total: $newTotal',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final parsed = int.tryParse(rawDelta);
+                  if (parsed == null) {
+                    setDialogState(() {
+                      error = 'Introduce un numero entero';
+                    });
+                    return;
+                  }
+                  await AppScope.read(context).adjustParticipantPoints(
+                    participantId: participantId,
+                    delta: parsed,
+                  );
+                  setSheetState(() {});
+                  if (dialogContext.mounted) {
+                    Navigator.of(dialogContext).pop();
+                  }
+                },
+                child: const Text('Aplicar ajuste'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 

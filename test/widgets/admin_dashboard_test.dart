@@ -98,4 +98,37 @@ void main() {
 
     expect(find.text('Copiar ranking CSV'), findsOneWidget);
   });
+
+  testWidgets('staff can adjust participant points from detail', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('admin-participant-search')),
+      500,
+    );
+    await tester.enterText(
+      find.byKey(const Key('admin-participant-search')),
+      'admin_ui',
+    );
+    await tester.pump();
+    await tester.tap(find.text('Admin UI (admin_ui)'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ajustar puntos'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('admin-points-delta')), '50');
+    await tester.pump();
+    await tester.tap(find.text('Aplicar ajuste'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('50 pts'), findsOneWidget);
+  });
 }

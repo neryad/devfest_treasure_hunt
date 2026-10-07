@@ -298,6 +298,27 @@ class AppController extends ChangeNotifier {
     return true;
   }
 
+  Future<bool> adjustParticipantPoints({
+    required String participantId,
+    required int delta,
+  }) async {
+    final participant = await _participantRepository.getParticipant(
+      participantId,
+    );
+    if (participant == null) return false;
+
+    final updatedPoints = (participant.points + delta).clamp(0, 1 << 31);
+    final updated = participant.copyWith(points: updatedPoints);
+
+    await _participantRepository.updateParticipant(updated);
+    if (_participant?.id == participantId) {
+      _participant = updated;
+    }
+    await _reloadLeaderboard();
+    notifyListeners();
+    return true;
+  }
+
   Future<void> resetDemo() async {
     _ticker?.cancel();
     _ticker = null;
