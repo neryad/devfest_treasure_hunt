@@ -1,6 +1,6 @@
 # Robustez: Arranque, Acciones y Datos Resilientes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Que la app nunca se rompa ni se quede colgada ante fallos de red o datos malformados antes del evento del viernes.
 
@@ -19,7 +19,7 @@
 - Create: `lib/ui/screens/root/startup_error_screen.dart`
 - Modify: `lib/ui/screens/root/session_gate.dart`
 
-- [ ] **Step 1: Crear SplashScreen (widget público, movido desde session_gate)**
+- [x] **Step 1: Crear SplashScreen (widget público, movido desde session_gate)**
 
 Crear `lib/ui/screens/root/splash_screen.dart`:
 
@@ -75,7 +75,7 @@ class SplashScreen extends StatelessWidget {
 }
 ```
 
-- [ ] **Step 2: Crear StartupErrorScreen**
+- [x] **Step 2: Crear StartupErrorScreen**
 
 Crear `lib/ui/screens/root/startup_error_screen.dart`:
 
@@ -158,7 +158,7 @@ class StartupErrorScreen extends StatelessWidget {
 
 Nota: `AppColors.textMuted` — verificar que existe en `lib/core/theme/app_theme.dart`; si no, usar `AppColors.textSecondary`.
 
-- [ ] **Step 3: Rewire session_gate.dart**
+- [x] **Step 3: Rewire session_gate.dart**
 
 Reemplazar `lib/ui/screens/root/session_gate.dart` completo por:
 
@@ -196,7 +196,7 @@ class SessionGate extends StatelessWidget {
 
 Esto NO compila todavía porque `initFailed` no existe — se agrega en Task 4. Ejecutar `flutter analyze` en Task 4 cuando todo cierre.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add lib/ui/screens/root/splash_screen.dart lib/ui/screens/root/startup_error_screen.dart lib/ui/screens/root/session_gate.dart
@@ -212,7 +212,7 @@ git commit -m "feat: add splash and startup error screens"
 - Modify: `lib/main.dart`
 - Test: `test/widgets/startup_root_test.dart`
 
-- [ ] **Step 1: Escribir el test RED**
+- [x] **Step 1: Escribir el test RED**
 
 Crear `test/widgets/startup_root_test.dart`:
 
@@ -275,12 +275,12 @@ void main() {
 }
 ```
 
-- [ ] **Step 2: Correr el test para verlo fallar**
+- [x] **Step 2: Correr el test para verlo fallar**
 
 Run: `flutter test test/widgets/startup_root_test.dart`
 Expected: FAIL — `AppDependencies` no tiene constructor con `offline`, `DevFestRoot` no existe.
 
-- [ ] **Step 3: Implementar DevFestRoot y las funciones de conexión en app.dart**
+- [x] **Step 3: Implementar DevFestRoot y las funciones de conexión en app.dart**
 
 En `lib/app/app.dart`, reemplazar `AppDependencies` y `buildAppDependencies` y agregar `DevFestRoot`. El bloque completo de la parte superior de la función queda así (sustituye las líneas 14-43 actuales):
 
@@ -396,7 +396,7 @@ import '../ui/screens/root/splash_screen.dart';
 import '../ui/screens/root/startup_error_screen.dart';
 ```
 
-- [ ] **Step 4: Cambiar main.dart**
+- [x] **Step 4: Cambiar main.dart**
 
 Reemplazar `lib/main.dart` completo:
 
@@ -411,17 +411,17 @@ Future<void> main() async {
 }
 ```
 
-- [ ] **Step 5: Correr el test hasta que pase**
+- [x] **Step 5: Correr el test hasta que pase**
 
 Run: `flutter test test/widgets/startup_root_test.dart`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Correr la suite completa por si se rompió algo**
+- [x] **Step 6: Correr la suite completa por si se rompió algo**
 
 Run: `flutter test`
 Expected: `+45: All tests passed!` o superior (los tests existentes que construían `DevFestApp` directamente — si los hay — podrían necesitar ajuste; `main.dart` no se testea).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add lib/app/app.dart lib/main.dart test/widgets/startup_root_test.dart
@@ -437,7 +437,7 @@ git commit -m "feat: add startup state machine with retry and offline choice"
 - Modify: `lib/state/app_controller.dart` (parámetro `offline`)
 - Test: `test/widgets/offline_banner_test.dart`
 
-- [ ] **Step 1: Escribir el test RED**
+- [x] **Step 1: Escribir el test RED**
 
 Crear `test/widgets/offline_banner_test.dart`:
 
@@ -481,12 +481,12 @@ void main() {
 }
 ```
 
-- [ ] **Step 2: Correr el test para verlo fallar**
+- [x] **Step 2: Correr el test para verlo fallar**
 
 Run: `flutter test test/widgets/offline_banner_test.dart`
 Expected: FAIL — el banner no existe y `DevFestApp` ignora `offline`.
 
-- [ ] **Step 3: Agregar `offline` al AppController**
+- [x] **Step 3: Agregar `offline` al AppController**
 
 En `lib/state/app_controller.dart`, en el constructor (líneas 31-39) agregar `this.offline = false,` después de `this.enableElapsedTicker = true,` y declarar el campo junto a `enableElapsedTicker`:
 
@@ -511,7 +511,7 @@ En `lib/state/app_controller.dart`, en el constructor (líneas 31-39) agregar `t
   final bool offline;
 ```
 
-- [ ] **Step 4: Cablear DevFestApp — controller + builder con banner**
+- [x] **Step 4: Cablear DevFestApp — controller + builder con banner**
 
 En `lib/app/app.dart`, `initState` de `_DevFestAppState`:
 
@@ -584,17 +584,17 @@ Y el `build` de `_DevFestAppState`:
   }
 ```
 
-- [ ] **Step 5: Correr el test hasta que pase**
+- [x] **Step 5: Correr el test hasta que pase**
 
 Run: `flutter test test/widgets/offline_banner_test.dart`
 Expected: PASS.
 
-- [ ] **Step 6: Suite completa**
+- [x] **Step 6: Suite completa**
 
 Run: `flutter test`
 Expected: All tests passed.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add lib/app/app.dart lib/state/app_controller.dart test/widgets/offline_banner_test.dart
@@ -612,7 +612,7 @@ git commit -m "feat: show persistent banner in offline mode"
 - Modify: `lib/ui/screens/welcome/welcome_screen.dart` (aviso de sesión expirada)
 - Test: `test/state/app_controller_init_test.dart`
 
-- [ ] **Step 1: Escribir el test RED**
+- [x] **Step 1: Escribir el test RED**
 
 Crear `test/state/app_controller_init_test.dart`:
 
@@ -744,12 +744,12 @@ void main() {
 }
 ```
 
-- [ ] **Step 2: Correr el test para verlo fallar**
+- [x] **Step 2: Correr el test para verlo fallar**
 
 Run: `flutter test test/state/app_controller_init_test.dart`
 Expected: FAIL — `initFailed`/`sessionExpired` no existen.
 
-- [ ] **Step 3: Cambiar la firma en la interfaz y el repo**
+- [x] **Step 3: Cambiar la firma en la interfaz y el repo**
 
 `lib/domain/repositories/participant_repository.dart` línea 25:
 
@@ -766,7 +766,7 @@ Expected: FAIL — `initFailed`/`sessionExpired` no existen.
       _dataSource.setCurrentParticipantId(id);
 ```
 
-- [ ] **Step 4: initialize() con try/catch + flags en AppController**
+- [x] **Step 4: initialize() con try/catch + flags en AppController**
 
 En `lib/state/app_controller.dart`, reemplazar `initialize()` (líneas 187-199) por:
 
@@ -826,7 +826,7 @@ Y en `startParticipant` (línea 201), al inicio del método:
   }
 ```
 
-- [ ] **Step 5: Aviso en WelcomeScreen**
+- [x] **Step 5: Aviso en WelcomeScreen**
 
 En `lib/ui/screens/welcome/welcome_screen.dart`, sustituir el bloque:
 
@@ -863,17 +863,17 @@ por:
 
 (Nota: `TextAlign.center` en minúsculas, como se usa en el resto del archivo.)
 
-- [ ] **Step 6: Correr el test hasta que pase**
+- [x] **Step 6: Correr el test hasta que pase**
 
 Run: `flutter test test/state/app_controller_init_test.dart`
 Expected: PASS (3 tests).
 
-- [ ] **Step 7: Suite completa + analyze**
+- [x] **Step 7: Suite completa + analyze**
 
 Run: `flutter test && flutter analyze`
 Expected: All tests passed; no issues (Task 1 dejó session_gate compilando ahora).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add lib/domain/repositories/participant_repository.dart lib/data/repositories/mock_app_repository.dart lib/state/app_controller.dart lib/ui/screens/welcome/welcome_screen.dart test/state/app_controller_init_test.dart lib/ui/screens/root/session_gate.dart
@@ -892,7 +892,7 @@ git commit -m "fix: handle init failures and orphaned sessions"
 - Modify: `lib/ui/screens/discovery/qr_scanner_screen.dart` (`_handleValue`)
 - Test: `test/widgets/action_error_feedback_test.dart`
 
-- [ ] **Step 1: Escribir el test RED**
+- [x] **Step 1: Escribir el test RED**
 
 Crear `test/widgets/action_error_feedback_test.dart`:
 
@@ -1033,12 +1033,12 @@ void main() {
 }
 ```
 
-- [ ] **Step 2: Correr el test para verlo fallar**
+- [x] **Step 2: Correr el test para verlo fallar**
 
 Run: `flutter test test/widgets/action_error_feedback_test.dart`
 Expected: FAIL — `networkErrorMessage` no existe (el import rompe), y los callbacks no muestran SnackBar.
 
-- [ ] **Step 3: Crear el helper**
+- [x] **Step 3: Crear el helper**
 
 Crear `lib/core/utils/snack_bar_utils.dart`:
 
@@ -1057,7 +1057,7 @@ void showNetworkError(BuildContext context) =>
     showSnack(context, networkErrorMessage);
 ```
 
-- [ ] **Step 4: Envolver `_start` en welcome_screen.dart**
+- [x] **Step 4: Envolver `_start` en welcome_screen.dart**
 
 Sustituir `_start` (líneas 28-36) por:
 
@@ -1081,7 +1081,7 @@ Sustituir `_start` (líneas 28-36) por:
 
 Import nuevo: `import '../../../core/utils/snack_bar_utils.dart';`
 
-- [ ] **Step 5: Mismo patrón en participant_setup_screen.dart**
+- [x] **Step 5: Mismo patrón en participant_setup_screen.dart**
 
 Sustituir `_start` (líneas 26-36) por:
 
@@ -1106,7 +1106,7 @@ Sustituir `_start` (líneas 26-36) por:
 
 Import nuevo: `import '../../../core/utils/snack_bar_utils.dart';`
 
-- [ ] **Step 6: Mismo patrón en manual_code_screen.dart**
+- [x] **Step 6: Mismo patrón en manual_code_screen.dart**
 
 Sustituir `_submit` (líneas 26-36) por:
 
@@ -1130,7 +1130,7 @@ Sustituir `_submit` (líneas 26-36) por:
 
 Import nuevo: `import '../../../core/utils/snack_bar_utils.dart';`
 
-- [ ] **Step 7: Mismo patrón en qr_scanner_screen.dart**
+- [x] **Step 7: Mismo patrón en qr_scanner_screen.dart**
 
 Sustituir `_handleValue` (líneas 43-58) por:
 
@@ -1155,17 +1155,17 @@ Sustituir `_handleValue` (líneas 43-58) por:
 
 Import nuevo: `import '../../../core/utils/snack_bar_utils.dart';`
 
-- [ ] **Step 8: Correr el test hasta que pase**
+- [x] **Step 8: Correr el test hasta que pase**
 
 Run: `flutter test test/widgets/action_error_feedback_test.dart`
 Expected: PASS (2 tests).
 
-- [ ] **Step 9: Suite completa**
+- [x] **Step 9: Suite completa**
 
 Run: `flutter test`
 Expected: All tests passed.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add lib/core/utils/snack_bar_utils.dart lib/ui/screens/welcome/welcome_screen.dart lib/ui/screens/setup/participant_setup_screen.dart lib/ui/screens/discovery/manual_code_screen.dart lib/ui/screens/discovery/qr_scanner_screen.dart test/widgets/action_error_feedback_test.dart
@@ -1180,7 +1180,7 @@ git commit -m "fix: recover participant actions from network failures"
 - Modify: `lib/ui/screens/challenge/challenge_screen.dart` (`_handleSubmit` + botón)
 - Test: agregar caso en `test/widgets/action_error_feedback_test.dart`
 
-- [ ] **Step 1: Escribir el test RED**
+- [x] **Step 1: Escribir el test RED**
 
 Agregar al final de `main()` en `test/widgets/action_error_feedback_test.dart` (y el import de `challenge_screen.dart`):
 
@@ -1266,12 +1266,12 @@ Nuevo test:
   });
 ```
 
-- [ ] **Step 2: Correr el test para verlo fallar**
+- [x] **Step 2: Correr el test para verlo fallar**
 
 Run: `flutter test test/widgets/action_error_feedback_test.dart --plain-name 'challenge submit failure'`
 Expected: FAIL — sin SnackBar (la excepción revienta el test o el botón queda bloqueado).
 
-- [ ] **Step 3: Hacer `_handleSubmit` async con try/catch y spinner en el botón**
+- [x] **Step 3: Hacer `_handleSubmit` async con try/catch y spinner en el botón**
 
 En `lib/ui/screens/challenge/challenge_screen.dart`, sustituir `_handleSubmit` (líneas 59-67) por:
 
@@ -1326,17 +1326,17 @@ El botón de submit (líneas 329-332) pasa a:
             ),
 ```
 
-- [ ] **Step 4: Correr el test hasta que pase**
+- [x] **Step 4: Correr el test hasta que pase**
 
 Run: `flutter test test/widgets/action_error_feedback_test.dart`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Suite completa**
+- [x] **Step 5: Suite completa**
 
 Run: `flutter test`
 Expected: All tests passed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add lib/ui/screens/challenge/challenge_screen.dart test/widgets/action_error_feedback_test.dart
@@ -1353,7 +1353,7 @@ git commit -m "fix: recover challenge submit from network failures"
 - Modify: `test/state/admin_controller_test.dart` (expectativas del enum)
 - Test: agregar casos en `test/widgets/admin_dashboard_test.dart`
 
-- [ ] **Step 1: Escribir el test RED**
+- [x] **Step 1: Escribir el test RED**
 
 Agregar a `test/widgets/admin_dashboard_test.dart`:
 
@@ -1394,12 +1394,12 @@ Agregar a `test/widgets/admin_dashboard_test.dart`:
   });
 ```
 
-- [ ] **Step 2: Correr el test para verlo fallar**
+- [x] **Step 2: Correr el test para verlo fallar**
 
 Run: `flutter test test/widgets/admin_dashboard_test.dart --plain-name 'inactive gym'`
 Expected: FAIL — sin SnackBar.
 
-- [ ] **Step 3: Enum + grantMedal en AppController**
+- [x] **Step 3: Enum + grantMedal en AppController**
 
 En `lib/state/app_controller.dart`, junto a `const _adminPassword` (línea 22):
 
@@ -1452,7 +1452,7 @@ Reemplazar `grantMedal` (líneas 270-299) por:
   }
 ```
 
-- [ ] **Step 4: Actualizar las expectativas existentes**
+- [x] **Step 4: Actualizar las expectativas existentes**
 
 En `test/state/admin_controller_test.dart`:
 
@@ -1479,7 +1479,7 @@ Líneas 71-84:
     );
 ```
 
-- [ ] **Step 5: Snackbars en admin_dashboard_screen.dart**
+- [x] **Step 5: Snackbars en admin_dashboard_screen.dart**
 
 Import nuevo:
 
@@ -1601,17 +1601,17 @@ Reset — sustituir líneas 89-96 en `_confirmReset`:
     }
 ```
 
-- [ ] **Step 6: Correr todos los tests del admin**
+- [x] **Step 6: Correr todos los tests del admin**
 
 Run: `flutter test test/widgets/admin_dashboard_test.dart test/state/admin_controller_test.dart`
 Expected: PASS (incluye el test nuevo de gimnasio inactivo).
 
-- [ ] **Step 7: Suite completa**
+- [x] **Step 7: Suite completa**
 
 Run: `flutter test`
 Expected: All tests passed.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add lib/state/app_controller.dart lib/ui/screens/admin/admin_dashboard_screen.dart test/state/admin_controller_test.dart test/widgets/admin_dashboard_test.dart
@@ -1631,7 +1631,7 @@ git commit -m "feat: give staff actions explicit failure feedback"
 - Modify: `lib/ui/screens/admin/admin_dashboard_screen.dart` (firstWhere → indexWhere)
 - Test: `test/data/tolerant_parsing_test.dart`
 
-- [ ] **Step 1: Escribir el test RED**
+- [x] **Step 1: Escribir el test RED**
 
 Crear `test/data/tolerant_parsing_test.dart`:
 
@@ -1698,12 +1698,12 @@ void main() {
 }
 ```
 
-- [ ] **Step 2: Correr el test para verlo fallar**
+- [x] **Step 2: Correr el test para verlo fallar**
 
 Run: `flutter test test/data/tolerant_parsing_test.dart`
 Expected: FAIL — `tryFromJson`/`decodeTreasures` no existen.
 
-- [ ] **Step 3: tryFromJson en las 4 entidades**
+- [x] **Step 3: tryFromJson en las 4 entidades**
 
 En cada entidad, agregar `import 'package:flutter/foundation.dart';` y el método `tryFromJson` + actualizar `listFromJson`.
 
@@ -1796,7 +1796,7 @@ Reemplazar `listFromJson` (líneas 33-35):
       .toList();
 ```
 
-- [ ] **Step 4: FirebaseDataSource tolerante + orden en cliente**
+- [x] **Step 4: FirebaseDataSource tolerante + orden en cliente**
 
 Sustituir `loadTreasures` (líneas 64-68) por:
 
@@ -1860,7 +1860,7 @@ Sustituir `loadAttempts` (líneas 124-127):
   }
 ```
 
-- [ ] **Step 5: firstWhere → indexWhere en la ficha del admin**
+- [x] **Step 5: firstWhere → indexWhere en la ficha del admin**
 
 En `lib/ui/screens/admin/admin_dashboard_screen.dart`, sustituir líneas 418-421:
 
@@ -1881,7 +1881,7 @@ En `lib/ui/screens/admin/admin_dashboard_screen.dart`, sustituir líneas 418-421
             final participant = controller.participants[index];
 ```
 
-- [ ] **Step 6: Test del crash del sheet**
+- [x] **Step 6: Test del crash del sheet**
 
 Agregar a `test/widgets/admin_dashboard_test.dart`:
 
@@ -1920,17 +1920,17 @@ Agregar a `test/widgets/admin_dashboard_test.dart`:
   });
 ```
 
-- [ ] **Step 7: Correr los tests nuevos**
+- [x] **Step 7: Correr los tests nuevos**
 
 Run: `flutter test test/data/tolerant_parsing_test.dart test/widgets/admin_dashboard_test.dart`
 Expected: PASS.
 
-- [ ] **Step 8: Suite completa**
+- [x] **Step 8: Suite completa**
 
 Run: `flutter test`
 Expected: All tests passed.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add lib/domain/entities/participant.dart lib/domain/entities/treasure_item.dart lib/domain/entities/attempt.dart lib/domain/entities/discovery.dart lib/data/datasources/firebase_data_source.dart lib/ui/screens/admin/admin_dashboard_screen.dart test/data/tolerant_parsing_test.dart test/widgets/admin_dashboard_test.dart
@@ -1941,7 +1941,7 @@ git commit -m "fix: tolerate malformed docs and missing participant in sheet"
 
 ### Task 9: Verificación final
 
-- [ ] **Step 1: Formato**
+- [x] **Step 1: Formato**
 
 Run:
 ```bash
@@ -1949,22 +1949,22 @@ dart format lib/ test/
 ```
 Expected: sin cambios pendientes relevantes (imprime archivos formateados).
 
-- [ ] **Step 2: Análisis estático**
+- [x] **Step 2: Análisis estático**
 
 Run: `flutter analyze`
 Expected: `No issues found!`
 
-- [ ] **Step 3: Suite completa**
+- [x] **Step 3: Suite completa**
 
 Run: `flutter test`
 Expected: `All tests passed!` con recuento ≥ 50 tests.
 
-- [ ] **Step 4: Build web**
+- [x] **Step 4: Build web**
 
 Run: `flutter build web`
 Expected: `✓ Built build/web`
 
-- [ ] **Step 5: Commit final si quedaron cambios**
+- [x] **Step 5: Commit final si quedaron cambios**
 
 ```bash
 git add -A
