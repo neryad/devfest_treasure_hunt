@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/stat_card.dart';
 import '../../../core/widgets/status_pill.dart';
+import '../../../domain/entities/treasure_item.dart';
 import '../../../state/app_scope.dart';
+import 'admin_ranking_csv.dart';
 
 /// Staff panel: metrics, ranking, gym availability toggles and participant ops.
 class AdminDashboardScreen extends StatelessWidget {
@@ -171,7 +174,16 @@ class _AdminRanking extends StatelessWidget {
 
     return Card(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+            child: OutlinedButton.icon(
+              onPressed: () => _copyRankingCsv(context),
+              icon: const Icon(Icons.copy_rounded),
+              label: const Text('Copiar ranking CSV'),
+            ),
+          ),
           for (final entry in top)
             ListTile(
               dense: true,
@@ -204,6 +216,15 @@ class _AdminRanking extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _copyRankingCsv(BuildContext context) async {
+    final csv = buildAdminRankingCsv(AppScope.read(context).leaderboard);
+    await Clipboard.setData(ClipboardData(text: csv));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Ranking CSV copiado')));
+  }
 }
 
 class _TreasureManagement extends StatelessWidget {
@@ -221,8 +242,7 @@ class _TreasureManagement extends StatelessWidget {
           for (final t in treasures)
             _TreasureRow(
               key: ValueKey(t.id),
-              isActive: t.isActive,
-              title: t.title,
+              treasure: t,
               discoverCount: controller.participants
                   .where((p) => p.discoveredTreasureIds.contains(t.id))
                   .length,
@@ -237,14 +257,12 @@ class _TreasureManagement extends StatelessWidget {
 class _TreasureRow extends StatelessWidget {
   const _TreasureRow({
     super.key,
-    required this.isActive,
-    required this.title,
+    required this.treasure,
     required this.discoverCount,
     required this.onChanged,
   });
 
-  final bool isActive;
-  final String title;
+  final TreasureItem treasure;
   final int discoverCount;
   final ValueChanged<bool> onChanged;
 
@@ -253,17 +271,21 @@ class _TreasureRow extends StatelessWidget {
     return ListTile(
       dense: true,
       leading: StatusPill(
-        label: isActive ? 'Activo' : 'Inactivo',
-        color: isActive ? AppColors.success : AppColors.danger,
-        icon: isActive ? Icons.check_circle_rounded : Icons.lock_rounded,
+        label: treasure.isActive ? 'Activo' : 'Inactivo',
+        color: treasure.isActive ? AppColors.success : AppColors.danger,
+        icon: treasure.isActive
+            ? Icons.check_circle_rounded
+            : Icons.lock_rounded,
       ),
-      title: Text(title, style: const TextStyle(fontSize: 13.5)),
+      title: Text(treasure.title, style: const TextStyle(fontSize: 13.5)),
       subtitle: Text(
-        'Descubrimientos: $discoverCount',
+        'Descubrimientos: $discoverCount\n'
+        'Codigo manual: ${treasure.code}\n'
+        'QR: ${treasure.qrValue}',
         style: const TextStyle(fontSize: 12),
       ),
       trailing: Switch(
-        value: isActive,
+        value: treasure.isActive,
         onChanged: onChanged,
         activeTrackColor: AppColors.primary,
       ),

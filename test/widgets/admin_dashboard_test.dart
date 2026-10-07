@@ -68,4 +68,34 @@ void main() {
     expect(updated.points, 100);
     expect(find.textContaining('1/8 medallas'), findsOneWidget);
   });
+
+  testWidgets('staff can see gym manual codes and qr values', (tester) async {
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.textContaining('Codigo manual: ANDROID-MASTER'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('QR: DEVFEST-GYM-ANDROID'), findsOneWidget);
+  });
+
+  testWidgets('staff can copy ranking csv from the ranking section', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Copiar ranking CSV'), findsOneWidget);
+  });
 }
