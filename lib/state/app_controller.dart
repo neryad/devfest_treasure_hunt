@@ -106,6 +106,7 @@ class AppController extends ChangeNotifier {
   String? get lastError => _lastError;
   ChallengeResult? get lastChallengeResult => _lastChallengeResult;
   bool get adminSignedIn => _adminSignedIn;
+  bool get eventActive => _event?.active ?? true;
 
   bool get isOnCooldown {
     final start = _cooldownStart;
@@ -292,6 +293,19 @@ class AppController extends ChangeNotifier {
 
   Future<void> setTreasureActive(String id, bool active) async {
     await _treasureRepository.setTreasureActive(id, active);
+    await _reloadStaticData();
+    notifyListeners();
+  }
+
+  /// Re-reads event, treasures, participants and ranking from the source.
+  Future<void> refresh() async {
+    await _reloadStaticData();
+    await _reloadLeaderboard();
+    notifyListeners();
+  }
+
+  Future<void> setEventActive(bool active) async {
+    await _eventRepository.setEventActive(active);
     await _reloadStaticData();
     notifyListeners();
   }

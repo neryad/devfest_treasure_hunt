@@ -122,4 +122,61 @@ void main() {
       findsOneWidget,
     );
   });
+
+  test('refresh reloads participants and notifies', () async {
+    final ds = MockLocalDataSource(seedData: false);
+    await ds.initialize();
+    final repo = _FlakyRepository(ds);
+    await repo.createParticipant(
+      id: 'participant-1',
+      name: 'Uno',
+      nickname: 'uno',
+      startedAt: DateTime.now(),
+    );
+    final controller = _controller(repo, ds);
+    addTearDown(controller.dispose);
+    await controller.initialize();
+
+    var notifications = 0;
+    controller.addListener(() => notifications++);
+
+    await repo.createParticipant(
+      id: 'participant-2',
+      name: 'Dos',
+      nickname: 'dos',
+      startedAt: DateTime.now(),
+    );
+    await controller.refresh();
+
+    expect(controller.participants.length, 2);
+    expect(notifications, greaterThan(0));
+  });
+
+  test('setEventActive updates eventActive and persists', () async {
+    final ds = MockLocalDataSource();
+    await ds.initialize();
+    final repo = _FlakyRepository(ds);
+    final controller = _controller(repo, ds);
+    addTearDown(controller.dispose);
+    await controller.initialize();
+
+    expect(controller.eventActive, isTrue);
+
+    await controller.setEventActive(false);
+
+    expect(controller.eventActive, isFalse);
+    expect((await repo.getEvent()).active, isFalse);
+  });
+
+  test('eventActive reflects a paused event loaded at init', () async {
+    final ds = MockLocalDataSource();
+    await ds.initialize();
+    await ds.setEventActive(false);
+    final repo = _FlakyRepository(ds);
+    final controller = _controller(repo, ds);
+    addTearDown(controller.dispose);
+    await controller.initialize();
+
+    expect(controller.eventActive, isFalse);
+  });
 }
