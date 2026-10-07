@@ -203,4 +203,37 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('participant detail sheet closes when the participant disappears', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('admin-participant-search')),
+      500,
+    );
+    await tester.enterText(
+      find.byKey(const Key('admin-participant-search')),
+      'admin_ui',
+    );
+    await tester.pump();
+    await tester.tap(find.text('Admin UI (admin_ui)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detalle de participante'), findsOneWidget);
+
+    await controller.resetDemo();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Detalle de participante'), findsNothing);
+    expect(find.text('El participante ya no existe'), findsOneWidget);
+  });
 }

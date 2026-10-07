@@ -63,8 +63,21 @@ class FirebaseDataSource implements AppDataSource {
 
   @override
   Future<List<TreasureItem>> loadTreasures() async {
-    final snapshot = await _treasuresRef.orderBy('order').get();
-    return snapshot.docs.map((doc) => TreasureItem.fromJson(doc.data())).toList();
+    final snapshot = await _treasuresRef.get();
+    return decodeTreasures(
+      snapshot.docs.map((doc) => doc.data()).toList(),
+    );
+  }
+
+  /// Malformed docs are skipped; ordering is done client-side so a doc
+  /// missing the `order` field cannot silently disappear.
+  static List<TreasureItem> decodeTreasures(List<Map<String, dynamic>> raws) {
+    final treasures = raws
+        .map(TreasureItem.tryFromJson)
+        .whereType<TreasureItem>()
+        .toList();
+    treasures.sort((a, b) => a.order.compareTo(b.order));
+    return treasures;
   }
 
   @override
@@ -79,7 +92,10 @@ class FirebaseDataSource implements AppDataSource {
   @override
   Future<List<Participant>> loadParticipants() async {
     final snapshot = await _participantsRef.get();
-    return snapshot.docs.map((doc) => Participant.fromJson(doc.data())).toList();
+    return snapshot.docs
+        .map((doc) => Participant.tryFromJson(doc.data()))
+        .whereType<Participant>()
+        .toList();
   }
 
   @override
@@ -90,7 +106,10 @@ class FirebaseDataSource implements AppDataSource {
   @override
   Future<List<Discovery>> loadDiscoveries() async {
     final snapshot = await _discoveriesRef.get();
-    return snapshot.docs.map((doc) => Discovery.fromJson(doc.data())).toList();
+    return snapshot.docs
+        .map((doc) => Discovery.tryFromJson(doc.data()))
+        .whereType<Discovery>()
+        .toList();
   }
 
   @override
@@ -123,7 +142,10 @@ class FirebaseDataSource implements AppDataSource {
   @override
   Future<List<Attempt>> loadAttempts() async {
     final snapshot = await _attemptsRef.get();
-    return snapshot.docs.map((doc) => Attempt.fromJson(doc.data())).toList();
+    return snapshot.docs
+        .map((doc) => Attempt.tryFromJson(doc.data()))
+        .whereType<Attempt>()
+        .toList();
   }
 
   @override

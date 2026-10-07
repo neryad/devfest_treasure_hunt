@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'gym_challenge.dart';
 
 /// Visual state of a treasure from the participant's point of view.
@@ -176,9 +178,19 @@ class TreasureItem {
     pointValue: json['pointValue'] as int? ?? 100,
   );
 
+  static TreasureItem? tryFromJson(Map<String, dynamic> json) {
+    try {
+      return TreasureItem.fromJson(json);
+    } catch (_) {
+      debugPrint('Skipping malformed treasure doc: ${json['id']}');
+      return null;
+    }
+  }
+
   static List<TreasureItem> listFromJson(String json) =>
       (jsonDecode(json) as List)
-          .map((e) => TreasureItem.fromJson(e as Map<String, dynamic>))
+          .map((e) => TreasureItem.tryFromJson(e as Map<String, dynamic>))
+          .whereType<TreasureItem>()
           .toList();
 
   static String listToJson(List<TreasureItem> items) =>

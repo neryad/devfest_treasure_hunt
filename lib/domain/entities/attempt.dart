@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 class Attempt {
   const Attempt({
     required this.id,
@@ -35,8 +37,19 @@ class Attempt {
         answer: json['answer'] as String?,
       );
 
-  static List<Attempt> listFromJson(String json) =>
-      (jsonDecode(json) as List).map((e) => Attempt.fromJson(e)).toList();
+  static Attempt? tryFromJson(Map<String, dynamic> json) {
+    try {
+      return Attempt.fromJson(json);
+    } catch (_) {
+      debugPrint('Skipping malformed attempt doc: ${json['id']}');
+      return null;
+    }
+  }
+
+  static List<Attempt> listFromJson(String json) => (jsonDecode(json) as List)
+      .map((e) => Attempt.tryFromJson(e as Map<String, dynamic>))
+      .whereType<Attempt>()
+      .toList();
 
   static String listToJson(List<Attempt> items) =>
       jsonEncode(items.map((e) => e.toJson()).toList());

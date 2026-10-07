@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 /// A single successful discovery of a treasure by a participant.
 ///
 /// Future Firebase shape: `participants/{id}/discoveries/{treasureId}`.
@@ -30,8 +32,18 @@ class Discovery {
         discoveredAt: DateTime.parse(json['discoveredAt'] as String),
       );
 
+  static Discovery? tryFromJson(Map<String, dynamic> json) {
+    try {
+      return Discovery.fromJson(json);
+    } catch (_) {
+      debugPrint('Skipping malformed discovery doc: ${json['id']}');
+      return null;
+    }
+  }
+
   static List<Discovery> listFromJson(String json) => (jsonDecode(json) as List)
-      .map((e) => Discovery.fromJson(e as Map<String, dynamic>))
+      .map((e) => Discovery.tryFromJson(e as Map<String, dynamic>))
+      .whereType<Discovery>()
       .toList();
 
   static String listToJson(List<Discovery> items) =>

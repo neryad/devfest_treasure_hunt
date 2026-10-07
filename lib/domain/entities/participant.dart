@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 enum ParticipantStatus { active, completed }
 
 class Participant {
@@ -96,8 +98,18 @@ class Participant {
         avatarEmoji: json['avatarEmoji'] as String?,
       );
 
+  static Participant? tryFromJson(Map<String, dynamic> json) {
+    try {
+      return Participant.fromJson(json);
+    } catch (_) {
+      debugPrint('Skipping malformed participant doc: ${json['id']}');
+      return null;
+    }
+  }
+
   static List<Participant> listFromJson(String json) => (jsonDecode(json) as List)
-      .map((e) => Participant.fromJson(e as Map<String, dynamic>))
+      .map((e) => Participant.tryFromJson(e as Map<String, dynamic>))
+      .whereType<Participant>()
       .toList();
 
   static String listToJson(List<Participant> items) =>

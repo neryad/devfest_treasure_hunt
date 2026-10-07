@@ -423,9 +423,19 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
         return StatefulBuilder(
           builder: (context, setSheetState) {
             final controller = AppScope.of(context);
-            final participant = controller.participants.firstWhere(
+            final index = controller.participants.indexWhere(
               (p) => p.id == participantId,
             );
+            if (index == -1) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                if (context.mounted) {
+                  showSnack(context, 'El participante ya no existe');
+                }
+              });
+              return const SizedBox.shrink();
+            }
+            final participant = controller.participants[index];
             final treasures = List.of(controller.treasures)
               ..sort((a, b) => a.order.compareTo(b.order));
             final missing = treasures
