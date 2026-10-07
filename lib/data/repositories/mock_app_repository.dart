@@ -170,6 +170,10 @@ class MockAppRepository
   @override
   Future<Event> getEvent() => _dataSource.loadEvent();
 
+  @override
+  Future<void> setEventActive(bool active) =>
+      _dataSource.setEventActive(active);
+
   // ---------- AttemptRepository ----------
 
   @override

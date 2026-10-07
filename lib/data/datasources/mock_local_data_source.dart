@@ -107,6 +107,17 @@ class MockLocalDataSource implements AppDataSource {
   Future<Event> loadEvent() async => _event;
 
   @override
+  Future<void> setEventActive(bool active) async {
+    _event = Event(
+      id: _event.id,
+      name: _event.name,
+      description: _event.description,
+      dateLabel: _event.dateLabel,
+      active: active,
+    );
+  }
+
+  @override
   Future<List<TreasureItem>> loadTreasures() async => List.of(_treasures);
 
   @override

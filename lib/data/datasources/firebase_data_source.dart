@@ -62,6 +62,11 @@ class FirebaseDataSource implements AppDataSource {
   }
 
   @override
+  Future<void> setEventActive(bool active) async {
+    await _eventRef.update({'active': active});
+  }
+
+  @override
   Future<List<TreasureItem>> loadTreasures() async {
     final snapshot = await _treasuresRef.get();
     return decodeTreasures(snapshot.docs.map((doc) => doc.data()).toList());

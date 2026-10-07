@@ -20,6 +20,8 @@ abstract class AppDataSource {
 
   Future<Event> loadEvent();
 
+  Future<void> setEventActive(bool active);
+
   Future<List<TreasureItem>> loadTreasures();
 
   Future<void> saveTreasures(List<TreasureItem> treasures);
