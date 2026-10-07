@@ -50,7 +50,7 @@ void main() {
       gymId: 'gym-android',
     );
 
-    expect(granted, isTrue);
+    expect(granted, StaffActionResult.success);
     final updated = await repository.getParticipant(participant.id);
     expect(updated!.discoveredTreasureIds, contains('gym-android'));
     expect(updated.medals, 1);
@@ -73,14 +73,14 @@ void main() {
         participantId: participant.id,
         gymId: 'gym-android',
       ),
-      isTrue,
+      StaffActionResult.success,
     );
     expect(
       await controller.grantMedal(
         participantId: participant.id,
         gymId: 'gym-android',
       ),
-      isFalse,
+      StaffActionResult.alreadyGranted,
     );
 
     final updated = await repository.getParticipant(participant.id);

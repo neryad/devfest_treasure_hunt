@@ -168,4 +168,39 @@ void main() {
     expect(find.textContaining('1/8 medallas'), findsOneWidget);
     expect(find.text('Validar Community Signal'), findsNothing);
   });
+
+  testWidgets('staff sees reason when granting an inactive gym', (
+    tester,
+  ) async {
+    await controller.setTreasureActive('gym-android', false);
+
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('admin-participant-search')),
+      500,
+    );
+    await tester.enterText(
+      find.byKey(const Key('admin-participant-search')),
+      'admin_ui',
+    );
+    await tester.pump();
+    await tester.tap(find.text('Admin UI (admin_ui)'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Otorgar Android'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      find.text('No se pudo otorgar: gimnasio inactivo'),
+      findsOneWidget,
+    );
+  });
 }

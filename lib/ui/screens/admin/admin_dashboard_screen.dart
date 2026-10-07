@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/format.dart';
+import '../../../core/utils/snack_bar_utils.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/stat_card.dart';
 import '../../../core/widgets/status_pill.dart';
 import '../../../domain/entities/treasure_item.dart';
+import '../../../state/app_controller.dart';
 import '../../../state/app_scope.dart';
 import 'admin_ranking_csv.dart';
 
@@ -89,7 +91,12 @@ class AdminDashboardScreen extends StatelessWidget {
     if (confirmed == true) {
       if (!context.mounted) return;
       final controller = AppScope.read(context);
-      await controller.resetDemo();
+      try {
+        await controller.resetDemo();
+      } catch (_) {
+        if (context.mounted) showNetworkError(context);
+        return;
+      }
       if (context.mounted && !controller.hasParticipant) {
         Navigator.of(context).pop();
       }
@@ -498,10 +505,17 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
                           if (treasure.id != 'gym-community')
                             OutlinedButton(
                               onPressed: () async {
-                                await controller.grantMedal(
+                                final result = await controller.grantMedal(
                                   participantId: participant.id,
                                   gymId: treasure.id,
                                 );
+                                if (context.mounted &&
+                                    result != StaffActionResult.success) {
+                                  showSnack(
+                                    context,
+                                    _staffResultMessage(result),
+                                  );
+                                }
                                 setSheetState(() {});
                               },
                               child: Text(
@@ -596,13 +610,27 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
                     });
                     return;
                   }
-                  await AppScope.read(context).adjustParticipantPoints(
-                    participantId: participantId,
-                    delta: parsed,
-                  );
-                  setSheetState(() {});
-                  if (dialogContext.mounted) {
-                    Navigator.of(dialogContext).pop();
+                  try {
+                    final ok = await AppScope.read(
+                      context,
+                    ).adjustParticipantPoints(
+                      participantId: participantId,
+                      delta: parsed,
+                    );
+                    if (!context.mounted) return;
+                    showSnack(
+                      context,
+                      ok
+                          ? 'Puntos actualizados'
+                          : 'No se pudo actualizar: participante no encontrado',
+                    );
+                  } catch (_) {
+                    if (context.mounted) showNetworkError(context);
+                  } finally {
+                    setSheetState(() {});
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
                   }
                 },
                 child: const Text('Aplicar ajuste'),
@@ -645,10 +673,29 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
     );
 
     if (confirmed != true) return;
-    await AppScope.read(
+    if (!context.mounted) return;
+    final result = await AppScope.read(
       context,
     ).grantMedal(participantId: participantId, gymId: 'gym-community');
+    if (context.mounted && result != StaffActionResult.success) {
+      showSnack(context, _staffResultMessage(result));
+    }
     setSheetState(() {});
+  }
+
+  String _staffResultMessage(StaffActionResult result) {
+    switch (result) {
+      case StaffActionResult.success:
+        return 'Medalla otorgada';
+      case StaffActionResult.participantNotFound:
+        return 'No se pudo otorgar: participante no encontrado';
+      case StaffActionResult.gymNotFound:
+        return 'No se pudo otorgar: gimnasio no encontrado';
+      case StaffActionResult.gymInactive:
+        return 'No se pudo otorgar: gimnasio inactivo';
+      case StaffActionResult.alreadyGranted:
+        return 'La medalla ya estaba otorgada';
+    }
   }
 
   String _adminGymLabel(String? track, String fallback) {

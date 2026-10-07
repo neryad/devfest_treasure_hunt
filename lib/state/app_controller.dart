@@ -21,6 +21,14 @@ const _cooldownDuration = Duration(minutes: 5);
 const _adminUser = 'admin';
 const _adminPassword = 'devfest2026';
 
+enum StaffActionResult {
+  success,
+  participantNotFound,
+  gymNotFound,
+  gymInactive,
+  alreadyGranted,
+}
+
 /// Single state container for the demo.
 ///
 /// Screens read state and call actions here; they never touch repositories
@@ -286,16 +294,20 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> grantMedal({
+  Future<StaffActionResult> grantMedal({
     required String participantId,
     required String gymId,
   }) async {
     final participant = await _participantRepository.getParticipant(
       participantId,
     );
+    if (participant == null) return StaffActionResult.participantNotFound;
     final gym = await _treasureRepository.getTreasure(gymId);
-    if (participant == null || gym == null || !gym.isActive) return false;
-    if (participant.discoveredTreasureIds.contains(gymId)) return false;
+    if (gym == null) return StaffActionResult.gymNotFound;
+    if (!gym.isActive) return StaffActionResult.gymInactive;
+    if (participant.discoveredTreasureIds.contains(gymId)) {
+      return StaffActionResult.alreadyGranted;
+    }
 
     final updatedTreasures = [...participant.discoveredTreasureIds, gymId];
     final allTreasures = await _treasureRepository.getTreasures();
@@ -314,7 +326,7 @@ class AppController extends ChangeNotifier {
     }
     await _reloadLeaderboard();
     notifyListeners();
-    return true;
+    return StaffActionResult.success;
   }
 
   Future<bool> adjustParticipantPoints({
