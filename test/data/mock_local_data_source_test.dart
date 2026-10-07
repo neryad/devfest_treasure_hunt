@@ -3,15 +3,21 @@ import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('setEventActive persists the event state for subsequent loads', () async {
-    final dataSource = MockLocalDataSource();
-    await dataSource.initialize();
-    final repository = MockAppRepository(dataSource);
+  test(
+    'setEventActive persists the event state for subsequent loads',
+    () async {
+      final dataSource = MockLocalDataSource();
+      await dataSource.initialize();
+      final repository = MockAppRepository(dataSource);
 
-    expect((await repository.getEvent()).active, isTrue);
+      expect((await repository.getEvent()).active, isTrue);
 
-    await repository.setEventActive(false);
+      await repository.setEventActive(false);
 
-    expect((await repository.getEvent()).active, isFalse);
-  });
+      final updated = await repository.getEvent();
+      expect(updated.active, isFalse);
+      expect(updated.id, isNotEmpty);
+      expect(updated.name, isNotEmpty);
+    },
+  );
 }

@@ -12,4 +12,14 @@ class Event {
   final String description;
   final String? dateLabel;
   final bool active;
+
+  Event copyWith({bool? active}) {
+    return Event(
+      id: id,
+      name: name,
+      description: description,
+      dateLabel: dateLabel,
+      active: active ?? this.active,
+    );
+  }
 }
