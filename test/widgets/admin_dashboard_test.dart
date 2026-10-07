@@ -131,4 +131,41 @@ void main() {
 
     expect(find.textContaining('50 pts'), findsOneWidget);
   });
+
+  testWidgets('staff can validate community signal from participant detail', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('admin-participant-search')),
+      500,
+    );
+    await tester.enterText(
+      find.byKey(const Key('admin-participant-search')),
+      'admin_ui',
+    );
+    await tester.pump();
+    await tester.tap(find.text('Admin UI (admin_ui)'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Validar Community Signal'), findsOneWidget);
+
+    await tester.tap(find.text('Validar Community Signal'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Validar evidencia'));
+    await tester.pumpAndSettle();
+
+    final updated = await repository.getParticipant('participant-admin-ui');
+    expect(updated!.discoveredTreasureIds, contains('gym-community'));
+    expect(updated.points, 100);
+    expect(find.textContaining('1/8 medallas'), findsOneWidget);
+    expect(find.text('Validar Community Signal'), findsNothing);
+  });
 }

@@ -424,6 +424,13 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
             final missing = treasures
                 .where((t) => !participant.discoveredTreasureIds.contains(t.id))
                 .toList();
+            TreasureItem? missingCommunity;
+            for (final treasure in missing) {
+              if (treasure.id == 'gym-community') {
+                missingCommunity = treasure;
+                break;
+              }
+            }
 
             return SafeArea(
               child: Padding(
@@ -467,24 +474,40 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
                         label: const Text('Ajustar puntos'),
                       ),
                     ),
+                    if (missingCommunity != null) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FilledButton.icon(
+                          onPressed: () => _confirmCommunitySignal(
+                            context,
+                            participant.id,
+                            setSheetState,
+                          ),
+                          icon: const Icon(Icons.groups_rounded),
+                          label: const Text('Validar Community Signal'),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
                         for (final treasure in missing)
-                          OutlinedButton(
-                            onPressed: () async {
-                              await controller.grantMedal(
-                                participantId: participant.id,
-                                gymId: treasure.id,
-                              );
-                              setSheetState(() {});
-                            },
-                            child: Text(
-                              'Otorgar ${_adminGymLabel(treasure.track, treasure.gymName ?? treasure.title)}',
+                          if (treasure.id != 'gym-community')
+                            OutlinedButton(
+                              onPressed: () async {
+                                await controller.grantMedal(
+                                  participantId: participant.id,
+                                  gymId: treasure.id,
+                                );
+                                setSheetState(() {});
+                              },
+                              child: Text(
+                                'Otorgar ${_adminGymLabel(treasure.track, treasure.gymName ?? treasure.title)}',
+                              ),
                             ),
-                          ),
                       ],
                     ),
                     if (missing.isEmpty)
@@ -589,6 +612,43 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
         },
       ),
     );
+  }
+
+  Future<void> _confirmCommunitySignal(
+    BuildContext context,
+    String participantId,
+    StateSetter setSheetState,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text(
+          'Validar Community Signal',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: const Text(
+          'Confirma que staff reviso la evidencia y otorgara la medalla Comunidad.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Validar evidencia'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    await AppScope.read(
+      context,
+    ).grantMedal(participantId: participantId, gymId: 'gym-community');
+    setSheetState(() {});
   }
 
   String _adminGymLabel(String? track, String fallback) {
