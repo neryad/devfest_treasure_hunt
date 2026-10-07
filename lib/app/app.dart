@@ -81,6 +81,7 @@ class _DevFestAppState extends State<DevFestApp> {
       eventRepository: repo,
       attemptRepository: repo,
       resetStore: widget.repository.resetStore,
+      offline: widget.repository.offline,
     );
     _controller.initialize();
   }
@@ -93,7 +94,48 @@ class _DevFestAppState extends State<DevFestApp> {
 
   @override
   Widget build(BuildContext context) {
-    return AppScope(controller: _controller, child: const SessionGate());
+    return AppScope(
+      controller: _controller,
+      child: _withOfflineBanner(const SessionGate()),
+    );
+  }
+
+  Widget _withOfflineBanner(Widget content) {
+    if (!_controller.offline) return content;
+    return Column(
+      children: [
+        Material(
+          color: AppColors.amber,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                children: const [
+                  Icon(
+                    Icons.cloud_off_rounded,
+                    size: 14,
+                    color: Colors.black87,
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Sin conexión — datos locales, no se sincronizan',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(child: content),
+      ],
+    );
   }
 }
 

@@ -36,6 +36,7 @@ class AppController extends ChangeNotifier {
     Future<void> Function()? resetStore,
     AttemptRepository? attemptRepository,
     this.enableElapsedTicker = true,
+    this.offline = false,
   }) : _treasureRepository = treasureRepository,
        _participantRepository = participantRepository {
     _discoverUseCase = DiscoverTreasureUseCase(
@@ -60,6 +61,9 @@ class AppController extends ChangeNotifier {
   late final EventRepository _eventRepository;
   late final Future<void> Function()? _resetStore;
   final bool enableElapsedTicker;
+
+  /// True when the app is running on local (unsynced) data by explicit choice.
+  final bool offline;
 
   late final DiscoverTreasureUseCase _discoverUseCase;
   late final StartParticipantUseCase _startUseCase;
