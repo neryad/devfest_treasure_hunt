@@ -15,7 +15,8 @@ class CompletionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final participant = controller.participant!;
-    final position = controller.approximateRank ?? controller.leaderboard.length;
+    final position =
+        controller.approximateRank ?? controller.leaderboard.length;
 
     return Scaffold(
       body: Container(
@@ -68,8 +69,9 @@ class CompletionScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: StatCard(
-                          label: 'Tesoros',
-                          value: '${controller.totalTreasures}/'
+                          label: 'Medallas',
+                          value:
+                              '${controller.totalTreasures}/'
                               '${controller.totalTreasures}',
                           icon: Icons.explore_rounded,
                           accent: AppColors.amber,

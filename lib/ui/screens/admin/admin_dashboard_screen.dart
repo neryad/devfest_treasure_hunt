@@ -51,7 +51,7 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
             const SectionHeader(title: 'Ranking'),
             const _AdminRanking(),
-            const SectionHeader(title: 'Gestión de tesoros'),
+            const SectionHeader(title: 'Gestión de gimnasios'),
             const _TreasureManagement(),
             const SectionHeader(title: 'Participantes'),
             const _ParticipantsList(),
@@ -151,7 +151,7 @@ class _MetricsGrid extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: StatCard(
-                label: 'Tesoros activos',
+                label: 'Gimnasios activos',
                 value: '$activeTreasures/$treasures',
                 icon: Icons.explore_rounded,
                 accent: AppColors.primary,
@@ -279,7 +279,7 @@ class _TreasureRow extends StatelessWidget {
       ),
       title: Text(treasure.title, style: const TextStyle(fontSize: 13.5)),
       subtitle: Text(
-        'Descubrimientos: $discoverCount\n'
+        'Medallas otorgadas: $discoverCount\n'
         'Codigo manual: ${treasure.code}\n'
         'QR: ${treasure.qrValue}',
         style: const TextStyle(fontSize: 12),

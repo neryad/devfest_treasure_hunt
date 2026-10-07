@@ -93,18 +93,17 @@ void main() {
     expect(find.text('2 de 8 medallas conseguidas'), findsOneWidget);
   });
 
-  testWidgets('clues tab unlocks when a treasure is discovered', (
-    tester,
-  ) async {
+  testWidgets('main navigation uses DevDex and hides pistas', (tester) async {
     await pumpApp(tester);
     await registerDemoUser(tester);
 
-    await controller.discoverByTreasureId('gym-android');
-    await tester.pump();
+    expect(find.text('DevDex'), findsOneWidget);
+    expect(find.text('Retos'), findsNothing);
+    expect(find.text('Pistas'), findsNothing);
 
-    await tester.tap(find.text('Retos'));
+    await tester.tap(find.text('DevDex'));
     await tester.pumpAndSettle();
 
-    expect(find.text('1 de 8 pistas desbloqueadas'), findsOneWidget);
+    expect(find.text('8 Gimnasios Tecnológicos'), findsOneWidget);
   });
 }

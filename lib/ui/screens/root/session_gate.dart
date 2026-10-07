@@ -57,7 +57,7 @@ class _SplashLoading extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             const Text(
-              'DevFest Treasure Hunt',
+              'DevFest Master',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,

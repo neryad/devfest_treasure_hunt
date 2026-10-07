@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../admin_navigation.dart';
-import '../clues/clues_screen.dart';
 import '../discovery/manual_code_screen.dart';
 import '../discovery/qr_scanner_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../pokedex/pokedex_screen.dart';
 import 'home_dashboard.dart';
 
-
 /// Main shell for a participant with bottom navigation:
-/// Inicio · Gimnasios (Pokédex) · Retos · Ranking, plus a highlighted CTA to find a
-/// treasure (scan or manual code).
+/// Inicio · DevDex · Ranking, plus a highlighted CTA to scan or enter a gym code.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -23,7 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
-  static const _titles = ['Inicio', 'Pokédex · Gimnasios', 'Retos & Pistas', 'Ranking'];
+  static const _titles = ['Inicio', 'DevDex · Gimnasios', 'Ranking'];
 
   void _openFindSheet() {
     showModalBottomSheet<void>(
@@ -48,8 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: const CircleAvatar(
                 backgroundColor: AppColors.primary,
-                child: Icon(Icons.qr_code_scanner_rounded,
-                    color: Colors.white),
+                child: Icon(Icons.qr_code_scanner_rounded, color: Colors.white),
               ),
               title: const Text('Escanear QR del Gimnasio'),
               subtitle: const Text('Usa la cámara o el modo demo'),
@@ -105,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
           children: const [
             HomeDashboard(),
             PokedexScreen(),
-            CluesScreen(),
             LeaderboardScreen(),
           ],
         ),
@@ -119,11 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.military_tech_rounded),
-              label: 'Pokédex',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.tips_and_updates_rounded),
-              label: 'Retos',
+              label: 'DevDex',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.leaderboard_rounded),

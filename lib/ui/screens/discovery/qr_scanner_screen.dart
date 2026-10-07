@@ -90,9 +90,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           const SizedBox(width: 12),
         ],
       ),
-      body: SafeArea(
-        child: _usingCamera ? _buildCamera() : _buildDemoPicker(),
-      ),
+      body: SafeArea(child: _usingCamera ? _buildCamera() : _buildDemoPicker()),
     );
   }
 
@@ -115,14 +113,16 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             children: [
               Container(
                 margin: const EdgeInsets.only(top: 32),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: const Text(
-                  'Encuadra el QR de un tesoro',
+                  'Encuadra el QR de un gimnasio',
                   style: TextStyle(color: Colors.white),
                 ),
               ),
@@ -130,9 +130,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               SizedBox(
                 width: 240,
                 height: 240,
-                child: CustomPaint(
-                  painter: _QrFramePainter(),
-                ),
+                child: CustomPaint(painter: _QrFramePainter()),
               ),
               const Spacer(),
               const SizedBox(height: 40),
@@ -156,7 +154,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           return const Padding(
             padding: EdgeInsets.only(bottom: 8),
             child: Text(
-              'Modo demo · simula apuntar el QR a un tesoro',
+              'Modo demo · simula apuntar el QR a un gimnasio',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           );
@@ -175,16 +173,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             title: Text(treasure.title),
             subtitle: Text(
               treasure.qrValue,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                letterSpacing: 1,
-              ),
+              style: const TextStyle(fontFamily: 'monospace', letterSpacing: 1),
             ),
-            trailing: const Icon(Icons.qr_code_2_rounded, color: AppColors.amber),
+            trailing: const Icon(
+              Icons.qr_code_2_rounded,
+              color: AppColors.amber,
+            ),
             enabled: !discovered,
-            onTap: discovered
-                ? null
-                : () => _handleValue(treasure.qrValue),
+            onTap: discovered ? null : () => _handleValue(treasure.qrValue),
           ),
         );
       },
@@ -213,13 +209,7 @@ class _QrFramePainter extends CustomPainter {
       Rect.fromLTWH(size.width - corner, size.height - corner, corner, corner),
     ];
     for (final c in corners) {
-      canvas.drawArc(
-        c,
-        _startFor(c, size),
-        _sweepFor(c, size),
-        false,
-        paint,
-      );
+      canvas.drawArc(c, _startFor(c, size), _sweepFor(c, size), false, paint);
     }
   }
 

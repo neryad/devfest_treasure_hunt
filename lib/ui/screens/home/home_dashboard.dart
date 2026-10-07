@@ -7,7 +7,6 @@ import '../../../core/utils/treasure_icons.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/stat_card.dart';
 import '../../../state/app_scope.dart';
-import '../clues/clues_screen.dart';
 import '../completion/completion_screen.dart';
 import '../discovery/manual_code_screen.dart';
 import '../discovery/qr_scanner_screen.dart';
@@ -25,9 +24,6 @@ class HomeDashboard extends StatelessWidget {
     }
 
     final position = controller.approximateRank;
-    final clues = controller.buildClues();
-    final unlockedClues = clues.where((c) => c.unlocked).length;
-
     return RefreshIndicator(
       onRefresh: () => Future<void>.value(),
       child: ListView(
@@ -79,12 +75,12 @@ class HomeDashboard extends StatelessWidget {
           ],
           const SectionHeader(
             title: 'Acciones rápidas',
-            subtitle: 'Descubre tesoros y consulta tus pistas',
+            subtitle: 'Completa gimnasios y suma medallas',
           ),
           _ActionCard(
             icon: Icons.qr_code_scanner_rounded,
             title: 'Escanear un QR',
-            subtitle: 'Apunta a un tesoro físico',
+            subtitle: 'Apunta al QR de un gimnasio',
             color: AppColors.primary,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const QrScannerScreen()),
@@ -98,16 +94,6 @@ class HomeDashboard extends StatelessWidget {
             color: AppColors.secondary,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const ManualCodeScreen()),
-            ),
-          ),
-          const SizedBox(height: 10),
-          _ActionCard(
-            icon: Icons.tips_and_updates_rounded,
-            title: 'Mis pistas',
-            subtitle: '$unlockedClues de ${clues.length} desbloqueadas',
-            color: AppColors.amber,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const CluesScreen()),
             ),
           ),
         ],

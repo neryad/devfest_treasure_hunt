@@ -13,18 +13,17 @@ Future<void> handleDiscoveryResult(
   if (result.failure != null) {
     final message = switch (result.failure!) {
       DiscoverFailure.treasureNotFound =>
-        'Tesoro no encontrado. Verifica el código o el QR.',
+        'Gimnasio no encontrado. Verifica el código o el QR.',
       DiscoverFailure.notActive =>
-        'No disponible todavía: este tesoro está desactivado.',
-      DiscoverFailure.alreadyDiscovered =>
-        '¡Ya descubriste este tesoro!',
+        'No disponible todavía: este gimnasio está desactivado.',
+      DiscoverFailure.alreadyDiscovered => '¡Ya tienes esta medalla!',
       DiscoverFailure.participantNotFound =>
-        'Necesitas registrarte antes de descubrir tesoros.',
+        'Necesitas registrarte antes de ganar medallas.',
     };
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
     return;
   }
@@ -108,7 +107,7 @@ class _TreasureFoundDialogState extends State<TreasureFoundDialog> {
             ),
             const SizedBox(height: 20),
             const Text(
-              '¡Tesoro encontrado!',
+              '¡Medalla desbloqueada!',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
@@ -144,7 +143,7 @@ class _TreasureFoundDialogState extends State<TreasureFoundDialog> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            _revealed ? 'Pista desbloqueada' : 'Pista',
+                            _revealed ? 'Detalle desbloqueado' : 'Detalle',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -178,11 +177,13 @@ class _TreasureFoundDialogState extends State<TreasureFoundDialog> {
                   }
                   Navigator.of(context).pop();
                 },
-                child: Text(_revealed
-                    ? (result.completed
-                        ? 'Ver mi resultado final'
-                        : '¡A por el siguiente!')
-                    : 'Revelar pista'),
+                child: Text(
+                  _revealed
+                      ? (result.completed
+                            ? 'Ver mi resultado final'
+                            : '¡A por el siguiente!')
+                      : 'Ver detalle',
+                ),
               ),
             ),
           ],

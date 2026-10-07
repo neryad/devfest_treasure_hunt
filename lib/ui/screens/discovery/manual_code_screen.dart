@@ -69,12 +69,9 @@ class _ManualCodeScreenState extends State<ManualCodeScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Escribe el código que verás junto a cada tesoro físico.',
+                'Escribe el código manual del gimnasio.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 24),
               TextField(
@@ -86,7 +83,7 @@ class _ManualCodeScreenState extends State<ManualCodeScreen> {
                   fontSize: 18,
                 ),
                 decoration: const InputDecoration(
-                  labelText: 'Código del tesoro',
+                  labelText: 'Código del gimnasio',
                   hintText: 'DEVFEST-001',
                   prefixIcon: Icon(Icons.password_rounded),
                 ),
@@ -94,9 +91,7 @@ class _ManualCodeScreenState extends State<ManualCodeScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: _submitting
-                    ? null
-                    : () => _submit(_controller.text),
+                onPressed: _submitting ? null : () => _submit(_controller.text),
                 icon: _submitting
                     ? const SizedBox(
                         width: 20,
@@ -104,7 +99,7 @@ class _ManualCodeScreenState extends State<ManualCodeScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.search_rounded),
-                label: const Text('Validar tesoro'),
+                label: const Text('Validar gimnasio'),
               ),
               const SizedBox(height: 24),
               const Text(
