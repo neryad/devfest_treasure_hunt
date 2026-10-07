@@ -621,12 +621,11 @@ class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
                     return;
                   }
                   try {
-                    final ok = await AppScope.read(
-                      context,
-                    ).adjustParticipantPoints(
-                      participantId: participantId,
-                      delta: parsed,
-                    );
+                    final ok = await AppScope.read(context)
+                        .adjustParticipantPoints(
+                          participantId: participantId,
+                          delta: parsed,
+                        );
                     if (!context.mounted) return;
                     showSnack(
                       context,

@@ -86,8 +86,9 @@ class _ParticipantSetupScreenState extends State<ParticipantSetupScreen> {
                     hintText: 'Ej: Carlos',
                     prefixIcon: Icon(Icons.person_rounded),
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Escribe tu nombre' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Escribe tu nombre'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -116,7 +117,10 @@ class _ParticipantSetupScreenState extends State<ParticipantSetupScreen> {
                 const Text(
                   'Demo: no se necesita cuenta ni autenticación.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),

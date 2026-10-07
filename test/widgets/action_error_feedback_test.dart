@@ -82,10 +82,7 @@ void main() {
       'Nery',
     );
     await tester.enterText(
-      find.widgetWithText(
-        TextFormField,
-        'Nickname / Alias para el Ranking',
-      ),
+      find.widgetWithText(TextFormField, 'Nickname / Alias para el Ranking'),
       'nery',
     );
     await tester.ensureVisible(find.text('¡Comenzar aventura!'));

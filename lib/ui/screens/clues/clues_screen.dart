@@ -23,7 +23,10 @@ class CluesScreen extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 16),
           child: Text(
             '$unlocked de ${clues.length} pistas desbloqueadas',
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
         for (final clue in clues) _ClueCard(clue: clue),

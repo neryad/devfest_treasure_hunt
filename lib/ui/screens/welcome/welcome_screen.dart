@@ -93,7 +93,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      event?.dateLabel ?? '9 · 10 de octubre — Biblioteca Nacional',
+                      event?.dateLabel ??
+                          '9 · 10 de octubre — Biblioteca Nacional',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 12.5,
@@ -151,10 +152,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               decoration: const InputDecoration(
                                 labelText: 'Tu Nombre',
                                 hintText: 'Ej: Carlos Pérez',
-                                prefixIcon: Icon(Icons.person_rounded, color: AppColors.primary),
+                                prefixIcon: Icon(
+                                  Icons.person_rounded,
+                                  color: AppColors.primary,
+                                ),
                               ),
-                              validator: (v) =>
-                                  (v == null || v.trim().isEmpty) ? 'Ingresa tu nombre' : null,
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Ingresa tu nombre'
+                                  : null,
                             ),
                             const SizedBox(height: 14),
                             TextFormField(
@@ -162,10 +167,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               decoration: const InputDecoration(
                                 labelText: 'Nickname / Alias para el Ranking',
                                 hintText: 'Ej: carlostech',
-                                prefixIcon: Icon(Icons.alternate_email_rounded, color: AppColors.amber),
+                                prefixIcon: Icon(
+                                  Icons.alternate_email_rounded,
+                                  color: AppColors.amber,
+                                ),
                               ),
-                              validator: (v) =>
-                                  (v == null || v.trim().isEmpty) ? 'Ingresa un alias' : null,
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Ingresa un alias'
+                                  : null,
                             ),
                             const SizedBox(height: 20),
                             ElevatedButton.icon(
@@ -173,12 +182,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 elevation: 4,
-                                shadowColor: AppColors.primary.withValues(alpha: 0.5),
+                                shadowColor: AppColors.primary.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                               icon: _submitting
                                   ? const SizedBox(
@@ -189,7 +202,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Icon(Icons.play_arrow_rounded, size: 24),
+                                  : const Icon(
+                                      Icons.play_arrow_rounded,
+                                      size: 24,
+                                    ),
                               label: const Text(
                                 '¡Comenzar aventura!',
                                 style: TextStyle(
@@ -233,7 +249,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     Center(
                       child: TextButton.icon(
                         onPressed: () => openAdminDemo(context),
-                        icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
+                        icon: const Icon(
+                          Icons.admin_panel_settings_rounded,
+                          size: 18,
+                        ),
                         label: const Text('Panel de Administración (Demo)'),
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.textMuted,
@@ -260,7 +279,10 @@ class _BannerHero extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35), width: 1.5),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.35),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.25),

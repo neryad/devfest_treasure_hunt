@@ -18,9 +18,9 @@ class Clue {
   final bool consulted;
 
   Clue copyWith({bool? consulted, bool? unlocked}) => Clue(
-        treasureId: treasureId,
-        text: text,
-        unlocked: unlocked ?? this.unlocked,
-        consulted: consulted ?? this.consulted,
-      );
+    treasureId: treasureId,
+    text: text,
+    unlocked: unlocked ?? this.unlocked,
+    consulted: consulted ?? this.consulted,
+  );
 }

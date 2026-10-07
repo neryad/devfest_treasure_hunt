@@ -64,9 +64,7 @@ class FirebaseDataSource implements AppDataSource {
   @override
   Future<List<TreasureItem>> loadTreasures() async {
     final snapshot = await _treasuresRef.get();
-    return decodeTreasures(
-      snapshot.docs.map((doc) => doc.data()).toList(),
-    );
+    return decodeTreasures(snapshot.docs.map((doc) => doc.data()).toList());
   }
 
   /// Malformed docs are skipped; ordering is done client-side so a doc

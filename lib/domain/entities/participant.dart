@@ -50,53 +50,51 @@ class Participant {
     int? points,
     int? medals,
     String? avatarEmoji,
-  }) =>
-      Participant(
-        id: id,
-        name: name,
-        nickname: nickname,
-        startedAt: startedAt,
-        completedAt: completedAt ?? this.completedAt,
-        status: status ?? this.status,
-        discoveredTreasureIds:
-            discoveredTreasureIds ?? this.discoveredTreasureIds,
-        points: points ?? this.points,
-        medals: medals ?? this.medals,
-        avatarEmoji: avatarEmoji ?? this.avatarEmoji,
-      );
+  }) => Participant(
+    id: id,
+    name: name,
+    nickname: nickname,
+    startedAt: startedAt,
+    completedAt: completedAt ?? this.completedAt,
+    status: status ?? this.status,
+    discoveredTreasureIds: discoveredTreasureIds ?? this.discoveredTreasureIds,
+    points: points ?? this.points,
+    medals: medals ?? this.medals,
+    avatarEmoji: avatarEmoji ?? this.avatarEmoji,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'nickname': nickname,
-        'startedAt': startedAt.toIso8601String(),
-        'completedAt': completedAt?.toIso8601String(),
-        'status': status.name,
-        'discoveredTreasureIds': discoveredTreasureIds,
-        'points': points,
-        'medals': medals,
-        'avatarEmoji': avatarEmoji,
-      };
+    'id': id,
+    'name': name,
+    'nickname': nickname,
+    'startedAt': startedAt.toIso8601String(),
+    'completedAt': completedAt?.toIso8601String(),
+    'status': status.name,
+    'discoveredTreasureIds': discoveredTreasureIds,
+    'points': points,
+    'medals': medals,
+    'avatarEmoji': avatarEmoji,
+  };
 
   factory Participant.fromJson(Map<String, dynamic> json) => Participant(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        nickname: json['nickname'] as String,
-        startedAt: DateTime.parse(json['startedAt'] as String),
-        completedAt: json['completedAt'] != null
-            ? DateTime.tryParse(json['completedAt'] as String)
-            : null,
-        status: ParticipantStatus.values.firstWhere(
-          (s) => s.name == json['status'],
-          orElse: () => ParticipantStatus.active,
-        ),
-        discoveredTreasureIds: (json['discoveredTreasureIds'] as List? ?? const [])
-            .map((e) => e as String)
-            .toList(),
-        points: json['points'] as int? ?? 0,
-        medals: json['medals'] as int? ?? 0,
-        avatarEmoji: json['avatarEmoji'] as String?,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    nickname: json['nickname'] as String,
+    startedAt: DateTime.parse(json['startedAt'] as String),
+    completedAt: json['completedAt'] != null
+        ? DateTime.tryParse(json['completedAt'] as String)
+        : null,
+    status: ParticipantStatus.values.firstWhere(
+      (s) => s.name == json['status'],
+      orElse: () => ParticipantStatus.active,
+    ),
+    discoveredTreasureIds: (json['discoveredTreasureIds'] as List? ?? const [])
+        .map((e) => e as String)
+        .toList(),
+    points: json['points'] as int? ?? 0,
+    medals: json['medals'] as int? ?? 0,
+    avatarEmoji: json['avatarEmoji'] as String?,
+  );
 
   static Participant? tryFromJson(Map<String, dynamic> json) {
     try {
@@ -107,10 +105,11 @@ class Participant {
     }
   }
 
-  static List<Participant> listFromJson(String json) => (jsonDecode(json) as List)
-      .map((e) => Participant.tryFromJson(e as Map<String, dynamic>))
-      .whereType<Participant>()
-      .toList();
+  static List<Participant> listFromJson(String json) =>
+      (jsonDecode(json) as List)
+          .map((e) => Participant.tryFromJson(e as Map<String, dynamic>))
+          .whereType<Participant>()
+          .toList();
 
   static String listToJson(List<Participant> items) =>
       jsonEncode(items.map((e) => e.toJson()).toList());

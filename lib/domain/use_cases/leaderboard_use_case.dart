@@ -6,5 +6,6 @@ class LeaderboardUseCase {
 
   final LeaderboardRepository _leaderboardRepository;
 
-  Future<List<LeaderboardEntry>> execute() => _leaderboardRepository.getLeaderboard();
+  Future<List<LeaderboardEntry>> execute() =>
+      _leaderboardRepository.getLeaderboard();
 }

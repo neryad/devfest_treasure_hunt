@@ -20,22 +20,22 @@ class Attempt {
   final String? answer;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'participantId': participantId,
-        'gymId': gymId,
-        'answeredAt': answeredAt.toIso8601String(),
-        'correct': correct,
-        'answer': answer,
-      };
+    'id': id,
+    'participantId': participantId,
+    'gymId': gymId,
+    'answeredAt': answeredAt.toIso8601String(),
+    'correct': correct,
+    'answer': answer,
+  };
 
   factory Attempt.fromJson(Map<String, dynamic> json) => Attempt(
-        id: json['id'] as String,
-        participantId: json['participantId'] as String,
-        gymId: json['gymId'] as String,
-        answeredAt: DateTime.parse(json['answeredAt'] as String),
-        correct: json['correct'] as bool,
-        answer: json['answer'] as String?,
-      );
+    id: json['id'] as String,
+    participantId: json['participantId'] as String,
+    gymId: json['gymId'] as String,
+    answeredAt: DateTime.parse(json['answeredAt'] as String),
+    correct: json['correct'] as bool,
+    answer: json['answer'] as String?,
+  );
 
   static Attempt? tryFromJson(Map<String, dynamic> json) {
     try {

@@ -19,18 +19,18 @@ class Discovery {
   final DateTime discoveredAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'participantId': participantId,
-        'treasureId': treasureId,
-        'discoveredAt': discoveredAt.toIso8601String(),
-      };
+    'id': id,
+    'participantId': participantId,
+    'treasureId': treasureId,
+    'discoveredAt': discoveredAt.toIso8601String(),
+  };
 
   factory Discovery.fromJson(Map<String, dynamic> json) => Discovery(
-        id: json['id'] as String,
-        participantId: json['participantId'] as String,
-        treasureId: json['treasureId'] as String,
-        discoveredAt: DateTime.parse(json['discoveredAt'] as String),
-      );
+    id: json['id'] as String,
+    participantId: json['participantId'] as String,
+    treasureId: json['treasureId'] as String,
+    discoveredAt: DateTime.parse(json['discoveredAt'] as String),
+  );
 
   static Discovery? tryFromJson(Map<String, dynamic> json) {
     try {
