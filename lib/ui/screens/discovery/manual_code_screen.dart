@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/snack_bar_utils.dart';
 import '../../../state/app_scope.dart';
 import 'treasure_found_modal.dart';
 
@@ -29,10 +30,14 @@ class _ManualCodeScreenState extends State<ManualCodeScreen> {
     if (code.isEmpty) return;
     setState(() => _submitting = true);
     final app = AppScope.read(context);
-    final result = await app.discoverByCode(code);
-    if (!mounted) return;
-    await handleDiscoveryResult(context, result);
-    if (mounted) setState(() => _submitting = false);
+    try {
+      final result = await app.discoverByCode(code);
+      if (mounted) await handleDiscoveryResult(context, result);
+    } catch (_) {
+      if (mounted) showNetworkError(context);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override

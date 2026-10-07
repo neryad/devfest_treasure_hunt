@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/snack_bar_utils.dart';
 import '../../../state/app_scope.dart';
 
 class ParticipantSetupScreen extends StatefulWidget {
@@ -27,12 +28,17 @@ class _ParticipantSetupScreenState extends State<ParticipantSetupScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     final controller = AppScope.read(context);
-    await controller.startParticipant(
-      name: _nameController.text.trim(),
-      nickname: _nicknameController.text.trim(),
-    );
-    if (!mounted) return;
-    Navigator.of(context).pop();
+    try {
+      await controller.startParticipant(
+        name: _nameController.text.trim(),
+        nickname: _nicknameController.text.trim(),
+      );
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) showNetworkError(context);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override

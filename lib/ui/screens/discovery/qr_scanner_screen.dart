@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/snack_bar_utils.dart';
 import '../../../core/utils/treasure_icons.dart';
 import '../../../domain/entities/treasure_item.dart';
 import '../../../state/app_scope.dart';
@@ -44,13 +45,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     if (_handling) return;
     _handling = true;
     final controller = AppScope.read(context);
-    final result = await controller.discoverByQrValue(value);
-    if (!mounted) {
+    try {
+      final result = await controller.discoverByQrValue(value);
+      if (mounted) await handleDiscoveryResult(context, result);
+    } catch (_) {
+      if (mounted) showNetworkError(context);
+    } finally {
       _handling = false;
-      return;
     }
-    await handleDiscoveryResult(context, result);
-    _handling = false;
     if (mounted && _usingCamera) {
       // Unpause UI (noDuplicates already throttles detected codes).
       setState(() {});

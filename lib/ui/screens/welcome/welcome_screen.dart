@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+
+import '../../../core/utils/snack_bar_utils.dart';
 import '../../../core/widgets/status_pill.dart';
 import '../../../state/app_scope.dart';
 import '../../admin_navigation.dart';
@@ -29,10 +31,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     final controller = AppScope.read(context);
-    await controller.startParticipant(
-      name: _nameController.text.trim(),
-      nickname: _nicknameController.text.trim(),
-    );
+    try {
+      await controller.startParticipant(
+        name: _nameController.text.trim(),
+        nickname: _nicknameController.text.trim(),
+      );
+    } catch (_) {
+      if (mounted) showNetworkError(context);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
