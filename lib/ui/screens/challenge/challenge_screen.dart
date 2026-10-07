@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/snack_bar_utils.dart';
 import '../../../core/utils/treasure_icons.dart';
 import '../../../domain/entities/gym_challenge.dart';
 import '../../../domain/entities/treasure_item.dart';
@@ -25,6 +26,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   String? _selectedAnswer;
   final _textController = TextEditingController();
   bool _submitted = false;
+  bool _submitting = false;
 
   TreasureItem get gym => widget.gym;
   GymChallenge? get challenge => gym.challenge;
@@ -56,14 +58,26 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     });
   }
 
-  void _handleSubmit() {
-    if (_submitted) return;
+  Future<void> _handleSubmit() async {
+    if (_submitted || _submitting) return;
     _timer?.cancel();
-    setState(() => _submitted = true);
+    setState(() {
+      _submitted = true;
+      _submitting = true;
+    });
 
     final answer = _selectedAnswer ?? _textController.text;
     final controller = AppScope.of(context);
-    controller.submitChallenge(gym.id, answer);
+    try {
+      await controller.submitChallenge(gym.id, answer);
+    } catch (_) {
+      if (!mounted) return;
+      showNetworkError(context);
+      setState(() {
+        _submitted = false;
+        _submitting = false;
+      });
+    }
   }
 
   String _formatTime(int seconds) {
@@ -327,8 +341,14 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
 
             // Submit button
             ElevatedButton(
-              onPressed: canSubmit ? _handleSubmit : null,
-              child: const Text('Enviar respuesta'),
+              onPressed: canSubmit && !_submitting ? _handleSubmit : null,
+              child: _submitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Enviar respuesta'),
             ),
           ],
         ),
