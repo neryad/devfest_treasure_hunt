@@ -1,6 +1,7 @@
 import 'package:devfest_treasure_hunt/app/app.dart';
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
+import 'package:devfest_treasure_hunt/ui/screens/admin/admin_login_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<AppDependencies> _deps({bool offline = false}) async {
@@ -51,5 +52,21 @@ void main() {
 
     expect(attempts, 2);
     expect(find.text('¡Comenzar aventura!'), findsOneWidget);
+  });
+
+  testWidgets('admin panel route can read the app scope', (tester) async {
+    await tester.pumpWidget(
+      DevFestRoot(connect: _deps, connectOffline: () => _deps(offline: true)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('¡Comenzar aventura!'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Panel de Administración (Demo)'));
+    await tester.pump();
+    await tester.tap(find.text('Panel de Administración (Demo)'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(AdminLoginScreen), findsOneWidget);
   });
 }

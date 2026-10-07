@@ -96,12 +96,18 @@ class _DevFestAppState extends State<DevFestApp> {
   Widget build(BuildContext context) {
     return AppScope(
       controller: _controller,
-      child: _withOfflineBanner(const SessionGate()),
+      child: MaterialApp(
+        title: 'DevFest Master',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.dark(),
+        builder: _controller.offline ? _withOfflineBanner : null,
+        home: const SessionGate(),
+      ),
     );
   }
 
-  Widget _withOfflineBanner(Widget content) {
-    if (!_controller.offline) return content;
+  Widget _withOfflineBanner(BuildContext context, Widget? child) {
+    final content = child ?? const SizedBox.shrink();
     return Column(
       children: [
         Material(
@@ -178,23 +184,25 @@ class _DevFestRootState extends State<DevFestRoot> {
     return FutureBuilder<AppDependencies>(
       future: _startup,
       builder: (context, snapshot) {
-        return MaterialApp(
-          title: 'DevFest Master',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.dark(),
-          home: _buildHome(snapshot),
-        );
+        if (snapshot.connectionState != ConnectionState.done) {
+          return _startupShell(const SplashScreen());
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return _startupShell(
+            StartupErrorScreen(onRetry: _retry, onOffline: _continueOffline),
+          );
+        }
+        return DevFestApp(repository: snapshot.data!);
       },
     );
   }
 
-  Widget _buildHome(AsyncSnapshot<AppDependencies> snapshot) {
-    if (snapshot.connectionState != ConnectionState.done) {
-      return const SplashScreen();
-    }
-    if (snapshot.hasError || !snapshot.hasData) {
-      return StartupErrorScreen(onRetry: _retry, onOffline: _continueOffline);
-    }
-    return DevFestApp(repository: snapshot.data!);
+  Widget _startupShell(Widget home) {
+    return MaterialApp(
+      title: 'DevFest Master',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.dark(),
+      home: home,
+    );
   }
 }
