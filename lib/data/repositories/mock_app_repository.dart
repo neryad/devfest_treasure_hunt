@@ -108,7 +108,7 @@ class MockAppRepository
       _dataSource.getCurrentParticipantId();
 
   @override
-  Future<void> setCurrentParticipantId(String id) =>
+  Future<void> setCurrentParticipantId(String? id) =>
       _dataSource.setCurrentParticipantId(id);
 
   @override

@@ -22,7 +22,7 @@ abstract class ParticipantRepository {
   /// Id remembered so the demo can restore the last session on restart.
   Future<String?> getCurrentParticipantId();
 
-  Future<void> setCurrentParticipantId(String id);
+  Future<void> setCurrentParticipantId(String? id);
 
   Future<void> recordDiscovery(Discovery discovery);
 }

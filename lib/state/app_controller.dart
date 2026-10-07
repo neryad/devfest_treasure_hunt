@@ -67,6 +67,8 @@ class AppController extends ChangeNotifier {
   late final CompleteChallengeUseCase? _completeChallengeUseCase;
 
   bool _initializing = true;
+  bool _initFailed = false;
+  bool _sessionExpired = false;
   Event? _event;
   List<TreasureItem> _treasures = [];
   Participant? _participant;
@@ -80,6 +82,8 @@ class AppController extends ChangeNotifier {
   bool _adminSignedIn = false;
 
   bool get initializing => _initializing;
+  bool get initFailed => _initFailed;
+  bool get sessionExpired => _sessionExpired;
   Event? get event => _event;
   List<TreasureItem> get treasures => _treasures;
   Participant? get participant => _participant;
@@ -186,15 +190,25 @@ class AppController extends ChangeNotifier {
 
   Future<void> initialize() async {
     _initializing = true;
+    _initFailed = false;
+    _sessionExpired = false;
     notifyListeners();
-    final id = await _participantRepository.getCurrentParticipantId();
-    if (id != null) {
-      _participant = await _participantRepository.getParticipant(id);
+    try {
+      final id = await _participantRepository.getCurrentParticipantId();
+      if (id != null) {
+        _participant = await _participantRepository.getParticipant(id);
+        if (_participant == null) {
+          await _participantRepository.setCurrentParticipantId(null);
+          _sessionExpired = true;
+        }
+      }
+      await _reloadStaticData();
+      await _reloadLeaderboard();
+      _startTickerIfNeeded();
+    } catch (_) {
+      _initFailed = true;
     }
-    await _reloadStaticData();
-    await _reloadLeaderboard();
     _initializing = false;
-    _startTickerIfNeeded();
     notifyListeners();
   }
 
@@ -202,6 +216,7 @@ class AppController extends ChangeNotifier {
     required String name,
     required String nickname,
   }) async {
+    _sessionExpired = false;
     _participant = await _startUseCase.execute(name: name, nickname: nickname);
     _consultedClues.clear();
     await _reloadLeaderboard();

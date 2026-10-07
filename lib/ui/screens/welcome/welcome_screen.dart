@@ -94,6 +94,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
                     const SizedBox(height: 24),
 
+                    if (controller.sessionExpired) ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Tu sesión anterior ya no existe — regístrate de nuevo.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.amber,
+                          ),
+                        ),
+                      ),
+                    ],
+
                     // --- DIRECT REGISTRATION CARD ---
                     Card(
                       child: Padding(
