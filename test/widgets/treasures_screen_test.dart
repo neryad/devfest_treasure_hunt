@@ -79,4 +79,25 @@ void main() {
 
     expect(find.byType(ChallengeScreen), findsOneWidget);
   });
+
+  testWidgets('pull to refresh marks a deactivated gym as unavailable', (
+    tester,
+  ) async {
+    final ds = MockLocalDataSource(seedData: false);
+    await ds.initialize();
+    final repo = MockAppRepository(ds);
+    final controller = _controller(repo, ds);
+    addTearDown(controller.dispose);
+    await controller.initialize();
+
+    await _pumpScreen(tester, controller);
+
+    await repo.setTreasureActive('gym-android', false);
+    await tester
+        .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+        .onRefresh();
+    await tester.pumpAndSettle();
+
+    expect(find.text('No disponible'), findsOneWidget);
+  });
 }

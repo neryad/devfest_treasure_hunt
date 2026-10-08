@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/snack_bar_utils.dart';
 import '../../../core/widgets/status_pill.dart';
 import '../../../domain/entities/gym_challenge.dart';
 import '../../../domain/entities/treasure_item.dart';
@@ -26,22 +27,31 @@ class TreasuresScreen extends StatelessWidget {
       (t) => controller.statusOf(t) != TreasureStatus.discovered,
     );
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
-      children: [
-        _Summary(
-          found: found.length,
-          total: treasures.length,
-          pending: pending.length,
-        ),
-        Text('Conquistados', style: _sectionStyle),
-        if (found.isEmpty) _EmptyFoundCard(),
-        for (final t in found) _TreasureTile(treasure: t, revealed: true),
-        const SizedBox(height: 20),
-        Text('Por conquistar', style: _sectionStyle),
-        for (final t in pending) _TreasureTile(treasure: t, revealed: false),
-        const SizedBox(height: 20),
-      ],
+    return RefreshIndicator(
+      onRefresh: () async {
+        try {
+          await controller.refresh();
+        } catch (_) {
+          if (context.mounted) showNetworkError(context);
+        }
+      },
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
+        children: [
+          _Summary(
+            found: found.length,
+            total: treasures.length,
+            pending: pending.length,
+          ),
+          Text('Conquistados', style: _sectionStyle),
+          if (found.isEmpty) _EmptyFoundCard(),
+          for (final t in found) _TreasureTile(treasure: t, revealed: true),
+          const SizedBox(height: 20),
+          Text('Por conquistar', style: _sectionStyle),
+          for (final t in pending) _TreasureTile(treasure: t, revealed: false),
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 
