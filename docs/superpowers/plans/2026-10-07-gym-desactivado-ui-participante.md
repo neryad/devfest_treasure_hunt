@@ -10,6 +10,10 @@
 
 **Referencia:** Spec `docs/superpowers/specs/2026-10-07-gym-desactivado-ui-participante-design.md`.
 
+**Resultado:** Implementado — los gimnasios desactivados no se abren desde la
+UI del participante (gateo fresco en DevDex/tiles) y "Mis Gimnasios" gana
+pull-to-refresh manual (pantalla actualmente no cableada; ver nota en la spec).
+
 ---
 
 ### Task 1: `AppController.fetchTreasure` — lectura fresca del gimnasio
@@ -19,7 +23,7 @@
 - Modify: `lib/state/app_controller.dart` (tras `treasureById`, ~línea 179)
 - Test: `test/state/app_controller_init_test.dart` (`main()`)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Agrega este test a `main()` en `test/state/app_controller_init_test.dart`:
 
@@ -43,12 +47,12 @@ Agrega este test a `main()` en `test/state/app_controller_init_test.dart`:
 
 Nota: `_FlakyRepository` (líneas 11-28 del archivo) extiende `MockAppRepository`, así que hereda `setTreasureActive`. `_controller` (líneas 30-39) ya existe. Los seeds tienen el gimnasio `gym-android` (mock_data.dart).
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/state/app_controller_init_test.dart --plain-name 'fetchTreasure'`
 Expected: FAIL con "no member" / "fetchTreasure is not defined".
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 En `lib/state/app_controller.dart`, justo después de `treasureById` (línea ~179):
 
@@ -59,12 +63,12 @@ En `lib/state/app_controller.dart`, justo después de `treasureById` (línea ~17
       _treasureRepository.getTreasure(id);
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `flutter test test/state/app_controller_init_test.dart`
 Expected: PASS (todos los tests del archivo).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/state/app_controller.dart test/state/app_controller_init_test.dart
@@ -81,7 +85,7 @@ git commit -m "feat: expose fetchTreasure fresh read on controller"
 - Modify: `lib/ui/screens/pokedex/pokedex_screen.dart:267-274` (botón "Desafiar este Gimnasio")
 - Test: `test/widgets/treasures_screen_test.dart` (archivo nuevo)
 
-- [ ] **Step 1: Write the failing widget tests**
+- [x] **Step 1: Write the failing widget tests**
 
 Create `test/widgets/treasures_screen_test.dart`:
 
@@ -168,7 +172,7 @@ void main() {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify the first fails and the second passes**
+- [x] **Step 2: Run tests to verify the first fails and the second passes**
 
 Run: `flutter test test/widgets/treasures_screen_test.dart`
 Expected:
@@ -181,7 +185,7 @@ terminar el test. El test de navegación fija `tester.view.physicalSize =
 const Size(1080, 2400)` (mismo patrón que `action_error_feedback_test.dart`)
 para que `ChallengeScreen` no desborde en el viewport por defecto de 800x600.
 
-- [ ] **Step 3: Write the helper and wire the entry points**
+- [x] **Step 3: Write the helper and wire the entry points**
 
 Create `lib/ui/screens/challenge/challenge_navigation.dart`:
 
@@ -247,17 +251,17 @@ En `lib/ui/screens/pokedex/pokedex_screen.dart`:
                 },
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `flutter test test/widgets/treasures_screen_test.dart`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Confirm no regressions**
+- [x] **Step 5: Confirm no regressions**
 
 Run: `flutter analyze` y `flutter test test/widgets/action_error_feedback_test.dart`
 Expected: analyze limpio; los 4 tests del archivo pasan (ChallengeScreen no cambió).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add lib/ui/screens/challenge/challenge_navigation.dart lib/ui/screens/treasures/treasures_screen.dart lib/ui/screens/pokedex/pokedex_screen.dart test/widgets/treasures_screen_test.dart
@@ -272,7 +276,7 @@ git commit -m "fix: block opening deactivated gyms from participant UI"
 - Modify: `lib/ui/screens/treasures/treasures_screen.dart:29-45` (build de `TreasuresScreen`)
 - Test: `test/widgets/treasures_screen_test.dart` (agregar un test)
 
-- [ ] **Step 1: Write the failing widget test**
+- [x] **Step 1: Write the failing widget test**
 
 Agrega a `main()` en `test/widgets/treasures_screen_test.dart` (reutilizando `_controller` y `_pumpScreen` del archivo):
 
@@ -299,12 +303,12 @@ Agrega a `main()` en `test/widgets/treasures_screen_test.dart` (reutilizando `_c
   });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/widgets/treasures_screen_test.dart --plain-name 'pull to refresh'`
 Expected: FAIL — no existe `RefreshIndicator` (`find.byType` lanza "zero widgets") y el pill sigue mostrando el tipo de reto.
 
-- [ ] **Step 3: Wrap the list in a RefreshIndicator**
+- [x] **Step 3: Wrap the list in a RefreshIndicator**
 
 En `lib/ui/screens/treasures/treasures_screen.dart`, `build` de `TreasuresScreen`
 declara `final controller = AppScope.of(context);` al inicio (ya existe) y luego
@@ -348,12 +352,12 @@ Agrega el import de snackbars en `treasures_screen.dart` (el `controller` y el
 import '../../../core/utils/snack_bar_utils.dart';
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `flutter test test/widgets/treasures_screen_test.dart`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/ui/screens/treasures/treasures_screen.dart test/widgets/treasures_screen_test.dart
@@ -367,7 +371,7 @@ git commit -m "feat: manual pull to refresh on mis gimnasios"
 **Files:**
 - Modify: `docs/superpowers/plans/2026-10-07-gym-desactivado-ui-participante.md` (checkboxes a `[x]`)
 
-- [ ] **Step 1: Format**
+- [x] **Step 1: Format**
 
 ```bash
 dart format --output=none --set-exit-if-changed lib test
@@ -376,35 +380,35 @@ dart format --output=none --set-exit-if-changed lib test
 Si reporta archivos, corre `dart format lib test` e incluye esos cambios en el
 commit de este task.
 
-- [ ] **Step 2: Analyze**
+- [x] **Step 2: Analyze**
 
 ```bash
 flutter analyze
 ```
 Expected: "No issues found!".
 
-- [ ] **Step 3: Full suite**
+- [x] **Step 3: Full suite**
 
 ```bash
 flutter test
 ```
 Expected: todos en verde (70 previos + 4 nuevos = ~74).
 
-- [ ] **Step 4: Web build**
+- [x] **Step 4: Web build**
 
 ```bash
 flutter build web
 ```
 Expected: "✓ Built build/web".
 
-- [ ] **Step 5: Marcar el plan completo**
+- [x] **Step 5: Marcar el plan completo**
 
 Cambia todos los checkboxes `- [ ]` de este archivo a `- [x]` (los 4 tasks).
 Agrega una línea final bajo el encabezado del plan confirmando:
 `**Resultado:** Implementado — los gimnasios desactivados no se abren desde la
 UI del participante y "Mis Gimnasios" se puede refrescar manualmente.`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A

@@ -24,7 +24,7 @@ Future<void> openChallenge(BuildContext context, TreasureItem gym) async {
     showSnack(context, gymUnavailableMessage);
     return;
   }
-  Navigator.of(context).push(
-    MaterialPageRoute<void>(builder: (_) => ChallengeScreen(gym: fresh!)),
-  );
+  Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => ChallengeScreen(gym: fresh!)));
 }

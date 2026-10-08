@@ -107,8 +107,8 @@ quedan intactos.
 ### 4. Pull-to-refresh en "Mis Gimnasios"
 
 `lib/ui/screens/treasures/treasures_screen.dart` — el `build` de
-`TreasuresScreen` devuelve directamente el `ListView` (el `Scaffold` lo provee
-`home_shell`). Se envuelve ese `ListView` raíz en un `RefreshIndicator`:
+`TreasuresScreen` devuelve directamente el `ListView`. Se envuelve ese
+`ListView` raíz en un `RefreshIndicator`:
 
 ```dart
 return RefreshIndicator(
@@ -124,11 +124,16 @@ return RefreshIndicator(
 ```
 
 El patrón exacto del try/catch + `showNetworkError` ya existe en
-`admin_dashboard_screen.dart:45-52`.
-`TreasuresScreen` vive dentro de un `IndexedStack` en `home_shell.dart`, así que
-`initState` no se re-dispara al cambiar de tab; el pull manual es la garantía
-consistente (misma decisión que en el panel staff: solo refresh manual, sin
-auto-refresh).
+`admin_dashboard_screen.dart:45-52`. El refresh es manual (pull), consistente
+con la decisión del panel staff: sin auto-refresh ni polling.
+
+**Nota de alcance (corregido tras la implementación):** `TreasuresScreen` NO
+está montada actualmente en la app — `home_shell.dart:99-105` apila
+`HomeDashboard`, `PokedexScreen` y `LeaderboardScreen`, y `TreasuresScreen` no
+se referencia en ninguna parte de `lib/`. Este componente queda implementado y
+probado, pero inerte hasta que la pantalla se cable. Las rutas de entrada
+reales al reto (DevDex → "Desafiar este Gimnasio", QR y código manual) quedan
+cubiertas por el gateo fresco del componente 2 y por la capa de dominio.
 
 ## Manejo de errores
 

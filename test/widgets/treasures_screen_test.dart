@@ -26,9 +26,7 @@ Future<void> _pumpScreen(WidgetTester tester, AppController controller) async {
   await tester.pumpWidget(
     AppScope(
       controller: controller,
-      child: const MaterialApp(
-        home: Scaffold(body: TreasuresScreen()),
-      ),
+      child: const MaterialApp(home: Scaffold(body: TreasuresScreen())),
     ),
   );
   await tester.pump();
