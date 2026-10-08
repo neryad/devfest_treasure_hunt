@@ -27,6 +27,8 @@ class MockLocalDataSource implements AppDataSource {
   final bool seedData;
 
   static const _treasuresKey = 'devfest.treasures.v1';
+  static const _challengeContentVersionKey = 'devfest.challengeContentVersion';
+  static const _challengeContentVersion = '2';
   static const _participantsKey = 'devfest.participants.v1';
   static const _discoveriesKey = 'devfest.discoveries.v1';
   static const _currentParticipantKey = 'devfest.currentParticipant.v1';
@@ -51,6 +53,7 @@ class MockLocalDataSource implements AppDataSource {
       TreasureItem.listFromJson,
       TreasureItem.listToJson,
     );
+    await _migrateChallengeContent();
     _participants = await _restore(
       _participantsKey,
       seedData ? MockData.buildSeedParticipants() : <Participant>[],
@@ -81,6 +84,34 @@ class MockLocalDataSource implements AppDataSource {
       }
     }
     return result;
+  }
+
+  Future<void> _migrateChallengeContent() async {
+    final storage = _storage;
+    if (storage == null) return;
+    if (await storage.read(_challengeContentVersionKey) ==
+        _challengeContentVersion) {
+      return;
+    }
+
+    final persistedById = {for (final item in _treasures) item.id: item};
+    final seeded = MockData.buildTreasures();
+    final migrated = <TreasureItem>[];
+
+    for (final definition in seeded) {
+      final persisted = persistedById.remove(definition.id);
+      migrated.add(
+        persisted == null
+            ? definition
+            : definition.copyWith(isActive: persisted.isActive),
+      );
+    }
+    // Preserve any event-specific gyms that are not part of the bundled seed.
+    migrated.addAll(persistedById.values);
+    _treasures = migrated;
+
+    await storage.write(_treasuresKey, TreasureItem.listToJson(_treasures));
+    await storage.write(_challengeContentVersionKey, _challengeContentVersion);
   }
 
   Future<T> _restore<T>(
@@ -190,6 +221,7 @@ class MockLocalDataSource implements AppDataSource {
     final storage = _storage;
     if (storage == null) return;
     await storage.remove(_treasuresKey);
+    await storage.remove(_challengeContentVersionKey);
     await storage.remove(_participantsKey);
     await storage.remove(_discoveriesKey);
     await storage.remove(_kAttempts);

@@ -74,7 +74,7 @@ void main() {
     await shot('04-encontrar-tesoro');
 
     // 05 · Scanner demo
-    await tester.tap(find.text('Escanear QR'));
+    await tester.tap(find.text('Introducir código manual'));
     await tester.pumpAndSettle();
     await shot('05-scanner-demo');
 
@@ -173,7 +173,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Encontrar tesoro'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Escanear QR'));
+    await tester.tap(find.text('Introducir código manual'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Tesoro #10 · El Hall de los Campeones'));
     await tester.pumpAndSettle();

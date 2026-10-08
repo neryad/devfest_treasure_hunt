@@ -31,19 +31,26 @@ class AppDependencies {
 
 /// Connects to Firebase. Throws on any failure — callers decide what to show.
 Future<AppDependencies> buildAppDependencies() async {
-  final storage = SharedPrefsLocalStorage();
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+  try {
+    final storage = SharedPrefsLocalStorage();
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+    debugPrint('BOOT: firebase initialized');
+    final dataSource = FirebaseDataSource(storage: storage);
+    await dataSource.initialize();
+    debugPrint('BOOT: datasource initialized');
+    return AppDependencies(
+      repository: MockAppRepository(dataSource),
+      resetStore: dataSource.reset,
+      offline: false,
     );
+  } catch (e, st) {
+    debugPrint('BOOT FAILURE: $e\n$st');
+    rethrow;
   }
-  final dataSource = FirebaseDataSource(storage: storage);
-  await dataSource.initialize();
-  return AppDependencies(
-    repository: MockAppRepository(dataSource),
-    resetStore: dataSource.reset,
-    offline: false,
-  );
 }
 
 /// Explicit local mode chosen by the user. Never silent.

@@ -1,6 +1,8 @@
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
 import 'package:devfest_treasure_hunt/domain/entities/participant.dart';
+import 'package:devfest_treasure_hunt/domain/entities/gym_challenge.dart';
+import 'package:devfest_treasure_hunt/domain/utils/challenge_question_selector.dart';
 import 'package:devfest_treasure_hunt/domain/use_cases/complete_challenge_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -31,13 +33,24 @@ void main() {
     return participant.id;
   }
 
+  Future<String> assignedAnswer(String participantId, String gymId) async {
+    final gym = await repository.getTreasure(gymId);
+    final challenge = gym!.challenge!;
+    if (challenge.questionBank.isEmpty) return challenge.correctAnswer!;
+    return ChallengeQuestionSelector.select(
+      participantId: participantId,
+      gymId: gymId,
+      bank: challenge.questionBank,
+    )!.correctAnswer;
+  }
+
   test('awards base points plus first attempt bonus', () async {
     final participantId = await createParticipant();
 
     final result = await useCase.execute(
       participantId: participantId,
       gymId: 'gym-android',
-      answer: 'AndroidManifest.xml',
+      answer: await assignedAnswer(participantId, 'gym-android'),
     );
 
     expect(result.isSuccess, isTrue);
@@ -61,7 +74,7 @@ void main() {
     final correct = await useCase.execute(
       participantId: participantId,
       gymId: 'gym-android',
-      answer: 'AndroidManifest.xml',
+      answer: await assignedAnswer(participantId, 'gym-android'),
     );
 
     expect(correct.isSuccess, isTrue);
@@ -85,7 +98,7 @@ void main() {
     final correct = await useCase.execute(
       participantId: participantId,
       gymId: 'gym-android',
-      answer: 'AndroidManifest.xml',
+      answer: await assignedAnswer(participantId, 'gym-android'),
     );
 
     expect(correct.isSuccess, isTrue);
@@ -105,7 +118,7 @@ void main() {
     final correct = await useCase.execute(
       participantId: participantId,
       gymId: 'gym-cloud',
-      answer: 'Firestore',
+      answer: await assignedAnswer(participantId, 'gym-cloud'),
     );
 
     expect(correct.isSuccess, isTrue);
@@ -134,7 +147,7 @@ void main() {
     final result = await useCase.execute(
       participantId: participantId,
       gymId: 'gym-cloud',
-      answer: 'Firestore',
+      answer: await assignedAnswer(participantId, 'gym-cloud'),
     );
 
     expect(result.isSuccess, isTrue);
@@ -165,5 +178,67 @@ void main() {
       'gym-android',
     );
     expect(attempts, 0);
+  });
+
+  test('rejects an answer from another question in the same bank', () async {
+    final participantId = await createParticipant();
+    final gym = await repository.getTreasure('gym-android');
+    final assigned = ChallengeQuestionSelector.select(
+      participantId: participantId,
+      gymId: gym!.id,
+      bank: gym.challenge!.questionBank,
+    )!;
+    final other = gym.challenge!.questionBank.firstWhere(
+      (question) => question.id != assigned.id,
+    );
+
+    final result = await useCase.execute(
+      participantId: participantId,
+      gymId: gym.id,
+      answer: other.correctAnswer,
+    );
+
+    expect(result.failure, ChallengeFailure.invalidAnswer);
+  });
+
+  test('legacy single-question challenges still work', () async {
+    final participantId = await createParticipant();
+    final treasures = await dataSource.loadTreasures();
+    final cloudIndex = treasures.indexWhere((item) => item.id == 'gym-cloud');
+    treasures[cloudIndex] = treasures[cloudIndex].copyWith(
+      challenge: const GymChallenge(
+        type: ChallengeType.trivia,
+        question: 'Legacy question',
+        options: ['Legacy answer', 'Wrong'],
+        correctAnswer: 'Legacy answer',
+      ),
+    );
+    await dataSource.saveTreasures(treasures);
+
+    final result = await useCase.execute(
+      participantId: participantId,
+      gymId: 'gym-cloud',
+      answer: 'Legacy answer',
+    );
+
+    expect(result.isSuccess, isTrue);
+  });
+
+  test('startup and security keep their existing answers', () async {
+    final participantId = await createParticipant();
+
+    final startup = await useCase.execute(
+      participantId: participantId,
+      gymId: 'gym-startup',
+      answer: 'RUNWAY-CLEARED',
+    );
+    final security = await useCase.execute(
+      participantId: participantId,
+      gymId: 'gym-security',
+      answer: 'SECURE2026',
+    );
+
+    expect(startup.isSuccess, isTrue);
+    expect(security.isSuccess, isTrue);
   });
 }

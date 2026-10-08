@@ -54,7 +54,7 @@ void main() {
     // Find the last treasure through the QR demo → completion.
     await tester.tap(find.text('Encontrar tesoro'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Escanear QR'));
+    await tester.tap(find.text('Introducir código manual'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Tesoro #10 · El Hall de los Campeones'));
     await tester.pumpAndSettle();

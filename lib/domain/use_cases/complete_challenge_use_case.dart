@@ -1,7 +1,9 @@
 import '../../core/utils/id_generator.dart';
 import '../entities/attempt.dart';
+import '../entities/challenge_question.dart';
 import '../entities/participant.dart';
 import '../entities/treasure_item.dart';
+import '../utils/challenge_question_selector.dart';
 import '../repositories/attempt_repository.dart';
 import '../repositories/event_repository.dart';
 import '../repositories/participant_repository.dart';
@@ -119,7 +121,10 @@ class CompleteChallengeUseCase {
     }
 
     // 5. Validate answer
-    final correct = _validateAnswer(gym, answer);
+    // Never trust a question id supplied by the client. The domain selects the
+    // participant's assigned question again before validating the answer.
+    final assigned = _selectAssignedQuestion(participantId, gym);
+    final correct = _validateAnswerAgainstQuestion(assigned, gym, answer);
 
     // 6. Record attempt
     final attempt = Attempt(
@@ -178,9 +183,42 @@ class CompleteChallengeUseCase {
     );
   }
 
-  bool _validateAnswer(TreasureItem gym, String answer) {
+  ChallengeQuestion? _selectAssignedQuestion(
+    String participantId,
+    TreasureItem gym,
+  ) {
+    final challenge = gym.challenge;
+    if (challenge == null) return null;
+    if (challenge.questionBank.isNotEmpty) {
+      return ChallengeQuestionSelector.select(
+        participantId: participantId,
+        gymId: gym.id,
+        bank: challenge.questionBank,
+      );
+    }
+    // Fallback: create a synthetic question from legacy fields
+    return ChallengeQuestion(
+      id: 'legacy',
+      question: challenge.question ?? '',
+      options: challenge.options ?? const [],
+      correctAnswer: challenge.correctAnswer ?? '',
+      hint: challenge.hint,
+      codeSnippet: challenge.codeSnippet,
+    );
+  }
+
+  bool _validateAnswerAgainstQuestion(
+    ChallengeQuestion? assigned,
+    TreasureItem gym,
+    String answer,
+  ) {
     final challenge = gym.challenge;
     if (challenge == null) return true; // QR-only gyms auto-pass
+    if (challenge.questionBank.isNotEmpty) {
+      if (assigned == null) return false;
+      return answer.trim().toLowerCase() ==
+          assigned.correctAnswer.trim().toLowerCase();
+    }
     if (challenge.correctAnswer == null) return true;
     return answer.trim().toLowerCase() ==
         challenge.correctAnswer!.trim().toLowerCase();

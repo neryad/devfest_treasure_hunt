@@ -19,6 +19,7 @@ class FirebaseDataSource implements AppDataSource {
        _storage = storage ?? SharedPrefsLocalStorage();
 
   static const _currentParticipantKey = 'devfest.currentParticipant.v1';
+  static const _challengeContentVersion = 2;
 
   final FirebaseFirestore _firestore;
   final AppLocalStorage _storage;
@@ -51,6 +52,32 @@ class FirebaseDataSource implements AppDataSource {
     if (treasureSnapshot.docs.isEmpty) {
       await saveTreasures(MockData.buildTreasures());
     }
+
+    final storedVersion =
+        eventSnapshot.data()?['challengeContentVersion'] as int? ?? 0;
+    if (storedVersion < _challengeContentVersion) {
+      await _migrateChallengeContent();
+    }
+  }
+
+  Future<void> _migrateChallengeContent() async {
+    final snapshot = await _treasuresRef.get();
+    final existingById = {for (final doc in snapshot.docs) doc.id: doc.data()};
+    final batch = _firestore.batch();
+
+    for (final definition in MockData.buildTreasures()) {
+      final existing = existingById[definition.id];
+      final active = existing?['isActive'] as bool? ?? definition.isActive;
+      batch.set(
+        _treasuresRef.doc(definition.id),
+        definition.copyWith(isActive: active).toJson(),
+        SetOptions(merge: true),
+      );
+    }
+    batch.set(_eventRef, {
+      'challengeContentVersion': _challengeContentVersion,
+    }, SetOptions(merge: true));
+    await batch.commit();
   }
 
   @override
@@ -139,6 +166,9 @@ class FirebaseDataSource implements AppDataSource {
     await _deleteCollection(_discoveriesRef);
     await _deleteCollection(_attemptsRef);
     await saveTreasures(MockData.buildTreasures());
+    await _eventRef.set({
+      'challengeContentVersion': _challengeContentVersion,
+    }, SetOptions(merge: true));
     await _storage.remove(_currentParticipantKey);
   }
 

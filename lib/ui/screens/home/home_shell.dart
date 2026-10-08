@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../admin_navigation.dart';
 import '../discovery/manual_code_screen.dart';
-import '../discovery/qr_scanner_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../pokedex/pokedex_screen.dart';
 import 'home_dashboard.dart';
@@ -42,22 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.primary,
-                child: Icon(Icons.qr_code_scanner_rounded, color: Colors.white),
-              ),
-              title: const Text('Escanear QR del Gimnasio'),
-              subtitle: const Text('Usa la cámara o el modo demo'),
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const QrScannerScreen(),
-                  ),
-                );
-              },
-            ),
+
             ListTile(
               leading: const CircleAvatar(
                 backgroundColor: AppColors.secondary,
@@ -128,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           icon: const Icon(Icons.search_rounded),
-          label: const Text('Escanear QR'),
+          label: const Text('Introducir código'),
         ),
       ),
     );

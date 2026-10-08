@@ -244,7 +244,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Entry point used by QR scan and manual code. Resolves to a treasure id
+  /// Entry point used by manual code. Resolves to a treasure id
   /// and delegates to the single discovery rule.
   Future<DiscoverTreasureResult> discoverByCode(String code) async {
     if (_participant == null) {
@@ -253,16 +253,6 @@ class AppController extends ChangeNotifier {
       );
     }
     final treasure = await _treasureRepository.getByCode(code);
-    return _runDiscovery(treasure);
-  }
-
-  Future<DiscoverTreasureResult> discoverByQrValue(String value) async {
-    if (_participant == null) {
-      return const DiscoverTreasureResult.failure(
-        DiscoverFailure.participantNotFound,
-      );
-    }
-    final treasure = await _treasureRepository.getByQrValue(value);
     return _runDiscovery(treasure);
   }
 

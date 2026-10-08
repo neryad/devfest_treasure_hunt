@@ -4,6 +4,7 @@ import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart
 import 'package:devfest_treasure_hunt/domain/entities/attempt.dart';
 import 'package:devfest_treasure_hunt/domain/entities/participant.dart';
 import 'package:devfest_treasure_hunt/domain/entities/treasure_item.dart';
+import 'package:devfest_treasure_hunt/domain/utils/challenge_question_selector.dart';
 import 'package:devfest_treasure_hunt/state/app_controller.dart';
 import 'package:devfest_treasure_hunt/state/app_scope.dart';
 import 'package:devfest_treasure_hunt/ui/screens/challenge/challenge_screen.dart';
@@ -162,7 +163,15 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.text(gym.challenge!.options!.first));
+    final assigned = ChallengeQuestionSelector.select(
+      participantId: controller.participant!.id,
+      gymId: gym.id,
+      bank: gym.challenge!.questionBank,
+    );
+    final options = assigned != null
+        ? assigned.options
+        : gym.challenge!.options!;
+    await tester.tap(find.text(options.first));
     await tester.pump();
     await tester.tap(find.text('Enviar respuesta'));
     await tester.pump();
@@ -212,7 +221,15 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.text(gym.challenge!.options!.first));
+    final assigned = ChallengeQuestionSelector.select(
+      participantId: controller.participant!.id,
+      gymId: gym.id,
+      bank: gym.challenge!.questionBank,
+    );
+    final options = assigned != null
+        ? assigned.options
+        : gym.challenge!.options!;
+    await tester.tap(find.text(options.first));
     await tester.pump();
     await tester.tap(find.text('Enviar respuesta'));
     await tester.pump();

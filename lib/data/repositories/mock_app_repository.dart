@@ -49,15 +49,6 @@ class MockAppRepository
     return null;
   }
 
-  @override
-  Future<TreasureItem?> getByQrValue(String value) async {
-    final normalized = value.trim().toUpperCase();
-    final treasures = await _dataSource.loadTreasures();
-    for (final t in treasures) {
-      if (t.qrValue.trim().toUpperCase() == normalized) return t;
-    }
-    return null;
-  }
 
   @override
   Future<void> setTreasureActive(String id, bool active) async {

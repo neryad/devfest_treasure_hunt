@@ -377,8 +377,7 @@ class _TreasureRow extends StatelessWidget {
       title: Text(treasure.title, style: const TextStyle(fontSize: 13.5)),
       subtitle: Text(
         'Medallas otorgadas: $discoverCount\n'
-        'Codigo manual: ${treasure.code}\n'
-        'QR: ${treasure.qrValue}',
+        'Codigo manual: ${treasure.code}',
         style: const TextStyle(fontSize: 12),
       ),
       trailing: Switch(

@@ -69,7 +69,7 @@ void main() {
     expect(find.textContaining('1/8 medallas'), findsOneWidget);
   });
 
-  testWidgets('staff can see gym manual codes and qr values', (tester) async {
+  testWidgets('staff can see gym manual codes', (tester) async {
     await tester.pumpWidget(
       AppScope(
         controller: controller,
@@ -86,7 +86,6 @@ void main() {
       find.textContaining('Codigo manual: ANDROID-MASTER'),
       findsOneWidget,
     );
-    expect(find.textContaining('QR: DEVFEST-GYM-ANDROID'), findsOneWidget);
   });
 
   testWidgets('staff can copy ranking csv from the ranking section', (

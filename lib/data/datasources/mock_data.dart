@@ -2,6 +2,7 @@ import '../../domain/entities/event.dart';
 import '../../domain/entities/gym_challenge.dart';
 import '../../domain/entities/participant.dart';
 import '../../domain/entities/treasure_item.dart';
+import '../../domain/entities/challenge_question.dart';
 
 /// Static seed data for the demo. Nothing here depends on storage or platform.
 class MockData {
@@ -22,7 +23,6 @@ class MockData {
         title: 'Gimnasio Android',
         description: 'Debug Droid: demuestra dominio de Android y Kotlin.',
         code: 'ANDROID-MASTER',
-        qrValue: 'DEVFEST-GYM-ANDROID',
         clue:
             'Debug Droid conquistado. El siguiente lider espera en otro track.',
         locationDescription: 'Stand Android / KMP',
@@ -43,6 +43,57 @@ class MockData {
           codeSnippet:
               '<uses-permission android:name="android.permission.CAMERA" />',
           points: 100,
+          questionBank: [
+            ChallengeQuestion(
+              id: 'android-permission',
+              question:
+                  'Puedo ver lo que está frente al teléfono, pero Android no me deja abrir los ojos. ¿Qué palabra falta?',
+              options: ['CAMERA', 'SCREEN', 'PHOTO', 'VISION'],
+              correctAnswer: 'CAMERA',
+              hint: 'Es el permiso necesario para escanear códigos QR.',
+              codeSnippet:
+                  '<uses-permission\n    android:name="android.permission._____" />',
+            ),
+            ChallengeQuestion(
+              id: 'android-variable',
+              question:
+                  'El jugador recibe daño, pero continúa teniendo tres vidas. ¿Cómo se corrige?',
+              options: ['vidas = 1', 'vidas -= 1', 'vidas + 1', 'vidas == 1'],
+              correctAnswer: 'vidas -= 1',
+              hint: 'La operación actual calcula un valor, pero no lo guarda.',
+              codeSnippet:
+                  'var vidas = 3\n\nfun perderVida() {\n  vidas - 1\n}',
+            ),
+            ChallengeQuestion(
+              id: 'android-null',
+              question:
+                  'El programa intenta medir algo que posiblemente no existe. ¿Qué expresión lo hace de forma segura?',
+              options: [
+                'nombre?.length',
+                'nombre!.length',
+                'nombre++',
+                'nombre:length',
+              ],
+              correctAnswer: 'nombre?.length',
+              hint:
+                  'Kotlin utiliza un operador especial para valores que pueden ser nulos.',
+              codeSnippet: 'val nombre: String? = null\nprintln(nombre.length)',
+            ),
+            ChallengeQuestion(
+              id: 'android-lifecycle',
+              question:
+                  'Una pantalla Android se crea, se hace visible y finalmente queda lista para interactuar. ¿Cuál es el orden correcto?',
+              options: [
+                'onCreate → onStart → onResume',
+                'onResume → onCreate → onStart',
+                'onStart → onResume → onCreate',
+                'onCreate → onResume → onStart',
+              ],
+              correctAnswer: 'onCreate → onStart → onResume',
+              hint:
+                  'Primero se crea, después comienza y finalmente se reanuda.',
+            ),
+          ],
         ),
         gymName: 'Debug Droid',
         track: 'android',
@@ -52,12 +103,11 @@ class MockData {
         id: 'gym-ia',
         title: 'Gimnasio IA',
         description:
-            'Prompt Master: responde preguntas de la charla de Carmelo.',
+            'Prompt Master: resuelve desafíos prácticos de inteligencia artificial.',
         code: 'IA-MASTER',
-        qrValue: 'DEVFEST-GYM-IA',
         clue:
-            'Prompt Master conquistado. La IA premia a quien escucha con atencion.',
-        locationDescription: 'Sala principal / charla IA',
+            'Prompt Master conquistado. La IA premia prompts claros y respuestas confiables.',
+        locationDescription: 'Área IA / Gemini',
         iconKey: 'brain',
         order: 2,
         challengeType: ChallengeType.trivia,
@@ -74,6 +124,65 @@ class MockData {
           correctAnswer: 'Puede planificar pasos y usar herramientas',
           timeLimitSeconds: 60,
           points: 100,
+          questionBank: [
+            ChallengeQuestion(
+              id: 'ia-prompt',
+              question:
+                  'Una IA debe clasificar comentarios y solo puede responder POSITIVO o NEGATIVO. ¿Cuál es el mejor prompt?',
+              options: [
+                'Analiza este comentario.',
+                'Dime qué piensas.',
+                'Clasifica el comentario como POSITIVO o NEGATIVO. Responde con una sola palabra.',
+                'Háblame sobre sentimientos.',
+              ],
+              correctAnswer:
+                  'Clasifica el comentario como POSITIVO o NEGATIVO. Responde con una sola palabra.',
+              hint: 'Un buen prompt especifica la tarea y el formato esperado.',
+            ),
+            ChallengeQuestion(
+              id: 'ia-hallucination',
+              question:
+                  'La IA no tiene acceso a la agenda del evento. ¿Cuál respuesta es más confiable?',
+              options: [
+                'La próxima charla comienza exactamente a las 3:17.',
+                'No tengo la agenda disponible, así que no puedo confirmar la hora.',
+                'Seguro comienza después del almuerzo.',
+                'Todas las charlas comienzan a la misma hora.',
+              ],
+              correctAnswer:
+                  'No tengo la agenda disponible, así que no puedo confirmar la hora.',
+              hint:
+                  'Una IA confiable reconoce cuando no posee suficiente información.',
+            ),
+            ChallengeQuestion(
+              id: 'ia-few-shot',
+              question:
+                  'Antes de hacerle una pregunta a una IA, le muestras dos entradas con sus respuestas correctas para enseñarle el formato. ¿Qué técnica utilizas?',
+              options: [
+                'Few-shot prompting',
+                'Compresión de imágenes',
+                'Balanceo de carga',
+                'Cifrado simétrico',
+              ],
+              correctAnswer: 'Few-shot prompting',
+              hint:
+                  'La IA recibe unos pocos ejemplos antes de resolver la tarea.',
+            ),
+            ChallengeQuestion(
+              id: 'ia-context',
+              question:
+                  'Si entregas demasiado texto y el modelo deja fuera las primeras instrucciones, ¿qué límite alcanzaste?',
+              options: [
+                'Ventana de contexto',
+                'Resolución de pantalla',
+                'Velocidad de internet',
+                'Memoria del teléfono',
+              ],
+              correctAnswer: 'Ventana de contexto',
+              hint:
+                  'Es la cantidad de información que el modelo puede considerar a la vez.',
+            ),
+          ],
         ),
         gymName: 'Prompt Master',
         track: 'ia',
@@ -85,7 +194,6 @@ class MockData {
         description:
             'The Hidden Exploit: encuentra pistas fisicas y descifra el codigo final.',
         code: 'SECURE2026',
-        qrValue: 'DEVFEST-GYM-SECURITY',
         clue: 'The Hidden Exploit conquistado. El codigo final fue SECURE2026.',
         locationDescription: 'QRs escondidos en el venue',
         iconKey: 'shield',
@@ -109,21 +217,65 @@ class MockData {
         description:
             'Pixel Perfect: resuelve un reto visual de UI y accesibilidad.',
         code: 'WEB-MASTER',
-        qrValue: 'DEVFEST-GYM-WEB',
         clue:
             'Pixel Perfect conquistado. Una buena UI tambien se mide por accesibilidad.',
         locationDescription: 'Area Web / UX',
         iconKey: 'globe',
         order: 4,
-        challengeType: ChallengeType.trivia,
+        challengeType: ChallengeType.code,
         challenge: GymChallenge(
-          type: ChallengeType.trivia,
+          type: ChallengeType.code,
           question:
               'Que opcion es mas semantica para una navegacion principal en HTML?',
           options: ['<nav>', '<div>', '<span>', '<section>'],
           correctAnswer: '<nav>',
           timeLimitSeconds: 60,
           points: 100,
+          questionBank: [
+            ChallengeQuestion(
+              id: 'web-button',
+              question:
+                  'Parece un botón, pero el teclado y los lectores de pantalla pueden tener problemas. ¿Qué etiqueta debería utilizarse?',
+              options: ['<button>', '<span>', '<section>', '<strong>'],
+              correctAnswer: '<button>',
+              hint:
+                  'Utiliza el elemento que describe la función, no solamente la apariencia.',
+              codeSnippet:
+                  '<div onclick="enviarFormulario()">\n  Enviar\n</div>',
+            ),
+            ChallengeQuestion(
+              id: 'web-hidden',
+              question:
+                  'Este elemento existe en el HTML, pero no aparece en la página. ¿Qué declaración lo ocultó?',
+              options: [
+                'display: none',
+                'color: blue',
+                'font-size: 16px',
+                'margin: auto',
+              ],
+              correctAnswer: 'display: none',
+              hint: 'Esta propiedad elimina el elemento del flujo visual.',
+              codeSnippet: '.mensaje {\n  display: none;\n}',
+            ),
+            ChallengeQuestion(
+              id: 'web-404',
+              question:
+                  'Un visitante solicita una página que el servidor no puede encontrar. ¿Qué código HTTP debería recibir?',
+              options: ['200', '301', '404', '500'],
+              correctAnswer: '404',
+              hint: 'El recurso solicitado no fue encontrado.',
+            ),
+            ChallengeQuestion(
+              id: 'web-alt',
+              question:
+                  'La imagen muestra dónde está el escenario, pero un lector de pantalla no puede describirla. ¿Qué atributo falta?',
+              options: ['alt', 'href', 'target', 'method'],
+              correctAnswer: 'alt',
+              hint:
+                  'Este atributo proporciona una descripción textual de la imagen.',
+              codeSnippet: '<img src="mapa.png">',
+            ),
+          ],
         ),
         gymName: 'Pixel Perfect',
         track: 'web',
@@ -134,7 +286,6 @@ class MockData {
         title: 'Gimnasio Startup',
         description: 'Runway Rush: sobrevive al caos de una startup.',
         code: 'STARTUP-MASTER',
-        qrValue: 'DEVFEST-GYM-STARTUP',
         clue:
             'Runway Rush conquistado. Llegaste al millon narrativo antes de quedarte sin runway.',
         locationDescription: 'Area emprendimiento / networking',
@@ -158,7 +309,6 @@ class MockData {
         title: 'Gimnasio Cloud',
         description: 'Scale the Cloud: responde arquitectura cloud y Firebase.',
         code: 'CLOUD-MASTER',
-        qrValue: 'DEVFEST-GYM-CLOUD',
         clue:
             'Scale the Cloud conquistado. La arquitectura escala mejor cuando es simple.',
         locationDescription: 'Area Cloud / Firebase',
@@ -178,6 +328,58 @@ class MockData {
           correctAnswer: 'Firestore',
           timeLimitSeconds: 60,
           points: 100,
+          questionBank: [
+            ChallengeQuestion(
+              id: 'cloud-persistence',
+              question:
+                  'El ranking se guarda solamente en la memoria del servidor. El servidor se reinicia y todos los puntos desaparecen. ¿Qué necesita la aplicación?',
+              options: [
+                'Almacenamiento persistente',
+                'Una pantalla más grande',
+                'Más animaciones',
+                'Un nuevo nombre de dominio',
+              ],
+              correctAnswer: 'Almacenamiento persistente',
+              hint:
+                  'Los datos importantes deben sobrevivir después de apagar el servidor.',
+            ),
+            ChallengeQuestion(
+              id: 'cloud-capacity',
+              question:
+                  'Un servidor puede atender 500 participantes. Llegan 2,000 participantes simultáneamente. ¿Cuántos servidores iguales hacen falta como mínimo?',
+              options: ['2', '3', '4', '5'],
+              correctAnswer: '4',
+              hint:
+                  'Divide la cantidad de participantes entre la capacidad de un servidor.',
+            ),
+            ChallengeQuestion(
+              id: 'cloud-load-balancer',
+              question:
+                  'Recibo una petición y decido a cuál de varios servidores enviarla para evitar que uno solo cargue con todo. ¿Qué soy?',
+              options: [
+                'Balanceador de carga',
+                'Base de datos',
+                'Editor de código',
+                'Sistema operativo',
+              ],
+              correctAnswer: 'Balanceador de carga',
+              hint: 'Su trabajo es distribuir el tráfico.',
+            ),
+            ChallengeQuestion(
+              id: 'cloud-storage',
+              question:
+                  'Los usuarios suben fotografías del evento. ¿Qué tipo de servicio conviene utilizar para almacenarlas?',
+              options: [
+                'Almacenamiento de objetos',
+                'Servicio de autenticación',
+                'Sistema de notificaciones',
+                'Balanceador de carga',
+              ],
+              correctAnswer: 'Almacenamiento de objetos',
+              hint:
+                  'Está diseñado para guardar imágenes, videos y otros archivos.',
+            ),
+          ],
         ),
         gymName: 'Scale the Cloud',
         track: 'cloud',
@@ -189,7 +391,6 @@ class MockData {
         description:
             'Hall of Voices: demuestra que estuviste atento a las charlas.',
         code: 'SPEAKER-MASTER',
-        qrValue: 'DEVFEST-GYM-SPEAKER',
         clue:
             'Hall of Voices conquistado. Las mejores pistas salieron del escenario.',
         locationDescription: 'Sala principal',
@@ -220,7 +421,6 @@ class MockData {
         description:
             'Community Signal: completa el reto social y canjea el codigo recibido por DM.',
         code: 'COMMUNITY-SIGNAL',
-        qrValue: 'DEVFEST-GYM-COMMUNITY',
         clue:
             'Community Signal conquistado. La comunidad tambien se construye compartiendo.',
         locationDescription: 'Instagram / area comunidad',

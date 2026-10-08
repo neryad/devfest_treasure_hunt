@@ -65,7 +65,7 @@ void main() {
 
     expect(find.text('Tu aventura'), findsOneWidget);
     expect(find.text('0 de 8 medallas conseguidas'), findsOneWidget);
-    expect(find.text('Escanear QR'), findsOneWidget);
+    expect(find.text('Introducir código'), findsOneWidget);
   });
 
   testWidgets('dashboard reflects discoveries in any order', (tester) async {

@@ -6,6 +6,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/snack_bar_utils.dart';
 import '../../../core/utils/treasure_icons.dart';
 import '../../../domain/entities/gym_challenge.dart';
+import '../../../domain/entities/challenge_question.dart';
+import '../../../domain/utils/challenge_question_selector.dart';
 import '../../../domain/entities/treasure_item.dart';
 import '../../../domain/use_cases/complete_challenge_use_case.dart';
 import '../../../state/app_scope.dart';
@@ -25,6 +27,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   Timer? _timer;
   String? _selectedAnswer;
   final _textController = TextEditingController();
+  ChallengeQuestion? _assignedQuestion;
   bool _submitted = false;
   bool _submitting = false;
 
@@ -38,6 +41,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
       _secondsRemaining = challenge!.timeLimitSeconds;
       _startTimer();
     }
+    _assignQuestion();
   }
 
   @override
@@ -56,6 +60,28 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         setState(() => _secondsRemaining--);
       }
     });
+  }
+
+  void _assignQuestion() {
+    final controller = AppScope.read(context);
+    final participant = controller.participant;
+    if (participant == null || challenge == null) return;
+    if (challenge!.questionBank.isNotEmpty) {
+      _assignedQuestion = ChallengeQuestionSelector.select(
+        participantId: participant.id,
+        gymId: gym.id,
+        bank: challenge!.questionBank,
+      );
+    } else {
+      _assignedQuestion = ChallengeQuestion(
+        id: 'legacy',
+        question: challenge!.question ?? '',
+        options: challenge!.options ?? const [],
+        correctAnswer: challenge!.correctAnswer ?? '',
+        hint: challenge!.hint,
+        codeSnippet: challenge!.codeSnippet,
+      );
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -90,7 +116,11 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final result = controller.lastChallengeResult;
-    final canSubmit = challenge?.hasOptions == true
+    final displayedQuestion = _assignedQuestion;
+    final displayedOptions = displayedQuestion?.options ?? const <String>[];
+    final displayedHint = displayedQuestion?.hint;
+    final displayedSnippet = displayedQuestion?.codeSnippet;
+    final canSubmit = displayedOptions.isNotEmpty
         ? _selectedAnswer != null
         : challenge?.requiresInput == true
         ? _textController.text.trim().isNotEmpty
@@ -98,7 +128,11 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
 
     // Show result screen if submitted
     if (_submitted && result != null) {
-      return _ResultScreen(result: result, gym: gym);
+      return _ResultScreen(
+        result: result,
+        gym: gym,
+        hint: challenge?.questionBank.isNotEmpty == true ? displayedHint : null,
+      );
     }
 
     // Show cooldown screen
@@ -118,15 +152,22 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: StartupMiniGame(
-              targetScore: challenge?.targetScore ?? 100,
-              onCompleted: () {
-                _selectedAnswer = challenge?.correctAnswer ?? 'RUNWAY-CLEARED';
-                _handleSubmit();
-              },
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 640),
+                child: StartupMiniGame(
+                  targetScore: challenge?.targetScore ?? 100,
+                  onCompleted: () {
+                    _selectedAnswer =
+                        challenge?.correctAnswer ?? 'RUNWAY-CLEARED';
+                    _handleSubmit();
+                  },
+                ),
+              ),
             ),
           ),
         ),
@@ -216,12 +257,12 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             ],
 
             // Question
-            if (challenge?.question != null)
+            if (displayedQuestion?.question.isNotEmpty == true)
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Text(
-                    challenge!.question!,
+                    displayedQuestion!.question,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -233,7 +274,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
               ),
             const SizedBox(height: 20),
 
-            if (challenge?.hint != null) ...[
+            // Legacy riddles need their hint to solve the challenge. Question
+            // banks reveal theirs only after a failed attempt.
+            if (challenge?.questionBank.isEmpty == true &&
+                displayedHint != null) ...[
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -241,7 +285,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  challenge!.hint!,
+                  displayedHint,
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w600,
@@ -252,7 +296,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             ],
 
             // Code snippet (if applicable)
-            if (challenge?.codeSnippet != null)
+            if (displayedSnippet != null)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -261,7 +305,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                   border: Border.all(color: AppColors.surfaceAlt),
                 ),
                 child: Text(
-                  challenge!.codeSnippet!,
+                  displayedSnippet,
                   style: const TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 14,
@@ -272,13 +316,13 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             const SizedBox(height: 20),
 
             // Options (trivia/code)
-            if (challenge?.hasOptions == true)
+            if (displayedOptions.isNotEmpty)
               Expanded(
                 child: ListView.separated(
-                  itemCount: challenge!.options!.length,
+                  itemCount: displayedOptions.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
-                    final option = challenge!.options![index];
+                    final option = displayedOptions[index];
                     final isSelected = _selectedAnswer == option;
                     return InkWell(
                       onTap: () => setState(() => _selectedAnswer = option),
@@ -400,10 +444,11 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
 }
 
 class _ResultScreen extends StatelessWidget {
-  const _ResultScreen({required this.result, required this.gym});
+  const _ResultScreen({required this.result, required this.gym, this.hint});
 
   final ChallengeResult result;
   final TreasureItem gym;
+  final String? hint;
 
   @override
   Widget build(BuildContext context) {
@@ -553,6 +598,24 @@ class _ResultScreen extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                     ),
+                    if (hint != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.amber.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Pista: $hint',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
 
                   const SizedBox(height: 32),

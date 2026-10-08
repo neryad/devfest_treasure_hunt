@@ -9,7 +9,6 @@ import '../../../core/widgets/stat_card.dart';
 import '../../../state/app_scope.dart';
 import '../completion/completion_screen.dart';
 import '../discovery/manual_code_screen.dart';
-import '../discovery/qr_scanner_screen.dart';
 
 /// "Inicio" tab: the participant's adventure overview.
 class HomeDashboard extends StatelessWidget {
@@ -77,16 +76,7 @@ class HomeDashboard extends StatelessWidget {
             title: 'Acciones rápidas',
             subtitle: 'Completa gimnasios y suma medallas',
           ),
-          _ActionCard(
-            icon: Icons.qr_code_scanner_rounded,
-            title: 'Escanear un QR',
-            subtitle: 'Apunta al QR de un gimnasio',
-            color: AppColors.primary,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const QrScannerScreen()),
-            ),
-          ),
-          const SizedBox(height: 10),
+
           _ActionCard(
             icon: Icons.keyboard_rounded,
             title: 'Introducir código manual',

@@ -9,7 +9,5 @@ abstract class TreasureRepository {
 
   Future<TreasureItem?> getByCode(String code);
 
-  Future<TreasureItem?> getByQrValue(String value);
-
   Future<void> setTreasureActive(String id, bool active);
 }

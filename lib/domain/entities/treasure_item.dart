@@ -19,7 +19,6 @@ class TreasureItem {
     required this.title,
     required this.description,
     required this.code,
-    required this.qrValue,
     required this.clue,
     required this.locationDescription,
     required this.iconKey,
@@ -42,9 +41,6 @@ class TreasureItem {
 
   /// Manual code a participant can type, e.g. "DEVFEST-042".
   final String code;
-
-  /// Value encoded in the physical QR, e.g. "DEVFEST-TREASURE-001".
-  final String qrValue;
 
   /// Hint unlocked once this treasure is discovered. Guidance, not order.
   final String clue;
@@ -91,7 +87,6 @@ class TreasureItem {
     title: title,
     description: description,
     code: code,
-    qrValue: qrValue,
     clue: clue,
     locationDescription: locationDescription,
     iconKey: iconKey,
@@ -110,7 +105,6 @@ class TreasureItem {
     'title': title,
     'description': description,
     'code': code,
-    'qrValue': qrValue,
     'clue': clue,
     'locationDescription': locationDescription,
     'iconKey': iconKey,
@@ -118,19 +112,7 @@ class TreasureItem {
     'isActive': isActive,
     'createdAt': createdAt?.toIso8601String(),
     'challengeType': challengeType.name,
-    'challenge': challenge != null
-        ? {
-            'type': challenge!.type.name,
-            'question': challenge!.question,
-            'options': challenge!.options,
-            'correctAnswer': challenge!.correctAnswer,
-            'hint': challenge!.hint,
-            'codeSnippet': challenge!.codeSnippet,
-            'timeLimitSeconds': challenge!.timeLimitSeconds,
-            'points': challenge!.points,
-            'targetScore': challenge!.targetScore,
-          }
-        : null,
+    'challenge': challenge?.toJson(),
     'gymName': gymName,
     'track': track,
     'pointValue': pointValue,
@@ -141,7 +123,6 @@ class TreasureItem {
     title: json['title'] as String,
     description: json['description'] as String,
     code: json['code'] as String,
-    qrValue: json['qrValue'] as String,
     clue: json['clue'] as String,
     locationDescription: json['locationDescription'] as String,
     iconKey: json['iconKey'] as String,
@@ -155,23 +136,7 @@ class TreasureItem {
       orElse: () => ChallengeType.qr,
     ),
     challenge: json['challenge'] != null
-        ? GymChallenge(
-            type: ChallengeType.values.firstWhere(
-              (e) => e.name == json['challenge']['type'],
-              orElse: () => ChallengeType.qr,
-            ),
-            question: json['challenge']['question'] as String?,
-            options: (json['challenge']['options'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList(),
-            correctAnswer: json['challenge']['correctAnswer'] as String?,
-            hint: json['challenge']['hint'] as String?,
-            codeSnippet: json['challenge']['codeSnippet'] as String?,
-            timeLimitSeconds:
-                json['challenge']['timeLimitSeconds'] as int? ?? 60,
-            points: json['challenge']['points'] as int? ?? 100,
-            targetScore: json['challenge']['targetScore'] as int?,
-          )
+        ? GymChallenge.fromJson(json['challenge'] as Map<String, dynamic>)
         : null,
     gymName: json['gymName'] as String?,
     track: json['track'] as String?,
