@@ -60,6 +60,10 @@ void main() {
   testWidgets('tap on an active gym opens the challenge screen', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     final ds = MockLocalDataSource(seedData: false);
     await ds.initialize();
     final repo = MockAppRepository(ds);
@@ -70,16 +74,9 @@ void main() {
     await _pumpScreen(tester, controller);
 
     await tester.tap(find.text('Gimnasio #01'));
-    try {
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    } catch (_) {
-      await tester.pump(const Duration(seconds: 1));
-    }
-
     await tester.pump();
-    // Rendering overflow may occur in test; navigation happened if push succeeded
-    expect(find.byType(ChallengeScreen), findsWidgets);
-    // Also verify at least one instance exists
-    expect(find.byType(ChallengeScreen), findsAtLeastNWidgets(1));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(ChallengeScreen), findsOneWidget);
   });
 }
