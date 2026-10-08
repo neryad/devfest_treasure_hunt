@@ -19,7 +19,7 @@ class FirebaseDataSource implements AppDataSource {
        _storage = storage ?? SharedPrefsLocalStorage();
 
   static const _currentParticipantKey = 'devfest.currentParticipant.v1';
-  static const _challengeContentVersion = 2;
+  static const _challengeContentVersion = 4;
 
   final FirebaseFirestore _firestore;
   final AppLocalStorage _storage;

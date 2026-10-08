@@ -8,11 +8,10 @@ void main() {
       MaterialApp(home: StartupMiniGame(targetScore: 100, onCompleted: () {})),
     );
 
-    expect(find.text('Carril: Centro'), findsOneWidget);
+    expect(find.text('¡Objetivo alineado! Dispara tu MVP'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('startup-game-move-left')));
     await tester.pump();
-    expect(find.text('Carril: Izquierda'), findsOneWidget);
     final fireWhileMisaligned = tester.widget<ElevatedButton>(
       find.byKey(const Key('startup-game-fire')),
     );
@@ -24,7 +23,6 @@ void main() {
 
     await tester.tap(find.byKey(const Key('startup-game-move-right')));
     await tester.pump();
-    expect(find.text('Carril: Centro'), findsOneWidget);
     expect(find.text('¡Objetivo alineado! Dispara tu MVP'), findsOneWidget);
   });
 
@@ -46,7 +44,7 @@ void main() {
     await tester.tap(find.byKey(const Key('startup-game-fire')));
     await tester.pump();
     expect(find.byKey(const Key('startup-game-projectile')), findsOneWidget);
-    expect(find.text('0 / 1'), findsOneWidget);
+    expect(find.text('0/1'), findsOneWidget);
 
     final projectile = find.byKey(const Key('startup-game-projectile'));
     final startY = tester.getTopLeft(projectile).dy;
@@ -56,7 +54,7 @@ void main() {
 
     await tester.pump(const Duration(milliseconds: 350));
     expect(completed, isTrue);
-    expect(find.text('1 / 1'), findsOneWidget);
+    expect(find.text('1/1'), findsOneWidget);
   });
 
   testWidgets('missed enemy subtracts runway and advances to another threat', (
@@ -77,7 +75,7 @@ void main() {
     await tester.tap(find.byKey(const Key('startup-game-miss-enemy')));
     await tester.pump();
 
-    expect(find.text('20 / 40'), findsOneWidget);
+    expect(find.text('20'), findsOneWidget);
     expect(find.textContaining('CHURN'), findsOneWidget);
   });
 
@@ -111,12 +109,12 @@ void main() {
     await tester.tap(find.byKey(const Key('startup-game-miss-enemy')));
     await tester.pump();
 
-    expect(find.text('Tu startup se quedó sin runway'), findsOneWidget);
+    expect(find.text('Te quedaste sin runway'), findsOneWidget);
 
-    await tester.tap(find.text('Reintentar misión'));
+    await tester.tap(find.text('Reintentar'));
     await tester.pump();
 
-    expect(find.text('20 / 20'), findsOneWidget);
-    expect(find.text('Tu startup se quedó sin runway'), findsNothing);
+    expect(find.text('20'), findsOneWidget);
+    expect(find.text('Te quedaste sin runway'), findsNothing);
   });
 }

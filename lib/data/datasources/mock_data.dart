@@ -222,60 +222,14 @@ class MockData {
         locationDescription: 'Area Web / UX',
         iconKey: 'globe',
         order: 4,
-        challengeType: ChallengeType.code,
+        challengeType: ChallengeType.miniGame,
         challenge: GymChallenge(
-          type: ChallengeType.code,
+          type: ChallengeType.miniGame,
           question:
-              'Que opcion es mas semantica para una navegacion principal en HTML?',
-          options: ['<nav>', '<div>', '<span>', '<section>'],
-          correctAnswer: '<nav>',
-          timeLimitSeconds: 60,
+              'Memoriza el color de referencia y encuentra el tono idéntico.',
+          correctAnswer: 'PIXEL-PERFECT',
           points: 100,
-          questionBank: [
-            ChallengeQuestion(
-              id: 'web-button',
-              question:
-                  'Parece un botón, pero el teclado y los lectores de pantalla pueden tener problemas. ¿Qué etiqueta debería utilizarse?',
-              options: ['<button>', '<span>', '<section>', '<strong>'],
-              correctAnswer: '<button>',
-              hint:
-                  'Utiliza el elemento que describe la función, no solamente la apariencia.',
-              codeSnippet:
-                  '<div onclick="enviarFormulario()">\n  Enviar\n</div>',
-            ),
-            ChallengeQuestion(
-              id: 'web-hidden',
-              question:
-                  'Este elemento existe en el HTML, pero no aparece en la página. ¿Qué declaración lo ocultó?',
-              options: [
-                'display: none',
-                'color: blue',
-                'font-size: 16px',
-                'margin: auto',
-              ],
-              correctAnswer: 'display: none',
-              hint: 'Esta propiedad elimina el elemento del flujo visual.',
-              codeSnippet: '.mensaje {\n  display: none;\n}',
-            ),
-            ChallengeQuestion(
-              id: 'web-404',
-              question:
-                  'Un visitante solicita una página que el servidor no puede encontrar. ¿Qué código HTTP debería recibir?',
-              options: ['200', '301', '404', '500'],
-              correctAnswer: '404',
-              hint: 'El recurso solicitado no fue encontrado.',
-            ),
-            ChallengeQuestion(
-              id: 'web-alt',
-              question:
-                  'La imagen muestra dónde está el escenario, pero un lector de pantalla no puede describirla. ¿Qué atributo falta?',
-              options: ['alt', 'href', 'target', 'method'],
-              correctAnswer: 'alt',
-              hint:
-                  'Este atributo proporciona una descripción textual de la imagen.',
-              codeSnippet: '<img src="mapa.png">',
-            ),
-          ],
+          targetScore: 100,
         ),
         gymName: 'Pixel Perfect',
         track: 'web',
@@ -419,20 +373,20 @@ class MockData {
         id: 'gym-community',
         title: 'Gimnasio Comunidad',
         description:
-            'Community Signal: completa el reto social y canjea el codigo recibido por DM.',
+            'Community Signal: únete a GDG Santo Domingo, obtén tu entrada y valida con el staff.',
         code: 'COMMUNITY-SIGNAL',
         clue:
             'Community Signal conquistado. La comunidad tambien se construye compartiendo.',
-        locationDescription: 'Instagram / area comunidad',
+        locationDescription: 'Booth de comunidad',
         iconKey: 'people',
         order: 8,
         challengeType: ChallengeType.social,
         challenge: GymChallenge(
           type: ChallengeType.social,
           question:
-              'Sube una selfie o story del evento, etiqueta a GDG Santo Domingo y envia evidencia por DM. Escribe aqui el codigo que recibas.',
+              'Únete a GDG Santo Domingo, obtén tu entrada al DevFest y escanea el QR privado del staff.',
           hint:
-              'Si Instagram falla, staff puede validar presencialmente y darte el codigo.',
+              'Muestra al staff las dos confirmaciones para acceder al QR de validación.',
           correctAnswer: 'COMMUNITY-SIGNAL',
           points: 100,
         ),

@@ -28,7 +28,7 @@ class MockLocalDataSource implements AppDataSource {
 
   static const _treasuresKey = 'devfest.treasures.v1';
   static const _challengeContentVersionKey = 'devfest.challengeContentVersion';
-  static const _challengeContentVersion = '2';
+  static const _challengeContentVersion = '4';
   static const _participantsKey = 'devfest.participants.v1';
   static const _discoveriesKey = 'devfest.discoveries.v1';
   static const _currentParticipantKey = 'devfest.currentParticipant.v1';

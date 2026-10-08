@@ -70,7 +70,7 @@ void main() {
 
       expect(android!.isActive, isFalse);
       expect(android.challenge!.questionBank, hasLength(4));
-      expect(storage.values['devfest.challengeContentVersion'], '2');
+      expect(storage.values['devfest.challengeContentVersion'], '4');
     },
   );
 }

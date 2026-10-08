@@ -11,6 +11,8 @@ import '../../../domain/utils/challenge_question_selector.dart';
 import '../../../domain/entities/treasure_item.dart';
 import '../../../domain/use_cases/complete_challenge_use_case.dart';
 import '../../../state/app_scope.dart';
+import 'community_challenge_screen.dart';
+import 'pixel_perfect_mini_game.dart';
 import 'startup_mini_game.dart';
 
 class ChallengeScreen extends StatefulWidget {
@@ -143,7 +145,35 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
       );
     }
 
+    if (gym.id == 'gym-community') {
+      return CommunityChallengeScreen(
+        validationCode: challenge?.correctAnswer ?? 'COMMUNITY-SIGNAL',
+        onCompleted: () async {
+          _selectedAnswer = challenge?.correctAnswer ?? 'COMMUNITY-SIGNAL';
+          await _handleSubmit();
+        },
+      );
+    }
+
     if (challenge?.isMiniGame == true) {
+      if (gym.id == 'gym-web') {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(gym.gymName ?? gym.title),
+            leading: IconButton(
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          body: PixelPerfectMiniGame(
+            targetScore: challenge?.targetScore ?? 100,
+            onCompleted: () {
+              _selectedAnswer = challenge?.correctAnswer ?? 'PIXEL-PERFECT';
+              _handleSubmit();
+            },
+          ),
+        );
+      }
       return Scaffold(
         appBar: AppBar(
           title: Text(gym.gymName ?? gym.title),
