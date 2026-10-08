@@ -10,10 +10,16 @@ import '../domain/entities/treasure_item.dart';
 import '../domain/repositories/event_repository.dart';
 import '../domain/repositories/leaderboard_repository.dart';
 import '../domain/repositories/participant_repository.dart';
+import '../domain/repositories/attempt_repository.dart';
 import '../domain/repositories/treasure_repository.dart';
+import '../domain/use_cases/complete_challenge_use_case.dart';
 import '../domain/use_cases/discover_treasure_use_case.dart';
 import '../domain/use_cases/leaderboard_use_case.dart';
 import '../domain/use_cases/start_participant_use_case.dart';
+
+const _cooldownDuration = Duration(minutes: 5);
+const _adminUser = 'admin';
+const _adminPassword = 'devfest2026';
 
 /// Single state container for the demo.
 ///
@@ -28,9 +34,10 @@ class AppController extends ChangeNotifier {
     required LeaderboardRepository leaderboardRepository,
     required EventRepository eventRepository,
     Future<void> Function()? resetStore,
+    AttemptRepository? attemptRepository,
     this.enableElapsedTicker = true,
-  })  : _treasureRepository = treasureRepository,
-        _participantRepository = participantRepository {
+  }) : _treasureRepository = treasureRepository,
+       _participantRepository = participantRepository {
     _discoverUseCase = DiscoverTreasureUseCase(
       treasureRepository: treasureRepository,
       participantRepository: participantRepository,
@@ -39,6 +46,13 @@ class AppController extends ChangeNotifier {
     _leaderboardUseCase = LeaderboardUseCase(leaderboardRepository);
     _eventRepository = eventRepository;
     _resetStore = resetStore;
+    _completeChallengeUseCase = attemptRepository != null
+        ? CompleteChallengeUseCase(
+            treasureRepository: treasureRepository,
+            participantRepository: participantRepository,
+            attemptRepository: attemptRepository,
+          )
+        : null;
   }
 
   final TreasureRepository _treasureRepository;
@@ -50,6 +64,7 @@ class AppController extends ChangeNotifier {
   late final DiscoverTreasureUseCase _discoverUseCase;
   late final StartParticipantUseCase _startUseCase;
   late final LeaderboardUseCase _leaderboardUseCase;
+  late final CompleteChallengeUseCase? _completeChallengeUseCase;
 
   bool _initializing = true;
   Event? _event;
@@ -60,6 +75,9 @@ class AppController extends ChangeNotifier {
   final Set<String> _consultedClues = {};
   Timer? _ticker;
   String? _lastError;
+  ChallengeResult? _lastChallengeResult;
+  DateTime? _cooldownStart;
+  bool _adminSignedIn = false;
 
   bool get initializing => _initializing;
   Event? get event => _event;
@@ -68,6 +86,22 @@ class AppController extends ChangeNotifier {
   List<Participant> get participants => _participants;
   List<LeaderboardEntry> get leaderboard => _leaderboard;
   String? get lastError => _lastError;
+  ChallengeResult? get lastChallengeResult => _lastChallengeResult;
+  bool get adminSignedIn => _adminSignedIn;
+
+  bool get isOnCooldown {
+    final start = _cooldownStart;
+    if (start == null) return false;
+    return DateTime.now().difference(start) < _cooldownDuration;
+  }
+
+  Duration get cooldownRemaining {
+    final start = _cooldownStart;
+    if (start == null) return Duration.zero;
+    final elapsed = DateTime.now().difference(start);
+    final remaining = _cooldownDuration - elapsed;
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
 
   int get totalTreasures => _treasures.length;
   int get discoveredCount => _participant?.discoveredCount ?? 0;
@@ -103,6 +137,21 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  CompleteChallengeUseCase? get completeChallengeUseCase =>
+      _completeChallengeUseCase;
+
+  bool signInAdmin(String user, String password) {
+    final valid = user.trim() == _adminUser && password == _adminPassword;
+    _adminSignedIn = valid;
+    notifyListeners();
+    return valid;
+  }
+
+  void signOutAdmin() {
+    _adminSignedIn = false;
+    notifyListeners();
+  }
+
   TreasureItem? treasureById(String id) {
     for (final t in _treasures) {
       if (t.id == id) return t;
@@ -124,12 +173,14 @@ class AppController extends ChangeNotifier {
       ..sort((a, b) => a.order.compareTo(b.order));
     final discovered = _participant?.discoveredTreasureIds ?? const [];
     return sorted
-        .map((t) => Clue(
-              treasureId: t.id,
-              text: t.clue,
-              unlocked: discovered.contains(t.id),
-              consulted: _consultedClues.contains(t.id),
-            ))
+        .map(
+          (t) => Clue(
+            treasureId: t.id,
+            text: t.clue,
+            unlocked: discovered.contains(t.id),
+            consulted: _consultedClues.contains(t.id),
+          ),
+        )
         .toList();
   }
 
@@ -163,7 +214,8 @@ class AppController extends ChangeNotifier {
   Future<DiscoverTreasureResult> discoverByCode(String code) async {
     if (_participant == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.participantNotFound);
+        DiscoverFailure.participantNotFound,
+      );
     }
     final treasure = await _treasureRepository.getByCode(code);
     return _runDiscovery(treasure);
@@ -172,7 +224,8 @@ class AppController extends ChangeNotifier {
   Future<DiscoverTreasureResult> discoverByQrValue(String value) async {
     if (_participant == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.participantNotFound);
+        DiscoverFailure.participantNotFound,
+      );
     }
     final treasure = await _treasureRepository.getByQrValue(value);
     return _runDiscovery(treasure);
@@ -181,7 +234,8 @@ class AppController extends ChangeNotifier {
   Future<DiscoverTreasureResult> discoverByTreasureId(String treasureId) async {
     if (_participant == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.participantNotFound);
+        DiscoverFailure.participantNotFound,
+      );
     }
     final treasure = await _treasureRepository.getTreasure(treasureId);
     return _runDiscovery(treasure);
@@ -190,7 +244,8 @@ class AppController extends ChangeNotifier {
   Future<DiscoverTreasureResult> _runDiscovery(TreasureItem? treasure) async {
     if (treasure == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.treasureNotFound);
+        DiscoverFailure.treasureNotFound,
+      );
     }
     final participant = _participant!;
     final result = await _discoverUseCase.execute(
@@ -212,6 +267,58 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> grantMedal({
+    required String participantId,
+    required String gymId,
+  }) async {
+    final participant = await _participantRepository.getParticipant(
+      participantId,
+    );
+    final gym = await _treasureRepository.getTreasure(gymId);
+    if (participant == null || gym == null || !gym.isActive) return false;
+    if (participant.discoveredTreasureIds.contains(gymId)) return false;
+
+    final updatedTreasures = [...participant.discoveredTreasureIds, gymId];
+    final allTreasures = await _treasureRepository.getTreasures();
+    final completed = updatedTreasures.length >= allTreasures.length;
+    final updated = participant.copyWith(
+      discoveredTreasureIds: updatedTreasures,
+      points: participant.points + (gym.challenge?.points ?? gym.pointValue),
+      medals: updatedTreasures.length,
+      status: completed ? ParticipantStatus.completed : participant.status,
+      completedAt: completed ? DateTime.now() : participant.completedAt,
+    );
+
+    await _participantRepository.updateParticipant(updated);
+    if (_participant?.id == participantId) {
+      _participant = updated;
+    }
+    await _reloadLeaderboard();
+    notifyListeners();
+    return true;
+  }
+
+  Future<bool> adjustParticipantPoints({
+    required String participantId,
+    required int delta,
+  }) async {
+    final participant = await _participantRepository.getParticipant(
+      participantId,
+    );
+    if (participant == null) return false;
+
+    final updatedPoints = (participant.points + delta).clamp(0, 1 << 31);
+    final updated = participant.copyWith(points: updatedPoints);
+
+    await _participantRepository.updateParticipant(updated);
+    if (_participant?.id == participantId) {
+      _participant = updated;
+    }
+    await _reloadLeaderboard();
+    notifyListeners();
+    return true;
+  }
+
   Future<void> resetDemo() async {
     _ticker?.cancel();
     _ticker = null;
@@ -221,8 +328,42 @@ class AppController extends ChangeNotifier {
     }
     _participant = null;
     _consultedClues.clear();
+    _lastChallengeResult = null;
+    _cooldownStart = null;
     await _reloadStaticData();
     await _reloadLeaderboard();
+    notifyListeners();
+  }
+
+  Future<void> submitChallenge(String gymId, String answer) async {
+    final participant = _participant;
+    if (participant == null || _completeChallengeUseCase == null) return;
+    final result = await _completeChallengeUseCase.execute(
+      participantId: participant.id,
+      gymId: gymId,
+      answer: answer,
+    );
+    _lastChallengeResult = result;
+    if (!result.isSuccess && result.cooldownRemaining != null) {
+      _cooldownStart = DateTime.now();
+    }
+    if (result.isSuccess) {
+      _participant = _participant?.copyWith(
+        discoveredTreasureIds: [
+          ...(_participant?.discoveredTreasureIds ?? []),
+          gymId,
+        ],
+        points: result.totalPoints ?? _participant?.points ?? 0,
+        medals: result.medals ?? _participant?.medals ?? 0,
+      );
+      await _reloadLeaderboard();
+    }
+    notifyListeners();
+  }
+
+  void clearChallengeResult() {
+    _lastChallengeResult = null;
+    _cooldownStart = null;
     notifyListeners();
   }
 

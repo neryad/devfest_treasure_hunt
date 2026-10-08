@@ -1,8 +1,10 @@
+import '../../domain/entities/attempt.dart';
 import '../../domain/entities/discovery.dart';
 import '../../domain/entities/event.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 import '../../domain/entities/participant.dart';
 import '../../domain/entities/treasure_item.dart';
+import '../../domain/repositories/attempt_repository.dart';
 import '../../domain/repositories/event_repository.dart';
 import '../../domain/repositories/leaderboard_repository.dart';
 import '../../domain/repositories/participant_repository.dart';
@@ -17,7 +19,8 @@ class MockAppRepository
         TreasureRepository,
         ParticipantRepository,
         LeaderboardRepository,
-        EventRepository {
+        EventRepository,
+        AttemptRepository {
   MockAppRepository(this._dataSource);
 
   final AppDataSource _dataSource;
@@ -59,8 +62,9 @@ class MockAppRepository
   @override
   Future<void> setTreasureActive(String id, bool active) async {
     final treasures = await _dataSource.loadTreasures();
-    final updated =
-        treasures.map((t) => t.id == id ? t.copyWith(isActive: active) : t).toList();
+    final updated = treasures
+        .map((t) => t.id == id ? t.copyWith(isActive: active) : t)
+        .toList();
     await _dataSource.saveTreasures(updated);
   }
 
@@ -97,8 +101,7 @@ class MockAppRepository
       _dataSource.saveParticipant(participant);
 
   @override
-  Future<List<Participant>> getParticipants() =>
-      _dataSource.loadParticipants();
+  Future<List<Participant>> getParticipants() => _dataSource.loadParticipants();
 
   @override
   Future<String?> getCurrentParticipantId() =>
@@ -132,10 +135,14 @@ class MockAppRepository
         totalTreasures: totalTreasures,
         elapsed: elapsed,
         status: p.status,
+        points: p.points,
       );
     }).toList();
 
     entries.sort((a, b) {
+      if (a.points != b.points) {
+        return b.points.compareTo(a.points);
+      }
       if (a.discoveredCount != b.discoveredCount) {
         return b.discoveredCount.compareTo(a.discoveredCount);
       }
@@ -152,6 +159,7 @@ class MockAppRepository
         elapsed: entries[i].elapsed,
         status: entries[i].status,
         position: i + 1,
+        points: entries[i].points,
       );
     }
     return entries;
@@ -161,4 +169,42 @@ class MockAppRepository
 
   @override
   Future<Event> getEvent() => _dataSource.loadEvent();
+
+  // ---------- AttemptRepository ----------
+
+  @override
+  Future<List<Attempt>> getAttempts(String participantId) async {
+    final allAttempts = await _dataSource.loadAttempts();
+    return allAttempts.where((a) => a.participantId == participantId).toList();
+  }
+
+  @override
+  Future<List<Attempt>> getAttemptsForGym(
+    String participantId,
+    String gymId,
+  ) async {
+    final allAttempts = await _dataSource.loadAttempts();
+    return allAttempts
+        .where((a) => a.participantId == participantId && a.gymId == gymId)
+        .toList();
+  }
+
+  @override
+  Future<void> saveAttempt(Attempt attempt) async {
+    await _dataSource.saveAttempt(attempt);
+  }
+
+  @override
+  Future<int> getAttemptCount(String participantId, String gymId) async {
+    final attempts = await getAttemptsForGym(participantId, gymId);
+    return attempts.length;
+  }
+
+  @override
+  Future<Attempt?> getLastAttempt(String participantId, String gymId) async {
+    final attempts = await getAttemptsForGym(participantId, gymId);
+    if (attempts.isEmpty) return null;
+    attempts.sort((a, b) => b.answeredAt.compareTo(a.answeredAt));
+    return attempts.first;
+  }
 }

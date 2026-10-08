@@ -11,6 +11,7 @@ class LeaderboardEntry {
     required this.elapsed,
     required this.status,
     this.position = 0,
+    this.points = 0,
   });
 
   final String participantId;
@@ -23,6 +24,9 @@ class LeaderboardEntry {
 
   /// 1-based position after sorting.
   final int position;
+
+  /// Points earned based on challenge difficulty.
+  final int points;
 
   double get progress =>
       totalTreasures == 0 ? 0 : discoveredCount / totalTreasures;

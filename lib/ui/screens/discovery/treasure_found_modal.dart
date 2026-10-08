@@ -89,7 +89,7 @@ class _TreasureFoundDialogState extends State<TreasureFoundDialog> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
-                    colors: [AppColors.amber, Color(0xFFB76E00)],
+                    colors: [AppColors.amber, Color(0xFFB8860B)],
                   ),
                   boxShadow: [
                     BoxShadow(

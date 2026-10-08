@@ -47,6 +47,7 @@ class _DevFestAppState extends State<DevFestApp> {
       participantRepository: repo,
       leaderboardRepository: repo,
       eventRepository: repo,
+      attemptRepository: repo,
       resetStore: widget.repository.resetStore,
     );
     _controller.initialize();
@@ -63,7 +64,7 @@ class _DevFestAppState extends State<DevFestApp> {
     return AppScope(
       controller: _controller,
       child: MaterialApp(
-        title: 'DevFest Treasure Hunt',
+        title: 'DevFest Master',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark(),
         home: const SessionGate(),

@@ -1,3 +1,4 @@
+import '../../domain/entities/attempt.dart';
 import '../../domain/entities/discovery.dart';
 import '../../domain/entities/event.dart';
 import '../../domain/entities/participant.dart';
@@ -15,7 +16,9 @@ import 'mock_data.dart';
 /// A future `FirebaseDataSource` replicates this contract against Firestore.
 class MockLocalDataSource implements AppDataSource {
   MockLocalDataSource({AppLocalStorage? storage, this.seedData = true})
-      : _storage = storage;
+    // Keep the public parameter name `storage` instead of exposing `_storage`.
+    // ignore: prefer_initializing_formals
+    : _storage = storage;
 
   final AppLocalStorage? _storage;
 
@@ -27,11 +30,13 @@ class MockLocalDataSource implements AppDataSource {
   static const _participantsKey = 'devfest.participants.v1';
   static const _discoveriesKey = 'devfest.discoveries.v1';
   static const _currentParticipantKey = 'devfest.currentParticipant.v1';
+  static const _kAttempts = 'devfest.attempts.v1';
 
   late Event _event;
   late List<TreasureItem> _treasures;
   late List<Participant> _participants;
   late List<Discovery> _discoveries;
+  List<Attempt> _attempts = [];
   String? _currentParticipantId;
   bool _loaded = false;
 
@@ -40,16 +45,24 @@ class MockLocalDataSource implements AppDataSource {
     if (_loaded) return;
     _loaded = true;
     _event = MockData.buildEvent();
-    _treasures = await _restore(_treasuresKey, MockData.buildTreasures(),
-        TreasureItem.listFromJson, TreasureItem.listToJson);
-    _participants = await _restore(_participantsKey,
-        seedData ? MockData.buildSeedParticipants() : <Participant>[],
-        Participant.listFromJson, Participant.listToJson);
+    _treasures = await _restore(
+      _treasuresKey,
+      MockData.buildTreasures(),
+      TreasureItem.listFromJson,
+      TreasureItem.listToJson,
+    );
+    _participants = await _restore(
+      _participantsKey,
+      seedData ? MockData.buildSeedParticipants() : <Participant>[],
+      Participant.listFromJson,
+      Participant.listToJson,
+    );
     _discoveries = await _restore(
-        _discoveriesKey,
-        seedData ? _seedDiscoveries(_participants) : <Discovery>[],
-        Discovery.listFromJson,
-        Discovery.listToJson);
+      _discoveriesKey,
+      seedData ? _seedDiscoveries(_participants) : <Discovery>[],
+      Discovery.listFromJson,
+      Discovery.listToJson,
+    );
     _currentParticipantId = await _storage?.read(_currentParticipantKey);
   }
 
@@ -57,12 +70,14 @@ class MockLocalDataSource implements AppDataSource {
     final result = <Discovery>[];
     for (final p in participants) {
       for (final t in p.discoveredTreasureIds) {
-        result.add(Discovery(
-          id: 'discovery-${p.id}-$t',
-          participantId: p.id,
-          treasureId: t,
-          discoveredAt: p.startedAt.add(const Duration(minutes: 1)),
-        ));
+        result.add(
+          Discovery(
+            id: 'discovery-${p.id}-$t',
+            participantId: p.id,
+            treasureId: t,
+            discoveredAt: p.startedAt.add(const Duration(minutes: 1)),
+          ),
+        );
       }
     }
     return result;
@@ -124,6 +139,25 @@ class MockLocalDataSource implements AppDataSource {
   }
 
   @override
+  Future<List<Attempt>> loadAttempts() async {
+    if (_storage != null) {
+      final raw = await _storage.read(_kAttempts);
+      if (raw != null) {
+        _attempts = Attempt.listFromJson(raw);
+      }
+    }
+    return List.unmodifiable(_attempts);
+  }
+
+  @override
+  Future<void> saveAttempt(Attempt attempt) async {
+    _attempts = [..._attempts, attempt];
+    if (_storage != null) {
+      await _storage.write(_kAttempts, Attempt.listToJson(_attempts));
+    }
+  }
+
+  @override
   Future<String?> getCurrentParticipantId() async => _currentParticipantId;
 
   @override
@@ -142,18 +176,26 @@ class MockLocalDataSource implements AppDataSource {
   Future<void> reset() async {
     _event = MockData.buildEvent();
     _treasures = MockData.buildTreasures();
-    _participants = seedData ? MockData.buildSeedParticipants() : <Participant>[];
+    _participants = seedData
+        ? MockData.buildSeedParticipants()
+        : <Participant>[];
     _discoveries = seedData ? _seedDiscoveries(_participants) : <Discovery>[];
+    _attempts = [];
     _currentParticipantId = null;
     final storage = _storage;
     if (storage == null) return;
     await storage.remove(_treasuresKey);
     await storage.remove(_participantsKey);
     await storage.remove(_discoveriesKey);
+    await storage.remove(_kAttempts);
     await storage.remove(_currentParticipantKey);
   }
 
-  Future<void> _persist<T>(String key, T value, String Function(T) encode) async {
+  Future<void> _persist<T>(
+    String key,
+    T value,
+    String Function(T) encode,
+  ) async {
     final storage = _storage;
     if (storage == null) return;
     await storage.write(key, encode(value));

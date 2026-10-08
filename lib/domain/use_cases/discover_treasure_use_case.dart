@@ -19,8 +19,12 @@ class DiscoverTreasureResult {
     this.completed = false,
   }) : failure = null;
 
-  const DiscoverTreasureResult.failure(this.failure,
-      {this.treasure, this.participant, this.completed = false});
+  const DiscoverTreasureResult.failure(
+    this.failure, {
+    this.treasure,
+    this.participant,
+    this.completed = false,
+  });
 
   final DiscoverFailure? failure;
   final TreasureItem? treasure;
@@ -41,8 +45,11 @@ class DiscoverTreasureUseCase {
   DiscoverTreasureUseCase({
     required TreasureRepository treasureRepository,
     required ParticipantRepository participantRepository,
-  })  : _treasureRepository = treasureRepository,
-        _participantRepository = participantRepository;
+  }) : // Keep public constructor names without leading underscores.
+       // ignore: prefer_initializing_formals
+       _treasureRepository = treasureRepository,
+       // ignore: prefer_initializing_formals
+       _participantRepository = participantRepository;
 
   final TreasureRepository _treasureRepository;
   final ParticipantRepository _participantRepository;
@@ -51,21 +58,27 @@ class DiscoverTreasureUseCase {
     required String participantId,
     required String treasureId,
   }) async {
-    final participant = await _participantRepository.getParticipant(participantId);
+    final participant = await _participantRepository.getParticipant(
+      participantId,
+    );
     if (participant == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.participantNotFound);
+        DiscoverFailure.participantNotFound,
+      );
     }
 
     final treasure = await _treasureRepository.getTreasure(treasureId);
     if (treasure == null) {
       return const DiscoverTreasureResult.failure(
-          DiscoverFailure.treasureNotFound);
+        DiscoverFailure.treasureNotFound,
+      );
     }
 
     if (!treasure.isActive) {
-      return DiscoverTreasureResult.failure(DiscoverFailure.notActive,
-          treasure: treasure);
+      return DiscoverTreasureResult.failure(
+        DiscoverFailure.notActive,
+        treasure: treasure,
+      );
     }
 
     if (participant.discoveredTreasureIds.contains(treasure.id)) {
@@ -83,17 +96,21 @@ class DiscoverTreasureUseCase {
 
     final updated = participant.copyWith(
       discoveredTreasureIds: discoveredIds,
+      points: participant.points + treasure.pointValue,
+      medals: discoveredIds.length,
       status: completed ? ParticipantStatus.completed : participant.status,
       completedAt: completed ? now : participant.completedAt,
     );
 
     await _participantRepository.updateParticipant(updated);
-    await _participantRepository.recordDiscovery(Discovery(
-      id: IdGenerator.discoveryId(),
-      participantId: participant.id,
-      treasureId: treasure.id,
-      discoveredAt: now,
-    ));
+    await _participantRepository.recordDiscovery(
+      Discovery(
+        id: IdGenerator.discoveryId(),
+        participantId: participant.id,
+        treasureId: treasure.id,
+        discoveredAt: now,
+      ),
+    );
 
     return DiscoverTreasureResult.success(
       treasure: treasure,

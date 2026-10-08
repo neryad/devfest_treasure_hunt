@@ -23,7 +23,7 @@ class CompletionScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF2A1B00), AppColors.backgroundGradientTop],
+            colors: [Color(0xFF3D2E00), AppColors.backgroundGradientTop],
           ),
         ),
         child: SafeArea(
@@ -34,12 +34,12 @@ class CompletionScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const _TrophyAnimation(),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
                   const Text(
-                    '¡Completaste la aventura!',
+                    '¡Eres DevFest Master!',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 30,
                       fontWeight: FontWeight.w900,
                       color: AppColors.textPrimary,
                     ),
@@ -48,19 +48,21 @@ class CompletionScreen extends StatelessWidget {
                   Text(
                     '${participant.name} · ${participant.nickname}',
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.secondary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Has encontrado todos los tesoros de DevFest.',
+                    '¡Has conquistado los 8 Gimnasios Tecnológicos del DevFest!',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                     ),
                   ),
+
                   const SizedBox(height: 28),
                   Row(
                     children: [
@@ -155,7 +157,7 @@ class _TrophyAnimation extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
-            colors: [AppColors.amber, Color(0xFF8A5A00)],
+            colors: [AppColors.amber, Color(0xFFB8860B)],
           ),
           boxShadow: [
             BoxShadow(

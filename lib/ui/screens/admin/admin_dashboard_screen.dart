@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/stat_card.dart';
 import '../../../core/widgets/status_pill.dart';
+import '../../../domain/entities/treasure_item.dart';
 import '../../../state/app_scope.dart';
+import 'admin_ranking_csv.dart';
 
-/// DEMO admin panel: metrics, ranking, treasure availability toggles and the
-/// participant list. No real auth — the whole point is showing how the event
-/// would be controlled.
+/// Staff panel: metrics, ranking, gym availability toggles and participant ops.
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
@@ -20,11 +21,13 @@ class AdminDashboardScreen extends StatelessWidget {
     final participants = controller.participants;
     final completed = participants.where((p) => p.isCompleted).length;
     final active = participants.length - completed;
-    final activeTreasures = controller.treasures.where((t) => t.isActive).length;
+    final activeTreasures = controller.treasures
+        .where((t) => t.isActive)
+        .length;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Panel admin · Demo'),
+        title: const Text('Panel Staff'),
         actions: [
           IconButton(
             tooltip: 'Resetear datos demo',
@@ -171,7 +174,16 @@ class _AdminRanking extends StatelessWidget {
 
     return Card(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+            child: OutlinedButton.icon(
+              onPressed: () => _copyRankingCsv(context),
+              icon: const Icon(Icons.copy_rounded),
+              label: const Text('Copiar ranking CSV'),
+            ),
+          ),
           for (final entry in top)
             ListTile(
               dense: true,
@@ -204,6 +216,15 @@ class _AdminRanking extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _copyRankingCsv(BuildContext context) async {
+    final csv = buildAdminRankingCsv(AppScope.read(context).leaderboard);
+    await Clipboard.setData(ClipboardData(text: csv));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Ranking CSV copiado')));
+  }
 }
 
 class _TreasureManagement extends StatelessWidget {
@@ -221,13 +242,11 @@ class _TreasureManagement extends StatelessWidget {
           for (final t in treasures)
             _TreasureRow(
               key: ValueKey(t.id),
-              isActive: t.isActive,
-              title: t.title,
+              treasure: t,
               discoverCount: controller.participants
                   .where((p) => p.discoveredTreasureIds.contains(t.id))
                   .length,
-              onChanged: (v) =>
-                  controller.setTreasureActive(t.id, v),
+              onChanged: (v) => controller.setTreasureActive(t.id, v),
             ),
         ],
       ),
@@ -238,14 +257,12 @@ class _TreasureManagement extends StatelessWidget {
 class _TreasureRow extends StatelessWidget {
   const _TreasureRow({
     super.key,
-    required this.isActive,
-    required this.title,
+    required this.treasure,
     required this.discoverCount,
     required this.onChanged,
   });
 
-  final bool isActive;
-  final String title;
+  final TreasureItem treasure;
   final int discoverCount;
   final ValueChanged<bool> onChanged;
 
@@ -254,15 +271,21 @@ class _TreasureRow extends StatelessWidget {
     return ListTile(
       dense: true,
       leading: StatusPill(
-        label: isActive ? 'Activo' : 'Inactivo',
-        color: isActive ? AppColors.success : AppColors.danger,
-        icon: isActive ? Icons.check_circle_rounded : Icons.lock_rounded,
+        label: treasure.isActive ? 'Activo' : 'Inactivo',
+        color: treasure.isActive ? AppColors.success : AppColors.danger,
+        icon: treasure.isActive
+            ? Icons.check_circle_rounded
+            : Icons.lock_rounded,
       ),
-      title: Text(title, style: const TextStyle(fontSize: 13.5)),
-      subtitle: Text('Descubrimientos: $discoverCount',
-          style: const TextStyle(fontSize: 12)),
+      title: Text(treasure.title, style: const TextStyle(fontSize: 13.5)),
+      subtitle: Text(
+        'Descubrimientos: $discoverCount\n'
+        'Codigo manual: ${treasure.code}\n'
+        'QR: ${treasure.qrValue}',
+        style: const TextStyle(fontSize: 12),
+      ),
       trailing: Switch(
-        value: isActive,
+        value: treasure.isActive,
         onChanged: onChanged,
         activeTrackColor: AppColors.primary,
       ),
@@ -274,12 +297,28 @@ class _ParticipantsList extends StatelessWidget {
   const _ParticipantsList();
 
   @override
+  Widget build(BuildContext context) => const _ParticipantsListBody();
+}
+
+class _ParticipantsListBody extends StatefulWidget {
+  const _ParticipantsListBody();
+
+  @override
+  State<_ParticipantsListBody> createState() => _ParticipantsListBodyState();
+}
+
+class _ParticipantsListBodyState extends State<_ParticipantsListBody> {
+  String _query = '';
+
+  @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final sorted = List.of(controller.participants)
       ..sort((a, b) {
-        final byCount = b.discoveredCount.compareTo(a.discoveredCount);
-        if (byCount != 0) return byCount;
+        final byPoints = b.points.compareTo(a.points);
+        if (byPoints != 0) return byPoints;
+        final byMedals = b.discoveredCount.compareTo(a.discoveredCount);
+        if (byMedals != 0) return byMedals;
         final aT = a.isCompleted
             ? a.completedAt!.difference(a.startedAt)
             : DateTime.now().difference(a.startedAt);
@@ -288,11 +327,28 @@ class _ParticipantsList extends StatelessWidget {
             : DateTime.now().difference(b.startedAt);
         return aT.compareTo(bT);
       });
+    final filtered = sorted.where((p) {
+      final q = _query.trim().toLowerCase();
+      if (q.isEmpty) return true;
+      return p.name.toLowerCase().contains(q) ||
+          p.nickname.toLowerCase().contains(q);
+    }).toList();
 
     return Card(
       child: Column(
         children: [
-          for (final p in sorted)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+            child: TextField(
+              key: const Key('admin-participant-search'),
+              decoration: const InputDecoration(
+                labelText: 'Buscar participante',
+                prefixIcon: Icon(Icons.search_rounded),
+              ),
+              onChanged: (value) => setState(() => _query = value),
+            ),
+          ),
+          for (final p in filtered)
             ListTile(
               dense: true,
               leading: CircleAvatar(
@@ -300,15 +356,22 @@ class _ParticipantsList extends StatelessWidget {
                 backgroundColor: AppColors.surfaceAlt,
                 child: Text(
                   p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
-              title: Text('${p.name} (${p.nickname})',
-                  style: const TextStyle(fontSize: 13.5)),
+              title: Text(
+                '${p.name} (${p.nickname})',
+                style: const TextStyle(fontSize: 13.5),
+              ),
               subtitle: Text(
-                formatElapsed(p.isCompleted
-                    ? p.completedAt!.difference(p.startedAt)
-                    : DateTime.now().difference(p.startedAt)),
+                formatElapsed(
+                  p.isCompleted
+                      ? p.completedAt!.difference(p.startedAt)
+                      : DateTime.now().difference(p.startedAt),
+                ),
                 style: const TextStyle(fontSize: 12),
               ),
               trailing: Row(
@@ -325,14 +388,288 @@ class _ParticipantsList extends StatelessWidget {
                   const SizedBox(width: 8),
                   StatusPill(
                     label: p.isCompleted ? 'Completado' : 'En progreso',
-                    color:
-                        p.isCompleted ? AppColors.success : AppColors.secondary,
+                    color: p.isCompleted
+                        ? AppColors.success
+                        : AppColors.secondary,
                   ),
                 ],
               ),
+              onTap: () => _showParticipantDetail(context, p.id),
+            ),
+          if (filtered.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Sin participantes encontrados'),
             ),
         ],
       ),
     );
+  }
+
+  void _showParticipantDetail(BuildContext context, String participantId) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final controller = AppScope.of(context);
+            final participant = controller.participants.firstWhere(
+              (p) => p.id == participantId,
+            );
+            final treasures = List.of(controller.treasures)
+              ..sort((a, b) => a.order.compareTo(b.order));
+            final missing = treasures
+                .where((t) => !participant.discoveredTreasureIds.contains(t.id))
+                .toList();
+            TreasureItem? missingCommunity;
+            for (final treasure in missing) {
+              if (treasure.id == 'gym-community') {
+                missingCommunity = treasure;
+                break;
+              }
+            }
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Detalle de participante',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${participant.name} (${participant.nickname})',
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${participant.points} pts · ${participant.medals}/${controller.totalTreasures} medallas',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showPointAdjustmentDialog(
+                          context,
+                          participant.id,
+                          participant.points,
+                          setSheetState,
+                        ),
+                        icon: const Icon(Icons.add_chart_rounded),
+                        label: const Text('Ajustar puntos'),
+                      ),
+                    ),
+                    if (missingCommunity != null) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FilledButton.icon(
+                          onPressed: () => _confirmCommunitySignal(
+                            context,
+                            participant.id,
+                            setSheetState,
+                          ),
+                          icon: const Icon(Icons.groups_rounded),
+                          label: const Text('Validar Community Signal'),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final treasure in missing)
+                          if (treasure.id != 'gym-community')
+                            OutlinedButton(
+                              onPressed: () async {
+                                await controller.grantMedal(
+                                  participantId: participant.id,
+                                  gymId: treasure.id,
+                                );
+                                setSheetState(() {});
+                              },
+                              child: Text(
+                                'Otorgar ${_adminGymLabel(treasure.track, treasure.gymName ?? treasure.title)}',
+                              ),
+                            ),
+                      ],
+                    ),
+                    if (missing.isEmpty)
+                      const Text(
+                        'Todas las medallas fueron otorgadas.',
+                        style: TextStyle(color: AppColors.secondary),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showPointAdjustmentDialog(
+    BuildContext context,
+    String participantId,
+    int currentPoints,
+    StateSetter setSheetState,
+  ) async {
+    String? error;
+    String rawDelta = '';
+    int delta = 0;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final newTotal = (currentPoints + delta).clamp(0, 1 << 31);
+          return AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: const Text(
+              'Ajustar puntos',
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Puntos actuales: $currentPoints',
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const Key('admin-points-delta'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    signed: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Ajuste (+/-)',
+                    errorText: error,
+                  ),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      error = null;
+                      rawDelta = value.trim();
+                      delta = int.tryParse(value.trim()) ?? 0;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Nuevo total: $newTotal',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final parsed = int.tryParse(rawDelta);
+                  if (parsed == null) {
+                    setDialogState(() {
+                      error = 'Introduce un numero entero';
+                    });
+                    return;
+                  }
+                  await AppScope.read(context).adjustParticipantPoints(
+                    participantId: participantId,
+                    delta: parsed,
+                  );
+                  setSheetState(() {});
+                  if (dialogContext.mounted) {
+                    Navigator.of(dialogContext).pop();
+                  }
+                },
+                child: const Text('Aplicar ajuste'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _confirmCommunitySignal(
+    BuildContext context,
+    String participantId,
+    StateSetter setSheetState,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text(
+          'Validar Community Signal',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: const Text(
+          'Confirma que staff reviso la evidencia y otorgara la medalla Comunidad.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Validar evidencia'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    await AppScope.read(
+      context,
+    ).grantMedal(participantId: participantId, gymId: 'gym-community');
+    setSheetState(() {});
+  }
+
+  String _adminGymLabel(String? track, String fallback) {
+    switch (track) {
+      case 'android':
+        return 'Android';
+      case 'ia':
+        return 'IA';
+      case 'security':
+        return 'Security';
+      case 'web':
+        return 'Web';
+      case 'startup':
+        return 'Startup';
+      case 'cloud':
+        return 'Cloud';
+      case 'speaker':
+        return 'Speaker';
+      case 'community':
+        return 'Community';
+    }
+    return fallback;
   }
 }

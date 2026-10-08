@@ -1,3 +1,4 @@
+import '../../domain/entities/attempt.dart';
 import '../../domain/entities/discovery.dart';
 import '../../domain/entities/event.dart';
 import '../../domain/entities/participant.dart';
@@ -37,4 +38,8 @@ abstract class AppDataSource {
 
   /// Wipes persisted demo state so the event starts from scratch.
   Future<void> reset();
+
+  Future<List<Attempt>> loadAttempts();
+
+  Future<void> saveAttempt(Attempt attempt);
 }

@@ -13,7 +13,7 @@ import 'package:integration_test/integration_test.dart';
 ///
 /// Run with:
 ///   flutter drive --driver=test_driver/integration_test.dart \
-///     --target=integration_test/capture_screenshots_test.dart -d <device>
+///     --target=integration_test/capture_screenshots_test.dart -d `device`
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -57,9 +57,13 @@ void main() {
 
     // 03 · Home dashboard (0/10)
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nombre'), 'Demo');
+      find.widgetWithText(TextFormField, 'Nombre'),
+      'Demo',
+    );
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nickname / Alias'), 'demo');
+      find.widgetWithText(TextFormField, 'Nickname / Alias'),
+      'demo',
+    );
     await tester.tap(find.text('Iniciar aventura'));
     await tester.pumpAndSettle();
     await shot('03-home');
@@ -109,20 +113,25 @@ void main() {
     await shot('11-admin');
 
     // 12 · Admin: desactivar Tesoro #03
-    final tile03 =
-        find.widgetWithText(ListTile, 'Tesoro #03 · El Rincón del Café');
+    final tile03 = find.widgetWithText(
+      ListTile,
+      'Tesoro #03 · El Rincón del Café',
+    );
     await tester.ensureVisible(tile03);
     await tester.pumpAndSettle();
-    await tester.tap(find.descendant(of: tile03, matching: find.byType(Switch)));
+    await tester.tap(
+      find.descendant(of: tile03, matching: find.byType(Switch)),
+    );
     await tester.pumpAndSettle();
     await shot('12-admin-inactivo');
     // Re-activar para que el reto quede completable.
-    await tester.tap(find.descendant(of: tile03, matching: find.byType(Switch)));
+    await tester.tap(
+      find.descendant(of: tile03, matching: find.byType(Switch)),
+    );
     await tester.pumpAndSettle();
 
     // 13 · Código manual con tesoro desactivado (snackbar de error)
-    final adminContext =
-        tester.element(find.byType(AdminDashboardScreen));
+    final adminContext = tester.element(find.byType(AdminDashboardScreen));
     Navigator.of(adminContext).pop();
     await tester.pumpAndSettle();
     await controller.setTreasureActive('treasure-003', false);
@@ -136,8 +145,9 @@ void main() {
     await shot('13-no-disponible');
     await controller.setTreasureActive('treasure-003', true);
     // Dismiss snackbar.
-    ScaffoldMessenger.of(tester.element(find.byType(TextField)))
-        .hideCurrentSnackBar();
+    ScaffoldMessenger.of(
+      tester.element(find.byType(TextField)),
+    ).hideCurrentSnackBar();
     await tester.pumpAndSettle();
 
     // 14 · Código manual exitoso (fuera de orden) — Tesoro #03 reactivado.
