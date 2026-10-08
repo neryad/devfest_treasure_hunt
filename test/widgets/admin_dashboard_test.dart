@@ -78,6 +78,10 @@ void main() {
     );
     await tester.pump();
 
+    await tester.scrollUntilVisible(
+      find.textContaining('Codigo manual: ANDROID-MASTER'),
+      500,
+    );
     expect(
       find.textContaining('Codigo manual: ANDROID-MASTER'),
       findsOneWidget,
@@ -234,4 +238,147 @@ void main() {
       expect(find.text('El participante ya no existe'), findsOneWidget);
     },
   );
+
+  testWidgets('pull to refresh reloads participants and metrics', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    await repository.createParticipant(
+      id: 'participant-refresh',
+      name: 'Nuevo',
+      nickname: 'nuevo',
+      startedAt: DateTime.now(),
+    );
+
+    await tester.widget<RefreshIndicator>(
+      find.byType(RefreshIndicator),
+    ).onRefresh();
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Nuevo (nuevo)'),
+      500,
+    );
+    expect(find.text('Nuevo (nuevo)'), findsOneWidget);
+  });
+
+  testWidgets('staff can pause and resume the event from the panel', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Estado del evento'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('admin-event-paused')));
+    await tester.pumpAndSettle();
+    expect(find.text('¿Pausar el evento?'), findsOneWidget);
+    await tester.tap(find.text('Pausar'));
+    await tester.pumpAndSettle();
+
+    expect(controller.eventActive, isFalse);
+
+    await tester.tap(find.byKey(const Key('admin-event-paused')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reanudar'));
+    await tester.pumpAndSettle();
+
+    expect(controller.eventActive, isTrue);
+  });
+
+  testWidgets('reset button is disabled when connected to Firestore', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    final button = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.restart_alt_rounded),
+    );
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets('reset stays disabled in offline mode until RESET is typed', (
+    tester,
+  ) async {
+    final ds = MockLocalDataSource(seedData: false);
+    await ds.initialize();
+    final repo = MockAppRepository(ds);
+    await repo.createParticipant(
+      id: 'participant-offline',
+      name: 'Offline',
+      nickname: 'offline',
+      startedAt: DateTime.now(),
+    );
+    final offlineController = AppController(
+      treasureRepository: repo,
+      participantRepository: repo,
+      leaderboardRepository: repo,
+      eventRepository: repo,
+      resetStore: ds.reset,
+      attemptRepository: repo,
+      enableElapsedTicker: false,
+      offline: true,
+    );
+    addTearDown(offlineController.dispose);
+    await offlineController.initialize();
+
+    await tester.pumpWidget(
+      AppScope(
+        controller: offlineController,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    final resetButton = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.restart_alt_rounded),
+    );
+    expect(resetButton.onPressed, isNotNull);
+
+    await tester.tap(find.byIcon(Icons.restart_alt_rounded));
+    await tester.pumpAndSettle();
+
+    var confirmButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Resetear'),
+    );
+    expect(confirmButton.onPressed, isNull);
+
+    await tester.enterText(
+      find.byKey(const Key('admin-reset-confirm')),
+      'reset',
+    );
+    await tester.pump();
+    confirmButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Resetear'),
+    );
+    expect(confirmButton.onPressed, isNull);
+
+    await tester.enterText(
+      find.byKey(const Key('admin-reset-confirm')),
+      'RESET',
+    );
+    await tester.pump();
+    confirmButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Resetear'),
+    );
+    expect(confirmButton.onPressed, isNotNull);
+  });
 }

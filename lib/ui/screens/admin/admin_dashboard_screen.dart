@@ -32,17 +32,28 @@ class AdminDashboardScreen extends StatelessWidget {
         title: const Text('Panel Staff'),
         actions: [
           IconButton(
-            tooltip: 'Resetear datos demo',
+            tooltip: controller.offline
+                ? 'Resetear datos demo'
+                : 'Solo disponible en modo demo',
             icon: const Icon(Icons.restart_alt_rounded),
-            onPressed: () => _confirmReset(context),
+            onPressed: controller.offline
+                ? () => _confirmReset(context)
+                : null,
           ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () async {},
+        onRefresh: () async {
+          try {
+            await controller.refresh();
+          } catch (_) {
+            if (context.mounted) showNetworkError(context);
+          }
+        },
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
           children: [
+            const _EventStatusCard(),
             const SectionHeader(title: 'Métricas del evento'),
             _MetricsGrid(
               participants: participants.length,
@@ -64,28 +75,45 @@ class AdminDashboardScreen extends StatelessWidget {
   }
 
   Future<void> _confirmReset(BuildContext context) async {
+    var typed = '';
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text(
-          '¿Resetear la demo?',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-        content: const Text(
-          'Se restaurarán los datos de ejemplo del evento.',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text(
+            '¿Resetear la demo?',
+            style: TextStyle(color: AppColors.textPrimary),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Resetear'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Se restaurarán los datos de ejemplo del evento.',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('admin-reset-confirm'),
+                decoration: const InputDecoration(labelText: 'Escribe RESET'),
+                onChanged: (value) => setDialogState(() => typed = value),
+              ),
+            ],
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: typed.trim() == 'RESET'
+                  ? () => Navigator.of(dialogContext).pop(true)
+                  : null,
+              child: const Text('Resetear'),
+            ),
+          ],
+        ),
       ),
     );
     if (confirmed == true) {
@@ -101,6 +129,75 @@ class AdminDashboardScreen extends StatelessWidget {
         Navigator.of(context).pop();
       }
     }
+  }
+}
+
+Future<void> _toggleEventPaused(BuildContext context) async {
+  final controller = AppScope.read(context);
+  final pausing = controller.eventActive;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: AppColors.surface,
+      title: Text(
+        pausing ? '¿Pausar el evento?' : '¿Reanudar el evento?',
+        style: const TextStyle(color: AppColors.textPrimary),
+      ),
+      content: Text(
+        pausing
+            ? 'Los participantes no podrán descubrir gimnasios mientras esté pausado.'
+            : 'Los participantes volverán a descubrir gimnasios.',
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(pausing ? 'Pausar' : 'Reanudar'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+  if (!context.mounted) return;
+  try {
+    await AppScope.read(context).setEventActive(!pausing);
+  } catch (_) {
+    if (context.mounted) showNetworkError(context);
+  }
+}
+
+class _EventStatusCard extends StatelessWidget {
+  const _EventStatusCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = AppScope.of(context);
+    final active = controller.eventActive;
+    return Card(
+      child: ListTile(
+        leading: StatusPill(
+          label: active ? 'Activo' : 'Pausado',
+          color: active ? AppColors.success : AppColors.danger,
+          icon: active
+              ? Icons.play_circle_rounded
+              : Icons.pause_circle_rounded,
+        ),
+        title: const Text(
+          'Estado del evento',
+          style: TextStyle(fontSize: 14),
+        ),
+        trailing: Switch(
+          key: const Key('admin-event-paused'),
+          value: !active,
+          onChanged: (_) => _toggleEventPaused(context),
+          activeTrackColor: AppColors.primary,
+        ),
+      ),
+    );
   }
 }
 
