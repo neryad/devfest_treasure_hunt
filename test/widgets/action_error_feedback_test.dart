@@ -223,5 +223,11 @@ void main() {
       find.text('Los descubrimientos están pausados temporalmente.'),
       findsOneWidget,
     );
+    expect(find.text('Respuesta Incorrecta'), findsNothing);
+    expect(find.text('La respuesta no es correcta.'), findsNothing);
+    expect(
+      find.text('Puedes intentarlo de nuevo inmediatamente.'),
+      findsNothing,
+    );
   });
 }
