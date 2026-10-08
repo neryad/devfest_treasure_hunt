@@ -5,7 +5,7 @@ import '../../../core/widgets/status_pill.dart';
 import '../../../domain/entities/gym_challenge.dart';
 import '../../../domain/entities/treasure_item.dart';
 import '../../../state/app_scope.dart';
-import '../challenge/challenge_screen.dart';
+import '../challenge/challenge_navigation.dart';
 
 /// "Mis Gimnasios": everything split into conquered vs pending.
 /// Pending gyms never spoil their description or location; they only
@@ -86,10 +86,8 @@ class _TreasureTile extends StatelessWidget {
     return Card(
       child: ListTile(
         onTap: () {
-          if (revealed) return; // Already conquered
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => ChallengeScreen(gym: treasure)),
-          );
+          if (revealed) return;
+          openChallenge(context, treasure);
         },
         leading: CircleAvatar(
           backgroundColor: (revealed ? AppColors.success : AppColors.surfaceAlt)

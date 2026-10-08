@@ -5,7 +5,7 @@ import '../../../core/utils/treasure_icons.dart';
 import '../../../domain/entities/gym_challenge.dart';
 import '../../../domain/entities/treasure_item.dart';
 import '../../../state/app_scope.dart';
-import '../challenge/challenge_screen.dart';
+import '../challenge/challenge_navigation.dart';
 
 class PokedexScreen extends StatelessWidget {
   const PokedexScreen({super.key});
@@ -266,11 +266,7 @@ class PokedexScreen extends StatelessWidget {
                 ),
                 onPressed: () {
                   Navigator.of(bottomSheetContext).pop();
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => ChallengeScreen(gym: gym),
-                    ),
-                  );
+                  openChallenge(context, gym);
                 },
                 icon: const Icon(Icons.play_arrow_rounded, size: 24),
                 label: const Text(
