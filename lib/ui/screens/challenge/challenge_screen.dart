@@ -408,6 +408,8 @@ class _ResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final success = result.isSuccess;
+    final paused = !success &&
+        result.failure == ChallengeFailure.eventPaused;
 
     return Scaffold(
       body: Container(
@@ -498,7 +500,11 @@ class _ResultScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   Text(
-                    success ? '¡Medalla Conquistada!' : 'Respuesta Incorrecta',
+                    success
+                        ? '¡Medalla Conquistada!'
+                        : paused
+                        ? 'Evento Pausado'
+                        : 'Respuesta Incorrecta',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
@@ -524,7 +530,15 @@ class _ResultScreen extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                  ] else ...[
+                  ] else if (paused)
+                    const Text(
+                      'Los descubrimientos están pausados temporalmente.',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: AppColors.textSecondary,
+                      ),
+                    )
+                  else ...[
                     const Text(
                       'La respuesta no es correcta.',
                       style: TextStyle(

@@ -184,4 +184,44 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump();
   });
+
+  testWidgets('paused event shows Evento Pausado in the challenge result', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final ds = MockLocalDataSource();
+    await ds.initialize();
+    await ds.setEventActive(false);
+    final repo = _FlakyRepository(ds);
+    final controller = _controller(repo, ds);
+    addTearDown(controller.dispose);
+    await controller.initialize();
+    await controller.startParticipant(name: 'Nery', nickname: 'nery_paused');
+
+    final gym = controller.treasures.firstWhere(
+      (t) => t.challenge?.hasOptions == true,
+    );
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: MaterialApp(home: ChallengeScreen(gym: gym)),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text(gym.challenge!.options!.first));
+    await tester.pump();
+    await tester.tap(find.text('Enviar respuesta'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Evento Pausado'), findsOneWidget);
+    expect(
+      find.text('Los descubrimientos están pausados temporalmente.'),
+      findsOneWidget,
+    );
+  });
 }
