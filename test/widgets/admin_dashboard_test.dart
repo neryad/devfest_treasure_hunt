@@ -257,15 +257,12 @@ void main() {
       startedAt: DateTime.now(),
     );
 
-    await tester.widget<RefreshIndicator>(
-      find.byType(RefreshIndicator),
-    ).onRefresh();
+    await tester
+        .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+        .onRefresh();
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(
-      find.text('Nuevo (nuevo)'),
-      500,
-    );
+    await tester.scrollUntilVisible(find.text('Nuevo (nuevo)'), 500);
     expect(find.text('Nuevo (nuevo)'), findsOneWidget);
   });
 

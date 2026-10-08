@@ -408,8 +408,7 @@ class _ResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final success = result.isSuccess;
-    final paused = !success &&
-        result.failure == ChallengeFailure.eventPaused;
+    final paused = !success && result.failure == ChallengeFailure.eventPaused;
 
     return Scaffold(
       body: Container(

@@ -36,9 +36,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 ? 'Resetear datos demo'
                 : 'Solo disponible en modo demo',
             icon: const Icon(Icons.restart_alt_rounded),
-            onPressed: controller.offline
-                ? () => _confirmReset(context)
-                : null,
+            onPressed: controller.offline ? () => _confirmReset(context) : null,
           ),
         ],
       ),
@@ -182,14 +180,9 @@ class _EventStatusCard extends StatelessWidget {
         leading: StatusPill(
           label: active ? 'Activo' : 'Pausado',
           color: active ? AppColors.success : AppColors.danger,
-          icon: active
-              ? Icons.play_circle_rounded
-              : Icons.pause_circle_rounded,
+          icon: active ? Icons.play_circle_rounded : Icons.pause_circle_rounded,
         ),
-        title: const Text(
-          'Estado del evento',
-          style: TextStyle(fontSize: 14),
-        ),
+        title: const Text('Estado del evento', style: TextStyle(fontSize: 14)),
         trailing: Switch(
           key: const Key('admin-event-paused'),
           value: !active,

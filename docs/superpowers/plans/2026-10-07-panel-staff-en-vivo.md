@@ -22,7 +22,7 @@
 - Modify: `lib/data/repositories/mock_app_repository.dart`
 - Create: `test/data/mock_local_data_source_test.dart`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/data/mock_local_data_source_test.dart`:
 
@@ -46,12 +46,12 @@ void main() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/data/mock_local_data_source_test.dart`
 Expected: FAIL — compile error: `setEventActive` no existe en `EventRepository`.
 
-- [ ] **Step 3: Implement the data-layer methods**
+- [x] **Step 3: Implement the data-layer methods**
 
 `lib/domain/repositories/event_repository.dart` — add to the abstract class:
 
@@ -97,12 +97,12 @@ Expected: FAIL — compile error: `setEventActive` no existe en `EventRepository
       _dataSource.setEventActive(active);
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `flutter test test/data/mock_local_data_source_test.dart`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/domain/repositories/event_repository.dart lib/data/datasources/app_data_source.dart lib/data/datasources/mock_local_data_source.dart lib/data/datasources/firebase_data_source.dart lib/data/repositories/mock_app_repository.dart test/data/mock_local_data_source_test.dart
@@ -121,7 +121,7 @@ git commit -m "feat: persist event active state in the data layer"
 - Test: `test/use_cases/discover_treasure_use_case_test.dart`
 - Test: `test/use_cases/complete_challenge_use_case_test.dart`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 In `test/use_cases/discover_treasure_use_case_test.dart`:
 1. Add `eventRepository: repository` to the `useCase` construction in `setUp` (line 16-19):
@@ -184,12 +184,12 @@ In `test/use_cases/complete_challenge_use_case_test.dart`:
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `flutter test test/use_cases/discover_treasure_use_case_test.dart test/use_cases/complete_challenge_use_case_test.dart`
 Expected: FAIL — compile error: `eventRepository` y `DiscoverFailure.eventPaused`/`ChallengeFailure.eventPaused` no existen.
 
-- [ ] **Step 3: Implement use cases, enum values, modal case and controller wiring**
+- [x] **Step 3: Implement use cases, enum values, modal case and controller wiring**
 
 `lib/domain/use_cases/discover_treasure_use_case.dart`:
 
@@ -335,12 +335,12 @@ In `execute`, right after the participant null check (after the block that retur
         'Evento pausado — reintenta en unos minutos.',
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `flutter test test/use_cases/ && flutter analyze`
 Expected: PASS both files; `flutter analyze` con 0 issues (el switch exhaustivo quedó cubierto).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/domain/use_cases/discover_treasure_use_case.dart lib/domain/use_cases/complete_challenge_use_case.dart lib/state/app_controller.dart lib/ui/screens/discovery/treasure_found_modal.dart test/use_cases/discover_treasure_use_case_test.dart test/use_cases/complete_challenge_use_case_test.dart
@@ -355,7 +355,7 @@ git commit -m "feat: block discoveries and challenges while the event is paused"
 - Modify: `lib/state/app_controller.dart`
 - Test: `test/state/app_controller_init_test.dart`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add to `test/state/app_controller_init_test.dart` `main()`:
 
@@ -418,12 +418,12 @@ Add to `test/state/app_controller_init_test.dart` `main()`:
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `flutter test test/state/app_controller_init_test.dart`
 Expected: FAIL — `refresh`, `eventActive` y `setEventActive` no existen en `AppController`.
 
-- [ ] **Step 3: Implement the controller API**
+- [x] **Step 3: Implement the controller API**
 
 `lib/state/app_controller.dart` — add near the other getters (after `bool get adminSignedIn`):
 
@@ -450,12 +450,12 @@ Add near the other public actions (after `setTreasureActive`):
 
 `_eventRepository` es `late final EventRepository _eventRepository;` — ya existe (línea 68) y soporta el nuevo método porque `MockAppRepository` lo implementa desde Task 1.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `flutter test test/state/app_controller_init_test.dart`
 Expected: PASS (3 tests nuevos + los existentes)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/state/app_controller.dart test/state/app_controller_init_test.dart
@@ -470,7 +470,7 @@ git commit -m "feat: add refresh, setEventActive and eventActive to controller"
 - Modify: `lib/ui/screens/admin/admin_dashboard_screen.dart`
 - Test: `test/widgets/admin_dashboard_test.dart`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add to `test/widgets/admin_dashboard_test.dart` `main()` (el `setUp` existente crea un controller con `offline: false` por defecto):
 
@@ -619,12 +619,12 @@ Add to `test/widgets/admin_dashboard_test.dart` `main()` (el `setUp` existente c
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `flutter test test/widgets/admin_dashboard_test.dart`
 Expected: FAIL — no existe `find.byKey(Key('admin-event-paused'))`, el refresh no recarga (`() async {}`), el reset online está habilitado y el diálogo no tiene el campo `admin-reset-confirm`.
 
-- [ ] **Step 3: Implement the panel changes**
+- [x] **Step 3: Implement the panel changes**
 
 `lib/ui/screens/admin/admin_dashboard_screen.dart`:
 
@@ -802,12 +802,12 @@ class _EventStatusCard extends StatelessWidget {
 
 Note: `AdminDashboardScreen` es `StatelessWidget`; `_EventStatusCard.build` lee `controller.eventActive`, y la pausa dispara `notifyListeners()` → `AppScope` reconstruye todo el árbol (incluida esta tarjeta) con el nuevo valor.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `flutter test test/widgets/admin_dashboard_test.dart`
 Expected: PASS (todos los tests, nuevos y existentes)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/ui/screens/admin/admin_dashboard_screen.dart test/widgets/admin_dashboard_test.dart
@@ -822,7 +822,7 @@ git commit -m "feat: staff panel refresh, protected reset and event pause toggle
 - Modify: `lib/ui/screens/challenge/challenge_screen.dart`
 - Test: `test/widgets/action_error_feedback_test.dart`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 Add to `test/widgets/action_error_feedback_test.dart` `main()`:
 
@@ -868,12 +868,12 @@ Add to `test/widgets/action_error_feedback_test.dart` `main()`:
   });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/widgets/action_error_feedback_test.dart --plain-name 'paused event'`
 Expected: FAIL — el resultado muestra "Respuesta Incorrecta" porque `_ResultScreen` no distingue `eventPaused`. (El `expect(find.text('Evento Pausado'), findsOneWidget)` no encuentra el texto.)
 
-- [ ] **Step 3: Implement the result screen message**
+- [x] **Step 3: Implement the result screen message**
 
 `lib/ui/screens/challenge/challenge_screen.dart` — in `_ResultScreen.build` (line 410), add:
 
@@ -924,12 +924,12 @@ In the `else` branch of the success/failure section (lines 527-543, the `else ..
                     ],
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `flutter test test/widgets/action_error_feedback_test.dart`
 Expected: PASS (todos los tests del archivo)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/ui/screens/challenge/challenge_screen.dart test/widgets/action_error_feedback_test.dart
@@ -942,7 +942,7 @@ git commit -m "fix: show paused event message in challenge result"
 
 **Files:** ninguno (solo comandos)
 
-- [ ] **Step 1: Format, analyze y suite completa**
+- [x] **Step 1: Format, analyze y suite completa**
 
 Run:
 ```bash
@@ -952,12 +952,12 @@ flutter test
 ```
 Expected: format sin cambios pendientes o solo de estilo; `flutter analyze` con **0 issues**; **todos los tests en verde** (58 existentes + nuevos del Bloque 2).
 
-- [ ] **Step 2: Build web**
+- [x] **Step 2: Build web**
 
 Run: `flutter build web`
 Expected: `✓ Built build/web`
 
-- [ ] **Step 3: Commit si hubo cambios de formato**
+- [x] **Step 3: Commit si hubo cambios de formato**
 
 ```bash
 git add -A
@@ -966,10 +966,16 @@ git status --short
 git commit -m "chore: format and verify panel staff en vivo changes"
 ```
 
-- [ ] **Step 4: Marcar el plan como completado**
+- [x] **Step 4: Marcar el plan como completado**
 
 ```bash
 sed -i '' 's/- \[ \]/- [x]/g' docs/superpowers/plans/2026-10-07-panel-staff-en-vivo.md
 git add docs/superpowers/plans/2026-10-07-panel-staff-en-vivo.md
 git commit -m "docs: mark panel staff en vivo plan tasks as completed"
 ```
+
+---
+
+## Resultado
+
+Plan completado el 2026-10-07: las 6 tareas están marcadas como completadas. Verificación final: `dart format` sin cambios pendientes, `flutter analyze` sin issues, `flutter test` con 70 tests en verde y `flutter build web` exitoso (`✓ Built build/web`).
