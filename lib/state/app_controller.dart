@@ -178,6 +178,11 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  /// Reads the current treasure state straight from the source instead of the
+  /// cached snapshot, so availability checks reflect staff changes.
+  Future<TreasureItem?> fetchTreasure(String id) =>
+      _treasureRepository.getTreasure(id);
+
   TreasureStatus statusOf(TreasureItem treasure) {
     final list = _participant?.discoveredTreasureIds;
     if (list != null && list.contains(treasure.id)) {

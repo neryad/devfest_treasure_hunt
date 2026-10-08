@@ -179,4 +179,20 @@ void main() {
 
     expect(controller.eventActive, isFalse);
   });
+
+  test('fetchTreasure reads fresh state from the repository', () async {
+    final ds = MockLocalDataSource(seedData: false);
+    await ds.initialize();
+    final repo = _FlakyRepository(ds);
+    final controller = _controller(repo, ds);
+    addTearDown(controller.dispose);
+    await controller.initialize();
+
+    expect(controller.treasureById('gym-android')?.isActive, isTrue);
+
+    await repo.setTreasureActive('gym-android', false);
+
+    expect((await controller.fetchTreasure('gym-android'))?.isActive, isFalse);
+    expect(controller.treasureById('gym-android')?.isActive, isTrue);
+  });
 }
