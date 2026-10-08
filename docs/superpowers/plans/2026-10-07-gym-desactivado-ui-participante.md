@@ -146,6 +146,10 @@ void main() {
   testWidgets('tap on an active gym opens the challenge screen', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     final ds = MockLocalDataSource(seedData: false);
     await ds.initialize();
     final repo = MockAppRepository(ds);
@@ -171,7 +175,11 @@ Expected:
 - "tap on a deactivated gym..." → FAIL (hoy ese tap NAVEGA: `find.byType(ChallengeScreen)` es 1 y no hay snackbar).
 - "tap on an active gym..." → PASS (regresión, ya navega).
 
-`gym-android` (order 1) no tiene timer (`timeLimitSeconds`), así que `ChallengeScreen` no arranca un `Timer.periodic` y no hay timers pendientes al terminar el test.
+`gym-android` (order 1) no tiene timer (`timeLimitSeconds`), así que
+`ChallengeScreen` no arranca un `Timer.periodic` y no hay timers pendientes al
+terminar el test. El test de navegación fija `tester.view.physicalSize =
+const Size(1080, 2400)` (mismo patrón que `action_error_feedback_test.dart`)
+para que `ChallengeScreen` no desborde en el viewport por defecto de 800x600.
 
 - [ ] **Step 3: Write the helper and wire the entry points**
 
