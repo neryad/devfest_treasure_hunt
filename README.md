@@ -154,8 +154,15 @@ Genera la versión de producción con:
 flutter build web --release
 ```
 
-Publica el contenido de `build/web`. Para evitar mostrar una versión anterior
-después de reemplazar el deploy, realiza una recarga completa o limpia los datos
+Publica la carpeta `build/web` completa en un deploy nuevo. No mezcles archivos
+de builds distintos ni reemplaces solamente `main.dart.js`, porque los plugins
+de Flutter Web pueden quedar desincronizados.
+
+En Firebase Console, agrega el dominio desplegado en **Authentication >
+Settings > Authorized domains**. Para producción debe estar autorizado
+`devfestmaster.netlify.app`.
+
+Después de reemplazar el deploy, realiza una recarga completa o limpia los datos
 de la PWA instalada.
 
 ## Enlaces

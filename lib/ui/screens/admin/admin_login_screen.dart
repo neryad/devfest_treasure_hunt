@@ -34,19 +34,26 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     final controller = AppScope.read(context);
     try {
       await controller.signInAdmin(
-        _emailController.text,
+        _emailController.text.trim(),
         _passwordController.text,
       );
     } on FirebaseAuthException catch (error) {
+      debugPrint('ADMIN AUTH FAILURE [${error.code}]: ${error.message}');
       if (!mounted) return;
       setState(() {
         _error = switch (error.code) {
+          'invalid-email' ||
           'invalid-credential' ||
           'user-not-found' ||
           'wrong-password' => 'Credenciales inválidas',
           'too-many-requests' => 'Demasiados intentos. Intenta más tarde.',
           'network-request-failed' => 'Sin conexión. Intenta de nuevo.',
-          _ => error.message ?? 'No se pudo iniciar sesión.',
+          'operation-not-allowed' =>
+            'El acceso por correo no está habilitado en Firebase.',
+          'unauthorized-domain' || 'app-not-authorized' =>
+            'Este dominio no está autorizado en Firebase.',
+          _ =>
+            'No se pudo iniciar sesión. Verifica la configuración de Firebase.',
         };
         _submitting = false;
       });
@@ -55,6 +62,15 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       if (!mounted) return;
       setState(() {
         _error = 'La autenticación no está disponible sin conexión.';
+        _submitting = false;
+      });
+      return;
+    } catch (error) {
+      debugPrint('ADMIN AUTH FAILURE: $error');
+      if (!mounted) return;
+      setState(() {
+        _error =
+            'No se pudo conectar con Firebase. Recarga la página e intenta de nuevo.';
         _submitting = false;
       });
       return;
