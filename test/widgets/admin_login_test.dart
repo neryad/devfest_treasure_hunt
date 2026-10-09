@@ -55,10 +55,7 @@ void main() {
 
     expect(find.text('Credenciales inválidas'), findsOneWidget);
 
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Contraseña'),
-      'CafecitoConCodigo!2026',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Contraseña'), '');
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();
 
