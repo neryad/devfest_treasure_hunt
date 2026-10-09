@@ -18,9 +18,9 @@ import '../domain/use_cases/leaderboard_use_case.dart';
 import '../domain/use_cases/start_participant_use_case.dart';
 
 const _cooldownDuration = Duration(minutes: 5);
-const _adminUser = 'admin';
-// Sí, sé que esto no se debe hacer 😅, pero fue algo rápido y con poco tiempo :P
-const _adminPassword = 'CafecitoConCodigo!2026';
+
+typedef AdminAuthenticator =
+    Future<void> Function(String email, String password);
 
 enum StaffActionResult {
   success,
@@ -42,6 +42,7 @@ class AppController extends ChangeNotifier {
     required ParticipantRepository participantRepository,
     required LeaderboardRepository leaderboardRepository,
     required EventRepository eventRepository,
+    this._adminAuthenticator,
     Future<void> Function()? resetStore,
     AttemptRepository? attemptRepository,
     this.enableElapsedTicker = true,
@@ -73,6 +74,7 @@ class AppController extends ChangeNotifier {
   final AttemptRepository? _attemptRepository;
   late final EventRepository _eventRepository;
   late final Future<void> Function()? _resetStore;
+  final AdminAuthenticator? _adminAuthenticator;
   final bool enableElapsedTicker;
 
   /// True when the app is running on local (unsynced) data by explicit choice.
@@ -162,11 +164,14 @@ class AppController extends ChangeNotifier {
   CompleteChallengeUseCase? get completeChallengeUseCase =>
       _completeChallengeUseCase;
 
-  bool signInAdmin(String user, String password) {
-    final valid = user.trim() == _adminUser && password == _adminPassword;
-    _adminSignedIn = valid;
+  Future<void> signInAdmin(String email, String password) async {
+    final authenticate = _adminAuthenticator;
+    if (authenticate == null) {
+      throw StateError('Firebase Authentication is unavailable.');
+    }
+    await authenticate(email.trim(), password);
+    _adminSignedIn = true;
     notifyListeners();
-    return valid;
   }
 
   void signOutAdmin() {

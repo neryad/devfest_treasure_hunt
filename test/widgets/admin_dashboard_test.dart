@@ -25,12 +25,13 @@ void main() {
       participantRepository: repository,
       leaderboardRepository: repository,
       eventRepository: repository,
+      adminAuthenticator: (email, password) async {},
       resetStore: dataSource.reset,
       attemptRepository: repository,
       enableElapsedTicker: false,
     );
     await controller.initialize();
-    controller.signInAdmin('admin', 'CafecitoConCodigo!2026');
+    await controller.signInAdmin('staff@example.com', 'valid-password');
   });
 
   tearDown(() => controller.dispose());

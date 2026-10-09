@@ -45,7 +45,7 @@ para no revelar las soluciones durante el evento.
 
 - Flutter y Dart.
 - Material 3.
-- Firebase Core y Cloud Firestore.
+- Firebase Authentication, Firebase Core y Cloud Firestore.
 - `mobile_scanner` para los retos con QR.
 - `shared_preferences` para conservar la sesión local del dispositivo.
 - `url_launcher` para agenda, comunidad, redes y feedback.
@@ -85,6 +85,8 @@ modo local; el cambio no ocurre de forma silenciosa.
 - Chrome para desarrollo web.
 - Android SDK o Xcode para ejecutar en dispositivos móviles.
 - Un proyecto Firebase configurado para usar la persistencia compartida.
+- Firebase Authentication con el proveedor de correo/contraseña habilitado y
+  las cuentas del staff creadas en Firebase Console.
 
 ## Ejecutar localmente
 
@@ -125,6 +127,10 @@ La definición base de los ocho gimnasios se encuentra en
 `lib/data/datasources/mock_data.dart` y se utiliza para inicializar o migrar el
 contenido del evento. La identificación de la sesión actual se conserva en el
 dispositivo mediante `SharedPreferences`.
+
+El panel Staff valida correo y contraseña con Firebase Authentication. Crea
+únicamente cuentas autorizadas para el staff en Firebase Console; el modo local
+no permite iniciar sesión en el panel.
 
 > Antes de publicar una instancia propia, configura reglas de Firestore que
 > impidan escrituras no autorizadas. Este repositorio no incluye un archivo

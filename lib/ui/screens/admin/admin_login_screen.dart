@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -12,27 +13,53 @@ class AdminLoginScreen extends StatefulWidget {
 }
 
 class _AdminLoginScreenState extends State<AdminLoginScreen> {
-  final _userController = TextEditingController(text: 'admin');
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _error;
+  bool _submitting = false;
 
   @override
   void dispose() {
-    _userController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    if (_submitting) return;
+    setState(() {
+      _error = null;
+      _submitting = true;
+    });
     final controller = AppScope.read(context);
-    final ok = controller.signInAdmin(
-      _userController.text,
-      _passwordController.text,
-    );
-    if (!ok) {
-      setState(() => _error = 'Credenciales inválidas');
+    try {
+      await controller.signInAdmin(
+        _emailController.text,
+        _passwordController.text,
+      );
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = switch (error.code) {
+          'invalid-credential' ||
+          'user-not-found' ||
+          'wrong-password' => 'Credenciales inválidas',
+          'too-many-requests' => 'Demasiados intentos. Intenta más tarde.',
+          'network-request-failed' => 'Sin conexión. Intenta de nuevo.',
+          _ => error.message ?? 'No se pudo iniciar sesión.',
+        };
+        _submitting = false;
+      });
+      return;
+    } on StateError {
+      if (!mounted) return;
+      setState(() {
+        _error = 'La autenticación no está disponible sin conexión.';
+        _submitting = false;
+      });
       return;
     }
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(builder: (_) => const AdminDashboardScreen()),
     );
@@ -80,8 +107,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   ),
                   const SizedBox(height: 20),
                   TextField(
-                    controller: _userController,
-                    decoration: const InputDecoration(labelText: 'Usuario'),
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    decoration: const InputDecoration(labelText: 'Correo'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -102,9 +131,14 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   ],
                   const SizedBox(height: 20),
                   ElevatedButton.icon(
-                    onPressed: _submit,
-                    icon: const Icon(Icons.login_rounded),
-                    label: const Text('Entrar'),
+                    onPressed: _submitting ? null : _submit,
+                    icon: _submitting
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.login_rounded),
+                    label: Text(_submitting ? 'Validando…' : 'Entrar'),
                   ),
                 ],
               ),

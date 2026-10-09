@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
 import 'package:devfest_treasure_hunt/state/app_controller.dart';
@@ -18,6 +19,11 @@ void main() {
       participantRepository: repo,
       leaderboardRepository: repo,
       eventRepository: repo,
+      adminAuthenticator: (email, password) async {
+        if (email != 'staff@example.com' || password != 'valid-password') {
+          throw FirebaseAuthException(code: 'invalid-credential');
+        }
+      },
       resetStore: dataSource.reset,
       attemptRepository: repo,
       enableElapsedTicker: false,
@@ -37,7 +43,7 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('requires shared admin credentials before showing dashboard', (
+  testWidgets('validates admin credentials before showing dashboard', (
     tester,
   ) async {
     await pumpAdmin(tester);
@@ -45,7 +51,10 @@ void main() {
     expect(find.text('Acceso Staff'), findsWidgets);
     expect(find.text('Panel Staff'), findsNothing);
 
-    await tester.enterText(find.widgetWithText(TextField, 'Usuario'), 'admin');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Correo'),
+      'staff@example.com',
+    );
     await tester.enterText(
       find.widgetWithText(TextField, 'Contraseña'),
       'wrong',
@@ -55,7 +64,10 @@ void main() {
 
     expect(find.text('Credenciales inválidas'), findsOneWidget);
 
-    await tester.enterText(find.widgetWithText(TextField, 'Contraseña'), '');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Contraseña'),
+      'valid-password',
+    );
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();
 

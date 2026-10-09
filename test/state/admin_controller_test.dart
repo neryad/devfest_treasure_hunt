@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
 import 'package:devfest_treasure_hunt/state/app_controller.dart';
@@ -17,6 +18,11 @@ void main() {
       participantRepository: repository,
       leaderboardRepository: repository,
       eventRepository: repository,
+      adminAuthenticator: (email, password) async {
+        if (email != 'staff@example.com' || password != 'valid-password') {
+          throw FirebaseAuthException(code: 'invalid-credential');
+        }
+      },
       resetStore: dataSource.reset,
       attemptRepository: repository,
       enableElapsedTicker: false,
@@ -26,15 +32,21 @@ void main() {
 
   tearDown(() => controller.dispose());
 
-  test('signs in admin with shared event credentials', () {
-    expect(controller.adminSignedIn, isFalse);
+  test(
+    'authenticates admin credentials through the configured provider',
+    () async {
+      expect(controller.adminSignedIn, isFalse);
 
-    expect(controller.signInAdmin('admin', 'wrong'), isFalse);
-    expect(controller.adminSignedIn, isFalse);
+      await expectLater(
+        controller.signInAdmin('staff@example.com', 'wrong'),
+        throwsA(isA<FirebaseAuthException>()),
+      );
+      expect(controller.adminSignedIn, isFalse);
 
-    expect(controller.signInAdmin('admin', ''), isTrue);
-    expect(controller.adminSignedIn, isTrue);
-  });
+      await controller.signInAdmin(' staff@example.com ', 'valid-password');
+      expect(controller.adminSignedIn, isTrue);
+    },
+  );
 
   test('staff can grant a medal and base points manually', () async {
     final participant = await repository.createParticipant(
