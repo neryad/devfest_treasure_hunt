@@ -126,20 +126,9 @@ La definición base de los ocho gimnasios se encuentra en
 contenido del evento. La identificación de la sesión actual se conserva en el
 dispositivo mediante `SharedPreferences`.
 
-El repositorio incluye reglas mínimas en `firestore.rules`. Estas mantienen las
-lecturas requeridas por la aplicación, validan la estructura de los datos de
-juego y bloquean modificaciones públicas de la configuración y los gimnasios.
-Antes de desplegarlas deben probarse con Firebase Emulator Suite:
-
-```bash
-firebase login
-firebase deploy --only firestore:rules
-```
-
-Estas reglas son una protección transitoria. Como la aplicación todavía no usa
-Firebase Authentication, no pueden comprobar que cada participante sea dueño
-de su documento. La solución definitiva debe asociar cada participante con un
-UID y mover las acciones administrativas a un backend confiable.
+> Antes de publicar una instancia propia, configura reglas de Firestore que
+> impidan escrituras no autorizadas. Este repositorio no incluye un archivo
+> `firestore.rules`.
 
 ## Pruebas
 
