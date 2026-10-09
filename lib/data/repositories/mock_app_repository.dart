@@ -78,13 +78,8 @@ class MockAppRepository
   }
 
   @override
-  Future<Participant?> getParticipant(String id) async {
-    final participants = await _dataSource.loadParticipants();
-    for (final p in participants) {
-      if (p.id == id) return p;
-    }
-    return null;
-  }
+  Future<Participant?> getParticipant(String id) =>
+      _dataSource.loadParticipant(id);
 
   @override
   Future<void> updateParticipant(Participant participant) =>
@@ -108,11 +103,10 @@ class MockAppRepository
   // ---------- LeaderboardRepository ----------
 
   @override
-  Future<List<LeaderboardEntry>> getLeaderboard() async {
-    final participants = await _dataSource.loadParticipants();
-    final treasures = await _dataSource.loadTreasures();
-    final totalTreasures = treasures.length;
-
+  Future<List<LeaderboardEntry>> getLeaderboard({
+    required List<Participant> participants,
+    required int totalTreasures,
+  }) async {
     final entries = participants.map((p) {
       final elapsed = p.isCompleted
           ? p.completedAt!.difference(p.startedAt)

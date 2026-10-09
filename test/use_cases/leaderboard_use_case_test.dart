@@ -1,5 +1,6 @@
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
+import 'package:devfest_treasure_hunt/domain/entities/leaderboard_entry.dart';
 import 'package:devfest_treasure_hunt/domain/entities/participant.dart';
 import 'package:devfest_treasure_hunt/domain/use_cases/leaderboard_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +16,13 @@ void main() {
     repository = MockAppRepository(dataSource);
     useCase = LeaderboardUseCase(repository);
   });
+
+  Future<List<LeaderboardEntry>> loadBoard() async {
+    return useCase.execute(
+      participants: await repository.getParticipants(),
+      totalTreasures: (await repository.getTreasures()).length,
+    );
+  }
 
   Future<Participant> add(
     String id,
@@ -51,7 +59,7 @@ void main() {
       await add('p3', 'Laura', 10, ['a']);
       await add('p4', 'Sofía', 10, ['a', 'b', 'c', 'd']);
 
-      final board = await useCase.execute();
+      final board = await loadBoard();
 
       expect(board[0].participantId, 'p4'); // 4 treasures
       // Both have 3; Pedro finished faster.
@@ -66,7 +74,7 @@ void main() {
     await add('p1', 'Ana', 5, ['a', 'b']);
     await add('p2', 'Pedro', 5, ['a']);
 
-    final board = await useCase.execute();
+    final board = await loadBoard();
     expect(board[0].position, 1);
     expect(board[1].position, 2);
   });
@@ -78,7 +86,7 @@ void main() {
       await add('p1', 'Ana', 20, ['a', 'b'], completeInMinutes: 2);
       await add('p2', 'Pedro', 30, ['a', 'b']);
 
-      final board = await useCase.execute();
+      final board = await loadBoard();
       expect(board[0].participantId, 'p1');
       expect(board[0].status, ParticipantStatus.completed);
     },

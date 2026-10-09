@@ -155,6 +155,14 @@ class MockLocalDataSource implements AppDataSource {
   Future<List<Participant>> loadParticipants() async => List.of(_participants);
 
   @override
+  Future<Participant?> loadParticipant(String id) async {
+    for (final participant in _participants) {
+      if (participant.id == id) return participant;
+    }
+    return null;
+  }
+
+  @override
   Future<void> saveParticipant(Participant participant) async {
     final index = _participants.indexWhere((p) => p.id == participant.id);
     if (index == -1) {

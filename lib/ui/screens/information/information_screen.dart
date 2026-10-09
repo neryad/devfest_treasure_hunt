@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -6,9 +8,16 @@ import '../../../core/utils/open_external_link.dart';
 typedef InformationLinkOpener = Future<bool> Function(Uri uri);
 
 class InformationScreen extends StatelessWidget {
-  const InformationScreen({super.key, this.linkOpener});
+  const InformationScreen({
+    super.key,
+    this.linkOpener,
+    this.repositoryAvailableAt,
+  });
 
   final InformationLinkOpener? linkOpener;
+  final DateTime? repositoryAvailableAt;
+
+  static final _repositoryReleaseAt = DateTime(2026, 10, 10, 18);
 
   static final _scheduleDayOne = Uri.parse(
     'https://devfest.gdgsantodomingo.org/schedule?day=1',
@@ -125,6 +134,8 @@ class InformationScreen extends StatelessWidget {
                 _CreatorCard(
                   onGithub: () => _open(context, _github),
                   onProjectRepository: () => _open(context, _projectRepository),
+                  repositoryAvailableAt:
+                      repositoryAvailableAt ?? _repositoryReleaseAt,
                   onLinkedIn: () => _open(context, _linkedIn),
                   onYoutube: () => _open(context, _youtube),
                   onX: () => _open(context, _x),
@@ -358,10 +369,11 @@ class _FeedbackCard extends StatelessWidget {
   }
 }
 
-class _CreatorCard extends StatelessWidget {
+class _CreatorCard extends StatefulWidget {
   const _CreatorCard({
     required this.onGithub,
     required this.onProjectRepository,
+    required this.repositoryAvailableAt,
     required this.onLinkedIn,
     required this.onYoutube,
     required this.onX,
@@ -374,6 +386,37 @@ class _CreatorCard extends StatelessWidget {
   final VoidCallback onYoutube;
   final VoidCallback onX;
   final VoidCallback onInstagram;
+  final DateTime repositoryAvailableAt;
+
+  @override
+  State<_CreatorCard> createState() => _CreatorCardState();
+}
+
+class _CreatorCardState extends State<_CreatorCard> {
+  Timer? _releaseTimer;
+  late bool _repositoryVisible;
+
+  @override
+  void initState() {
+    super.initState();
+    _repositoryVisible = !DateTime.now().isBefore(
+      widget.repositoryAvailableAt,
+    );
+    if (!_repositoryVisible) {
+      _releaseTimer = Timer(
+        widget.repositoryAvailableAt.difference(DateTime.now()),
+        () {
+          if (mounted) setState(() => _repositoryVisible = true);
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _releaseTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -447,39 +490,40 @@ class _CreatorCard extends StatelessWidget {
                 key: const Key('info-creator-github'),
                 icon: Icons.code_rounded,
                 label: 'GitHub',
-                onPressed: onGithub,
+                onPressed: widget.onGithub,
               ),
               _SocialButton(
                 icon: Icons.business_center_rounded,
                 label: 'LinkedIn',
-                onPressed: onLinkedIn,
+                onPressed: widget.onLinkedIn,
               ),
               _SocialButton(
                 icon: Icons.smart_display_rounded,
                 label: 'YouTube',
-                onPressed: onYoutube,
+                onPressed: widget.onYoutube,
               ),
               _SocialButton(
                 key: const Key('info-creator-x'),
                 icon: Icons.alternate_email_rounded,
                 label: 'X',
-                onPressed: onX,
+                onPressed: widget.onX,
               ),
               _SocialButton(
                 key: const Key('info-creator-instagram'),
                 icon: Icons.camera_alt_outlined,
                 label: 'Instagram',
-                onPressed: onInstagram,
+                onPressed: widget.onInstagram,
               ),
             ],
           ),
           const SizedBox(height: 10),
-          OutlinedButton.icon(
-            key: const Key('info-project-repository'),
-            onPressed: onProjectRepository,
-            icon: const Icon(Icons.folder_open_rounded, size: 18),
-            label: const Text('Código fuente de DevFest Master'),
-          ),
+          if (_repositoryVisible)
+            OutlinedButton.icon(
+              key: const Key('info-project-repository'),
+              onPressed: widget.onProjectRepository,
+              icon: const Icon(Icons.folder_open_rounded, size: 18),
+              label: const Text('Código fuente de DevFest Master'),
+            ),
           const SizedBox(height: 14),
           const Text(
             'Desarrollado con Flutter y Firebase.',

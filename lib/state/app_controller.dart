@@ -440,7 +440,10 @@ class AppController extends ChangeNotifier {
 
   Future<void> _reloadLeaderboard() async {
     _participants = await _participantRepository.getParticipants();
-    _leaderboard = await _leaderboardUseCase.execute();
+    _leaderboard = await _leaderboardUseCase.execute(
+      participants: _participants,
+      totalTreasures: _treasures.length,
+    );
   }
 
   void _startTickerIfNeeded() {

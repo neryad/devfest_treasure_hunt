@@ -129,6 +129,14 @@ class FirebaseDataSource implements AppDataSource {
   }
 
   @override
+  Future<Participant?> loadParticipant(String id) async {
+    final snapshot = await _participantsRef.doc(id).get();
+    final data = snapshot.data();
+    if (!snapshot.exists || data == null) return null;
+    return Participant.tryFromJson(data);
+  }
+
+  @override
   Future<void> saveParticipant(Participant participant) async {
     await _participantsRef.doc(participant.id).set(participant.toJson());
   }

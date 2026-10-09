@@ -1,5 +1,6 @@
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
+import 'package:devfest_treasure_hunt/domain/entities/leaderboard_entry.dart';
 import 'package:devfest_treasure_hunt/domain/use_cases/leaderboard_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -14,6 +15,13 @@ void main() {
     repository = MockAppRepository(dataSource);
     useCase = LeaderboardUseCase(repository);
   });
+
+  Future<List<LeaderboardEntry>> loadBoard() async {
+    return useCase.execute(
+      participants: await repository.getParticipants(),
+      totalTreasures: (await repository.getTreasures()).length,
+    );
+  }
 
   Future<void> addParticipant({
     required String id,
@@ -53,7 +61,7 @@ void main() {
       minutesAgo: 20,
     );
 
-    final board = await useCase.execute();
+    final board = await loadBoard();
 
     expect(board.first.participantId, 'p2');
     expect(board.first.points, 430);

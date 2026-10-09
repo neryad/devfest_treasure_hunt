@@ -28,6 +28,8 @@ abstract class AppDataSource {
 
   Future<List<Participant>> loadParticipants();
 
+  Future<Participant?> loadParticipant(String id);
+
   Future<void> saveParticipant(Participant participant);
 
   Future<List<Discovery>> loadDiscoveries();

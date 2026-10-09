@@ -14,6 +14,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: InformationScreen(
+          repositoryAvailableAt: DateTime(2020),
           linkOpener: (uri) async {
             openedUri = uri;
             return true;
@@ -104,5 +105,29 @@ void main() {
       find.text('Hecho con amor, por y para la comunidad.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('shows the project repository when its release time arrives', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final releaseAt = DateTime.now().add(const Duration(seconds: 10));
+    await tester.pumpWidget(
+      MaterialApp(home: InformationScreen(repositoryAvailableAt: releaseAt)),
+    );
+
+    await tester.scrollUntilVisible(
+      find.text('Dayern Gomez'),
+      500,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('info-project-repository')), findsNothing);
+
+    await tester.pump(const Duration(seconds: 11));
+    expect(find.byKey(const Key('info-project-repository')), findsOneWidget);
   });
 }
