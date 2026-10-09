@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/open_external_link.dart';
 
 typedef CommunityLinkOpener = Future<bool> Function(Uri uri);
 typedef CommunityScannerBuilder =
@@ -42,9 +42,7 @@ class _CommunityChallengeScreenState extends State<CommunityChallengeScreen> {
   bool _openingLink = false;
   bool _completing = false;
 
-  CommunityLinkOpener get _openLink =>
-      widget.linkOpener ??
-      (uri) => launchUrl(uri, mode: LaunchMode.externalApplication);
+  CommunityLinkOpener get _openLink => widget.linkOpener ?? openExternalLink;
 
   Future<void> _launch(Uri uri, {required bool community}) async {
     if (_openingLink) return;

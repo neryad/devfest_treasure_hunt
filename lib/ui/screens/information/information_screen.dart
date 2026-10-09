@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/open_external_link.dart';
 
 typedef InformationLinkOpener = Future<bool> Function(Uri uri);
 
@@ -40,9 +40,7 @@ class InformationScreen extends StatelessWidget {
   );
 
   Future<void> _open(BuildContext context, Uri uri) async {
-    final open =
-        linkOpener ??
-        (target) => launchUrl(target, mode: LaunchMode.externalApplication);
+    final open = linkOpener ?? openExternalLink;
     final opened = await open(uri);
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -512,7 +510,7 @@ class _CommunityThanks extends StatelessWidget {
         ),
         SizedBox(height: 6),
         Text(
-          'Gracias al equipo de GDG Santo Domingo y a Eruy Pérez por la oportunidad y la confianza.',
+          'Gracias al equipo de GDG Santo Domingo y a Eury Pérez por la oportunidad y la confianza.',
           textAlign: TextAlign.center,
           style: TextStyle(color: AppColors.textSecondary, height: 1.4),
         ),
