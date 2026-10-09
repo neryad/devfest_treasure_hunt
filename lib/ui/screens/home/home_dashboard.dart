@@ -4,13 +4,12 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/utils/treasure_icons.dart';
 
-import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/stat_card.dart';
 import '../../../state/app_scope.dart';
 import '../completion/completion_screen.dart';
-import '../discovery/manual_code_screen.dart';
+import '../pokedex/pokedex_screen.dart';
 
-/// "Inicio" tab: the participant's adventure overview.
+/// Unified DevMaster tab: participant overview and gym collection.
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({super.key});
 
@@ -72,20 +71,8 @@ class HomeDashboard extends StatelessWidget {
             const SizedBox(height: 16),
             const _CompletedBanner(),
           ],
-          const SectionHeader(
-            title: 'Acciones rápidas',
-            subtitle: 'Completa gimnasios y suma medallas',
-          ),
-
-          _ActionCard(
-            icon: Icons.keyboard_rounded,
-            title: 'Introducir código manual',
-            subtitle: 'Alternativa al escaneo',
-            color: AppColors.secondary,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const ManualCodeScreen()),
-            ),
-          ),
+          const SizedBox(height: 24),
+          const PokedexScreen(embedded: true, showTrainerCard: false),
         ],
       ),
     );
@@ -404,71 +391,6 @@ class _CompletedBanner extends StatelessWidget {
               child: const Text('Ver resultado'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: color.withValues(alpha: 0.2),
-                child: Icon(icon, color: color),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
         ),
       ),
     );

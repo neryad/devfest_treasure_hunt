@@ -6,4 +6,5 @@ abstract class AttemptRepository {
   Future<void> saveAttempt(Attempt attempt);
   Future<int> getAttemptCount(String participantId, String gymId);
   Future<Attempt?> getLastAttempt(String participantId, String gymId);
+  Future<Set<String>> getCorrectQuestionIds(String participantId, String gymId);
 }

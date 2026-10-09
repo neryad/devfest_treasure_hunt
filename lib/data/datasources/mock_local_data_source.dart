@@ -28,7 +28,7 @@ class MockLocalDataSource implements AppDataSource {
 
   static const _treasuresKey = 'devfest.treasures.v1';
   static const _challengeContentVersionKey = 'devfest.challengeContentVersion';
-  static const _challengeContentVersion = '4';
+  static const _challengeContentVersion = '11';
   static const _participantsKey = 'devfest.participants.v1';
   static const _discoveriesKey = 'devfest.discoveries.v1';
   static const _currentParticipantKey = 'devfest.currentParticipant.v1';
@@ -191,6 +191,24 @@ class MockLocalDataSource implements AppDataSource {
     if (_storage != null) {
       await _storage.write(_kAttempts, Attempt.listToJson(_attempts));
     }
+  }
+
+  @override
+  Future<Set<String>> getCorrectQuestionIds(
+    String participantId,
+    String gymId,
+  ) async {
+    final attempts = await loadAttempts();
+    return attempts
+        .where(
+          (attempt) =>
+              attempt.participantId == participantId &&
+              attempt.gymId == gymId &&
+              attempt.correct &&
+              attempt.questionId != null,
+        )
+        .map((attempt) => attempt.questionId!)
+        .toSet();
   }
 
   @override

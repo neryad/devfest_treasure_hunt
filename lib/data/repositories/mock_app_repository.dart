@@ -49,7 +49,6 @@ class MockAppRepository
     return null;
   }
 
-
   @override
   Future<void> setTreasureActive(String id, bool active) async {
     final treasures = await _dataSource.loadTreasures();
@@ -202,4 +201,10 @@ class MockAppRepository
     attempts.sort((a, b) => b.answeredAt.compareTo(a.answeredAt));
     return attempts.first;
   }
+
+  @override
+  Future<Set<String>> getCorrectQuestionIds(
+    String participantId,
+    String gymId,
+  ) => _dataSource.getCorrectQuestionIds(participantId, gymId);
 }

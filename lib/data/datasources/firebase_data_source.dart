@@ -19,7 +19,7 @@ class FirebaseDataSource implements AppDataSource {
        _storage = storage ?? SharedPrefsLocalStorage();
 
   static const _currentParticipantKey = 'devfest.currentParticipant.v1';
-  static const _challengeContentVersion = 4;
+  static const _challengeContentVersion = 11;
 
   final FirebaseFirestore _firestore;
   final AppLocalStorage _storage;
@@ -184,6 +184,22 @@ class FirebaseDataSource implements AppDataSource {
   @override
   Future<void> saveAttempt(Attempt attempt) async {
     await _attemptsRef.doc(attempt.id).set(attempt.toJson());
+  }
+
+  @override
+  Future<Set<String>> getCorrectQuestionIds(
+    String participantId,
+    String gymId,
+  ) async {
+    final snapshot = await _attemptsRef
+        .where('participantId', isEqualTo: participantId)
+        .where('gymId', isEqualTo: gymId)
+        .where('correct', isEqualTo: true)
+        .get();
+    return snapshot.docs
+        .map((doc) => doc.data()['questionId'] as String?)
+        .whereType<String>()
+        .toSet();
   }
 
   Future<void> _deleteCollection(

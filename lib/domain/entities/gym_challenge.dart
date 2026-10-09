@@ -16,6 +16,7 @@ class GymChallenge {
     this.points = 100,
     this.targetScore,
     this.questionBank = const [],
+    this.questionsRequired = 1,
   });
 
   final ChallengeType type;
@@ -28,6 +29,7 @@ class GymChallenge {
   final int points;
   final int? targetScore;
   final List<ChallengeQuestion> questionBank;
+  final int questionsRequired;
 
   bool get hasTimer =>
       type == ChallengeType.trivia || type == ChallengeType.code;
@@ -47,6 +49,7 @@ class GymChallenge {
     int? points,
     int? targetScore,
     List<ChallengeQuestion>? questionBank,
+    int? questionsRequired,
   }) {
     return GymChallenge(
       type: type ?? this.type,
@@ -60,6 +63,7 @@ class GymChallenge {
       targetScore: targetScore ?? this.targetScore,
       questionBank:
           questionBank ?? List<ChallengeQuestion>.from(this.questionBank),
+      questionsRequired: questionsRequired ?? this.questionsRequired,
     );
   }
 
@@ -75,11 +79,21 @@ class GymChallenge {
       'points': points,
       'targetScore': targetScore,
       'questionBank': questionBank.map((q) => q.toJson()).toList(),
+      'questionsRequired': questionsRequired,
     };
   }
 
   factory GymChallenge.fromJson(Map<String, dynamic> json) {
     final bankJson = json['questionBank'] as List<dynamic>?;
+    final questionBank = bankJson != null
+        ? bankJson
+              .map((e) => ChallengeQuestion.fromJson(e as Map<String, dynamic>))
+              .toList()
+        : <ChallengeQuestion>[];
+    final requested = (json['questionsRequired'] as num?)?.toInt() ?? 1;
+    final questionsRequired = questionBank.isNotEmpty
+        ? requested.clamp(0, questionBank.length)
+        : requested;
     return GymChallenge(
       type: ChallengeType.values.firstWhere(
         (e) => e.name == json['type'],
@@ -95,13 +109,8 @@ class GymChallenge {
       timeLimitSeconds: json['timeLimitSeconds'] as int? ?? 60,
       points: json['points'] as int? ?? 100,
       targetScore: json['targetScore'] as int?,
-      questionBank: bankJson != null
-          ? bankJson
-                .map(
-                  (e) => ChallengeQuestion.fromJson(e as Map<String, dynamic>),
-                )
-                .toList()
-          : [],
+      questionBank: questionBank,
+      questionsRequired: questionsRequired,
     );
   }
 
@@ -118,6 +127,7 @@ class GymChallenge {
         other.timeLimitSeconds == timeLimitSeconds &&
         other.points == points &&
         other.targetScore == targetScore &&
+        other.questionsRequired == questionsRequired &&
         listEquals(other.questionBank, questionBank);
   }
 
@@ -133,6 +143,7 @@ class GymChallenge {
       timeLimitSeconds,
       points,
       targetScore,
+      questionsRequired,
       Object.hashAll(questionBank),
     );
   }

@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../admin_navigation.dart';
 import '../discovery/manual_code_screen.dart';
+import '../information/information_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
-import '../pokedex/pokedex_screen.dart';
 import 'home_dashboard.dart';
 
 /// Main shell for a participant with bottom navigation:
-/// Inicio · DevDex · Ranking, plus a highlighted CTA to scan or enter a gym code.
+/// DevMaster · Ranking, plus a highlighted CTA to enter a gym code.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -19,7 +19,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
-  static const _titles = ['Inicio', 'DevDex · Gimnasios', 'Ranking'];
+  static const _titles = ['DevMaster', 'Ranking'];
 
   void _openFindSheet() {
     showModalBottomSheet<void>(
@@ -74,6 +74,15 @@ class _HomeScreenState extends State<HomeScreen> {
           title: Text(_titles[_index]),
           actions: [
             IconButton(
+              tooltip: 'Información y reglas',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const InformationScreen(),
+                ),
+              ),
+              icon: const Icon(Icons.info_outline_rounded),
+            ),
+            IconButton(
               tooltip: 'Panel admin demo',
               onPressed: () => openAdminDemo(context),
               icon: const Icon(Icons.admin_panel_settings_rounded),
@@ -82,23 +91,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         body: IndexedStack(
           index: _index,
-          children: const [
-            HomeDashboard(),
-            PokedexScreen(),
-            LeaderboardScreen(),
-          ],
+          children: const [HomeDashboard(), LeaderboardScreen()],
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _index,
           onTap: (i) => setState(() => _index = i),
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: 'Inicio',
-            ),
-            BottomNavigationBarItem(
               icon: Icon(Icons.military_tech_rounded),
-              label: 'DevDex',
+              label: 'DevMaster',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.leaderboard_rounded),

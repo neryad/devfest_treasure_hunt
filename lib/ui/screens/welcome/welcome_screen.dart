@@ -6,6 +6,7 @@ import '../../../core/utils/snack_bar_utils.dart';
 import '../../../core/widgets/status_pill.dart';
 import '../../../state/app_scope.dart';
 import '../../admin_navigation.dart';
+import '../information/information_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -244,6 +245,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+
+                    Center(
+                      child: TextButton.icon(
+                        key: const Key('welcome-information'),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const InformationScreen(),
+                          ),
+                        ),
+                        icon: const Icon(Icons.info_outline_rounded, size: 18),
+                        label: const Text('Información y reglas'),
+                      ),
+                    ),
 
                     // --- ADMIN ACCESS ---
                     Center(

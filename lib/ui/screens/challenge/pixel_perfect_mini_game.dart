@@ -8,15 +8,16 @@ import '../../../core/theme/app_theme.dart';
 class PixelPerfectMiniGame extends StatefulWidget {
   const PixelPerfectMiniGame({
     super.key,
-    required this.targetScore,
     required this.onCompleted,
-    this.initialRunway = 100,
+    this.totalRounds = 10,
+    this.requiredHits = 5,
     this.random,
-  });
+  }) : assert(totalRounds > 0),
+       assert(requiredHits > 0 && requiredHits <= totalRounds);
 
-  final int targetScore;
-  final VoidCallback onCompleted;
-  final int initialRunway;
+  final ValueChanged<int> onCompleted;
+  final int totalRounds;
+  final int requiredHits;
 
   /// Injectable only to make the generated rounds deterministic in tests.
   final Random? random;
@@ -29,8 +30,6 @@ enum _Phase { memorize, choose, reveal }
 
 class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
     with SingleTickerProviderStateMixin {
-  static const _pointsPerHit = 10;
-  static const _runwayPenalty = 20;
   static const _tileCount = 16;
   static const _columns = 4;
 
@@ -44,17 +43,13 @@ class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
   int _targetIndex = 0;
   int? _picked;
   int _round = 0;
-  int _score = 0;
-  late int _runway;
+  int _correctHits = 0;
   bool _completed = false;
   bool _gameOver = false;
   String? _feedback;
 
-  int get _targetHits => (widget.targetScore / _pointsPerHit).ceil();
-  int get _validatedHits => (_score / _pointsPerHit).ceil();
-
   double get _spread {
-    final difficulty = (_round / 10).clamp(0.0, 1.0);
+    final difficulty = (_round / widget.totalRounds).clamp(0.0, 1.0);
     return 0.14 - (0.12 * difficulty);
   }
 
@@ -63,18 +58,10 @@ class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
     return Duration(milliseconds: milliseconds);
   }
 
-  Color get _runwayColor {
-    final ratio = _runway / widget.initialRunway;
-    if (ratio <= 0.4) return AppColors.danger;
-    if (ratio <= 0.7) return AppColors.amber;
-    return AppColors.success;
-  }
-
   @override
   void initState() {
     super.initState();
     _rng = widget.random ?? Random();
-    _runway = widget.initialRunway;
     _memorizeController = AnimationController(vsync: this)
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed && _phase == _Phase.memorize) {
@@ -130,27 +117,33 @@ class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
   void _pick(int index) {
     if (_phase != _Phase.choose || _gameOver || _completed) return;
     final correct = index == _targetIndex;
+    final nextRound = _round + 1;
+    final nextCorrectHits = _correctHits + (correct ? 1 : 0);
+    final finished = nextRound >= widget.totalRounds;
+    final passed = finished && nextCorrectHits >= widget.requiredHits;
 
     setState(() {
       _picked = index;
       _phase = _Phase.reveal;
-      _round += 1;
+      _round = nextRound;
+      _correctHits = nextCorrectHits;
       if (correct) {
-        _score = (_score + _pointsPerHit).clamp(0, widget.targetScore);
-        _feedback = '¡Exacto! +$_pointsPerHit de validación';
+        final extra = nextCorrectHits > widget.requiredHits;
+        _feedback = extra
+            ? '¡Exacto! +10 puntos extra'
+            : '¡Exacto! $nextCorrectHits/${widget.requiredHits} para la medalla';
       } else {
-        _runway = (_runway - _runwayPenalty).clamp(0, widget.initialRunway);
-        _feedback = 'Ese tono no era: -$_runwayPenalty de runway';
-        _gameOver = _runway == 0;
+        _feedback = 'Ese tono no era';
       }
+      _completed = passed;
+      _gameOver = finished && !passed;
     });
 
-    if (_score >= widget.targetScore) {
-      _completed = true;
-      widget.onCompleted();
+    if (passed) {
+      widget.onCompleted(nextCorrectHits);
       return;
     }
-    if (_gameOver) return;
+    if (finished) return;
 
     _revealTimer?.cancel();
     _revealTimer = Timer(const Duration(milliseconds: 1000), () {
@@ -162,9 +155,8 @@ class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
   void _retry() {
     _revealTimer?.cancel();
     setState(() {
-      _score = 0;
+      _correctHits = 0;
       _round = 0;
-      _runway = widget.initialRunway;
       _completed = false;
       _gameOver = false;
       _prepareRound();
@@ -179,8 +171,11 @@ class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
 
   @override
   Widget build(BuildContext context) {
-    final progress = (_score / widget.targetScore).clamp(0.0, 1.0);
-    final runwayProgress = (_runway / widget.initialRunway).clamp(0.0, 1.0);
+    final accuracyProgress = (_correctHits / widget.totalRounds).clamp(
+      0.0,
+      1.0,
+    );
+    final roundsProgress = (_round / widget.totalRounds).clamp(0.0, 1.0);
     final isReveal = _phase == _Phase.reveal;
 
     return Material(
@@ -191,7 +186,7 @@ class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
           child: Column(
             children: [
               const Text(
-                'Memoriza el color y encuentra el tono idéntico.',
+                'Acierta al menos 5 de 10. Cada acierto adicional suma +10 puntos.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textSecondary,
@@ -204,18 +199,18 @@ class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
                   Expanded(
                     child: _Meter(
                       icon: Icons.palette_outlined,
-                      label: '$_validatedHits/$_targetHits',
-                      value: progress,
+                      label: '$_correctHits/${widget.totalRounds}',
+                      value: accuracyProgress,
                       color: AppColors.primarySoft,
                     ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: _Meter(
-                      icon: Icons.favorite_rounded,
-                      label: '$_runway',
-                      value: runwayProgress,
-                      color: _runwayColor,
+                      icon: Icons.flag_rounded,
+                      label: '$_round/${widget.totalRounds}',
+                      value: roundsProgress,
+                      color: AppColors.amber,
                     ),
                   ),
                 ],
@@ -258,7 +253,7 @@ class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
                               ),
                               const SizedBox(height: 12),
                               const Text(
-                                'Te quedaste sin runway',
+                                'Te faltaron aciertos',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: AppColors.textPrimary,
@@ -268,7 +263,7 @@ class _PixelPerfectMiniGameState extends State<PixelPerfectMiniGame>
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Identificaste $_validatedHits de $_targetHits colores',
+                                'Identificaste $_correctHits de ${widget.totalRounds} colores. Necesitas ${widget.requiredHits}.',
                                 style: const TextStyle(
                                   color: AppColors.textSecondary,
                                 ),

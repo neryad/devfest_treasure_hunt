@@ -1,7 +1,7 @@
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
-import 'package:devfest_treasure_hunt/domain/entities/participant.dart';
 import 'package:devfest_treasure_hunt/domain/entities/gym_challenge.dart';
+import 'package:devfest_treasure_hunt/domain/entities/treasure_item.dart';
 import 'package:devfest_treasure_hunt/domain/utils/challenge_question_selector.dart';
 import 'package:devfest_treasure_hunt/domain/use_cases/complete_challenge_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,212 +33,244 @@ void main() {
     return participant.id;
   }
 
-  Future<String> assignedAnswer(String participantId, String gymId) async {
+  Future<List<({String id, String answer})>> assignedQuestions(
+    String participantId,
+    String gymId,
+  ) async {
     final gym = await repository.getTreasure(gymId);
     final challenge = gym!.challenge!;
-    if (challenge.questionBank.isEmpty) return challenge.correctAnswer!;
-    return ChallengeQuestionSelector.select(
-      participantId: participantId,
-      gymId: gymId,
-      bank: challenge.questionBank,
-    )!.correctAnswer;
+    return ChallengeQuestionSelector.selectMany(
+          participantId: participantId,
+          gymId: gymId,
+          bank: challenge.questionBank,
+          count: challenge.questionsRequired,
+        )
+        .map((question) => (id: question.id, answer: question.correctAnswer))
+        .toList();
   }
 
-  test('awards base points plus first attempt bonus', () async {
+  Future<ChallengeResult> answer(
+    String participantId,
+    String gymId,
+    ({String id, String answer}) question, {
+    String? answerOverride,
+  }) => useCase.execute(
+    participantId: participantId,
+    gymId: gymId,
+    questionId: question.id,
+    answer: answerOverride ?? question.answer,
+  );
+
+  test(
+    'first correct answer reports progress without granting a medal',
+    () async {
+      final participantId = await createParticipant();
+      final assigned = await assignedQuestions(participantId, 'gym-android');
+
+      final result = await answer(participantId, 'gym-android', assigned.first);
+
+      expect(result.isProgress, isTrue);
+      expect(result.isSuccess, isFalse);
+      expect(result.answeredQuestionIds, {assigned.first.id});
+      expect(result.requiredQuestions, 4);
+      final participant = await repository.getParticipant(participantId);
+      expect(participant!.medals, 0);
+      expect(participant.discoveredTreasureIds, isEmpty);
+    },
+  );
+
+  test('the same assigned question cannot be answered twice', () async {
     final participantId = await createParticipant();
+    final assigned = await assignedQuestions(participantId, 'gym-android');
+    await answer(participantId, 'gym-android', assigned.first);
 
-    final result = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-android',
-      answer: await assignedAnswer(participantId, 'gym-android'),
-    );
-
-    expect(result.isSuccess, isTrue);
-    expect(result.pointsEarned, 130);
-
-    final participant = await repository.getParticipant(participantId);
-    expect(participant!.points, 130);
-    expect(participant.medals, 1);
-  });
-
-  test('awards second attempt bonus after one wrong answer', () async {
-    final participantId = await createParticipant();
-
-    final wrong = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-android',
-      answer: 'build.gradle',
-    );
-    expect(wrong.failure, ChallengeFailure.invalidAnswer);
-
-    final correct = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-android',
-      answer: await assignedAnswer(participantId, 'gym-android'),
-    );
-
-    expect(correct.isSuccess, isTrue);
-    expect(correct.pointsEarned, 115);
-  });
-
-  test('awards no attempt bonus after two wrong answers', () async {
-    final participantId = await createParticipant();
-
-    await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-android',
-      answer: 'wrong one',
-    );
-    await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-android',
-      answer: 'wrong two',
-    );
-
-    final correct = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-android',
-      answer: await assignedAnswer(participantId, 'gym-android'),
-    );
-
-    expect(correct.isSuccess, isTrue);
-    expect(correct.pointsEarned, 100);
-  });
-
-  test('does not apply cooldown after wrong answer', () async {
-    final participantId = await createParticipant();
-
-    final wrong = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-cloud',
-      answer: 'Compute Engine',
-    );
-    expect(wrong.failure, ChallengeFailure.invalidAnswer);
-
-    final correct = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-cloud',
-      answer: await assignedAnswer(participantId, 'gym-cloud'),
-    );
-
-    expect(correct.isSuccess, isTrue);
-    expect(correct.failure, isNull);
-  });
-
-  test('adds completion bonus when eighth medal is completed', () async {
-    final participantId = await createParticipant();
-    final participant = await repository.getParticipant(participantId);
-    await repository.updateParticipant(
-      participant!.copyWith(
-        discoveredTreasureIds: const [
-          'gym-android',
-          'gym-ia',
-          'gym-security',
-          'gym-web',
-          'gym-startup',
-          'gym-speaker',
-          'gym-community',
-        ],
-        medals: 7,
-        points: 700,
-      ),
-    );
-
-    final result = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-cloud',
-      answer: await assignedAnswer(participantId, 'gym-cloud'),
-    );
-
-    expect(result.isSuccess, isTrue);
-    expect(result.completed, isTrue);
-    expect(result.pointsEarned, 230);
-
-    final completed = await repository.getParticipant(participantId);
-    expect(completed!.status, ParticipantStatus.completed);
-    expect(completed.points, 930);
-  });
-
-  test('paused event blocks challenge completion', () async {
-    final participantId = await createParticipant();
-    await repository.setEventActive(false);
-
-    final result = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-android',
-      answer: 'AndroidManifest.xml',
-    );
-
-    expect(result.failure, ChallengeFailure.eventPaused);
-    final participant = await repository.getParticipant(participantId);
-    expect(participant!.points, 0);
-    expect(participant.medals, 0);
-    final attempts = await repository.getAttemptCount(
+    final duplicate = await answer(
       participantId,
       'gym-android',
+      assigned.first,
     );
-    expect(attempts, 0);
+
+    expect(duplicate.failure, ChallengeFailure.questionAlreadyAnswered);
+    expect(await repository.getAttemptCount(participantId, 'gym-android'), 1);
   });
 
-  test('rejects an answer from another question in the same bank', () async {
+  test('a wrong answer does not remove prior progress', () async {
     final participantId = await createParticipant();
-    final gym = await repository.getTreasure('gym-android');
-    final assigned = ChallengeQuestionSelector.select(
-      participantId: participantId,
-      gymId: gym!.id,
-      bank: gym.challenge!.questionBank,
-    )!;
-    final other = gym.challenge!.questionBank.firstWhere(
-      (question) => question.id != assigned.id,
-    );
+    final assigned = await assignedQuestions(participantId, 'gym-android');
+    await answer(participantId, 'gym-android', assigned.first);
 
-    final result = await useCase.execute(
-      participantId: participantId,
-      gymId: gym.id,
-      answer: other.correctAnswer,
+    final wrong = await answer(
+      participantId,
+      'gym-android',
+      assigned.last,
+      answerOverride: 'incorrecta',
+    );
+    expect(wrong.failure, ChallengeFailure.invalidAnswer);
+
+    final continued = await answer(participantId, 'gym-android', assigned.last);
+    expect(continued.isProgress, isTrue);
+    expect(
+      await repository.getCorrectQuestionIds(participantId, 'gym-android'),
+      {assigned.first.id, assigned.last.id},
+    );
+    expect((await repository.getParticipant(participantId))!.medals, 0);
+  });
+
+  test('all assigned answers grant one medal', () async {
+    final participantId = await createParticipant();
+    final assigned = await assignedQuestions(participantId, 'gym-android');
+
+    ChallengeResult? result;
+    for (final question in assigned) {
+      result = await answer(participantId, 'gym-android', question);
+    }
+
+    expect(result!.isSuccess, isTrue);
+    expect(result.pointsEarned, 130);
+    final participant = await repository.getParticipant(participantId);
+    expect(participant!.medals, 1);
+    expect(participant.discoveredTreasureIds, contains('gym-android'));
+  });
+
+  test(
+    'an unassigned question id is rejected without saving an attempt',
+    () async {
+      final participantId = await createParticipant();
+
+      final result = await useCase.execute(
+        participantId: participantId,
+        gymId: 'gym-android',
+        questionId: 'not-assigned',
+        answer: 'CAMERA',
+      );
+
+      expect(result.failure, ChallengeFailure.invalidQuestion);
+      expect(await repository.getAttemptCount(participantId, 'gym-android'), 0);
+    },
+  );
+
+  test('an empty answer is always incorrect and is recorded', () async {
+    final participantId = await createParticipant();
+    final assigned = await assignedQuestions(participantId, 'gym-android');
+
+    final result = await answer(
+      participantId,
+      'gym-android',
+      assigned.first,
+      answerOverride: '   ',
     );
 
     expect(result.failure, ChallengeFailure.invalidAnswer);
+    final attempts = await repository.getAttemptsForGym(
+      participantId,
+      'gym-android',
+    );
+    expect(attempts, hasLength(1));
+    expect(attempts.single.correct, isFalse);
+    expect(attempts.single.questionId, assigned.first.id);
   });
 
-  test('legacy single-question challenges still work', () async {
+  test('speaker names accept accents, punctuation, and extra spaces', () async {
     final participantId = await createParticipant();
-    final treasures = await dataSource.loadTreasures();
-    final cloudIndex = treasures.indexWhere((item) => item.id == 'gym-cloud');
-    treasures[cloudIndex] = treasures[cloudIndex].copyWith(
-      challenge: const GymChallenge(
-        type: ChallengeType.trivia,
-        question: 'Legacy question',
-        options: ['Legacy answer', 'Wrong'],
-        correctAnswer: 'Legacy answer',
-      ),
+    final assigned = await assignedQuestions(participantId, 'gym-speaker');
+    final expected = assigned.first.answer.toLowerCase();
+    final vowel = RegExp(r'[aeiou]').firstMatch(expected)!;
+    const accentedVowels = {'a': 'á', 'e': 'é', 'i': 'í', 'o': 'ó', 'u': 'ú'};
+    final variant = expected
+        .replaceRange(vowel.start, vowel.end, accentedVowels[vowel.group(0)]!)
+        .replaceFirst(' ', ' ...  ');
+
+    final result = await answer(
+      participantId,
+      'gym-speaker',
+      assigned.first,
+      answerOverride: variant,
     );
-    await dataSource.saveTreasures(treasures);
+
+    expect(result.isProgress, isTrue);
+  });
+
+  test('a gym without a challenge is an invalid question', () async {
+    final participantId = await createParticipant();
+    final original = (await repository.getTreasure('gym-android'))!;
+    final treasures = await dataSource.loadTreasures();
+    final replacement = TreasureItem(
+      id: original.id,
+      title: original.title,
+      description: original.description,
+      code: original.code,
+      clue: original.clue,
+      locationDescription: original.locationDescription,
+      iconKey: original.iconKey,
+      order: original.order,
+      isActive: original.isActive,
+      createdAt: original.createdAt,
+      challengeType: ChallengeType.qr,
+      gymName: original.gymName,
+      track: original.track,
+      pointValue: original.pointValue,
+    );
+    await dataSource.saveTreasures([
+      for (final treasure in treasures)
+        if (treasure.id == original.id) replacement else treasure,
+    ]);
 
     final result = await useCase.execute(
       participantId: participantId,
-      gymId: 'gym-cloud',
-      answer: 'Legacy answer',
+      gymId: original.id,
+      questionId: 'legacy',
+      answer: 'anything',
+    );
+
+    expect(result.failure, ChallengeFailure.invalidQuestion);
+    expect((await repository.getParticipant(participantId))!.medals, 0);
+  });
+
+  test('a paused event changes neither attempts nor participant', () async {
+    final participantId = await createParticipant();
+    final assigned = await assignedQuestions(participantId, 'gym-android');
+    await repository.setEventActive(false);
+
+    final result = await answer(participantId, 'gym-android', assigned.first);
+
+    expect(result.failure, ChallengeFailure.eventPaused);
+    expect(await repository.getAttemptCount(participantId, 'gym-android'), 0);
+    final participant = await repository.getParticipant(participantId);
+    expect(participant!.points, 0);
+    expect(participant.medals, 0);
+  });
+
+  test(
+    'legacy and mini-game challenges remain single-question flows',
+    () async {
+      final participantId = await createParticipant();
+
+      final startup = await useCase.execute(
+        participantId: participantId,
+        gymId: 'gym-startup',
+        questionId: 'legacy',
+        answer: 'RUNWAY-CLEARED',
+      );
+
+      expect(startup.isSuccess, isTrue);
+      expect(startup.isProgress, isFalse);
+    },
+  );
+
+  test('Pixel Perfect awards ten points for each hit above five', () async {
+    final participantId = await createParticipant();
+
+    final result = await useCase.execute(
+      participantId: participantId,
+      gymId: 'gym-web',
+      questionId: 'legacy',
+      answer: 'PIXEL-PERFECT',
+      miniGameScore: 8,
     );
 
     expect(result.isSuccess, isTrue);
-  });
-
-  test('startup and security keep their existing answers', () async {
-    final participantId = await createParticipant();
-
-    final startup = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-startup',
-      answer: 'RUNWAY-CLEARED',
-    );
-    final security = await useCase.execute(
-      participantId: participantId,
-      gymId: 'gym-security',
-      answer: 'SECURE2026',
-    );
-
-    expect(startup.isSuccess, isTrue);
-    expect(security.isSuccess, isTrue);
+    expect(result.performanceBonus, 30);
+    expect(result.pointsEarned, 160);
+    expect((await repository.getParticipant(participantId))!.points, 160);
   });
 }

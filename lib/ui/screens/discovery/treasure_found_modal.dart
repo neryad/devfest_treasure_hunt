@@ -21,6 +21,8 @@ Future<void> handleDiscoveryResult(
       DiscoverFailure.alreadyDiscovered => '¡Ya tienes esta medalla!',
       DiscoverFailure.participantNotFound =>
         'Necesitas registrarte antes de ganar medallas.',
+      DiscoverFailure.requiresChallenge =>
+        'Completa el reto del gimnasio para ganar esta medalla.',
     };
     if (context.mounted) {
       ScaffoldMessenger.of(

@@ -9,12 +9,36 @@ import 'package:devfest_treasure_hunt/ui/screens/challenge/pixel_perfect_mini_ga
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-int _firstTargetForSeed(int seed) {
+List<int> _targetsForSeed(int seed, int rounds) {
   final random = Random(seed);
-  random.nextDouble();
-  random.nextDouble();
-  random.nextDouble();
-  return random.nextInt(16);
+  return List.generate(rounds, (_) {
+    random.nextDouble();
+    random.nextDouble();
+    random.nextDouble();
+    final target = random.nextInt(16);
+    for (var index = 0; index < 16; index++) {
+      if (index == target) continue;
+      for (var channel = 0; channel < 3; channel++) {
+        random.nextDouble();
+        random.nextBool();
+      }
+    }
+    return target;
+  });
+}
+
+Future<void> _chooseColor(
+  WidgetTester tester,
+  int index, {
+  required bool isLastRound,
+}) async {
+  await tester.pump(const Duration(milliseconds: 2500));
+  await tester.pump();
+  await tester.tap(find.byKey(Key('pixel-game-tile-$index')));
+  await tester.pump();
+  if (!isLastRound) {
+    await tester.pump(const Duration(milliseconds: 1100));
+  }
 }
 
 void main() {
@@ -23,11 +47,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: PixelPerfectMiniGame(
-          targetScore: 100,
-          random: Random(7),
-          onCompleted: () {},
-        ),
+        home: PixelPerfectMiniGame(random: Random(7), onCompleted: (_) {}),
       ),
     );
 
@@ -44,58 +64,49 @@ void main() {
     }
   });
 
-  testWidgets('selecting the exact color completes the target score', (
-    tester,
-  ) async {
+  testWidgets('five correct colors out of ten earn the medal', (tester) async {
     const seed = 11;
-    var completed = false;
+    final targets = _targetsForSeed(seed, 10);
+    int? completedHits;
     await tester.pumpWidget(
       MaterialApp(
         home: PixelPerfectMiniGame(
-          targetScore: 10,
           random: Random(seed),
-          onCompleted: () => completed = true,
+          onCompleted: (hits) => completedHits = hits,
         ),
       ),
     );
-    await tester.pump(const Duration(milliseconds: 2500));
-    await tester.pump();
 
-    await tester.tap(
-      find.byKey(Key('pixel-game-tile-${_firstTargetForSeed(seed)}')),
-    );
-    await tester.pump();
+    for (var round = 0; round < 10; round++) {
+      final target = targets[round];
+      final pick = round < 5 ? target : (target == 0 ? 1 : 0);
+      await _chooseColor(tester, pick, isLastRound: round == 9);
+    }
 
-    expect(completed, isTrue);
-    expect(find.text('¡Exacto! +10 de validación'), findsOneWidget);
-    expect(find.text('1/1'), findsOneWidget);
+    expect(completedHits, 5);
+    expect(find.text('5/10'), findsOneWidget);
   });
 
-  testWidgets('a wrong color consumes runway and allows retry', (tester) async {
+  testWidgets('fewer than five correct colors allows retry', (tester) async {
     const seed = 19;
-    final target = _firstTargetForSeed(seed);
-    final wrong = target == 0 ? 1 : 0;
+    final targets = _targetsForSeed(seed, 10);
     await tester.pumpWidget(
       MaterialApp(
-        home: PixelPerfectMiniGame(
-          targetScore: 100,
-          initialRunway: 20,
-          random: Random(seed),
-          onCompleted: () {},
-        ),
+        home: PixelPerfectMiniGame(random: Random(seed), onCompleted: (_) {}),
       ),
     );
-    await tester.pump(const Duration(milliseconds: 2500));
-    await tester.pump();
 
-    await tester.tap(find.byKey(Key('pixel-game-tile-$wrong')));
-    await tester.pump();
+    for (var round = 0; round < 10; round++) {
+      final target = targets[round];
+      final pick = round < 4 ? target : (target == 0 ? 1 : 0);
+      await _chooseColor(tester, pick, isLastRound: round == 9);
+    }
 
-    expect(find.text('Te quedaste sin runway'), findsOneWidget);
+    expect(find.text('Te faltaron aciertos'), findsOneWidget);
     await tester.tap(find.byKey(const Key('pixel-game-retry')));
     await tester.pump();
     expect(find.byKey(const Key('pixel-game-memorize')), findsOneWidget);
-    expect(find.text('Te quedaste sin runway'), findsNothing);
+    expect(find.text('Te faltaron aciertos'), findsNothing);
   });
 
   testWidgets('the Web gym opens Pixel Perfect instead of a trivia', (

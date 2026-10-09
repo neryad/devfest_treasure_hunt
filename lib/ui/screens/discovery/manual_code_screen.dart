@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/snack_bar_utils.dart';
+import '../../../domain/use_cases/discover_treasure_use_case.dart';
 import '../../../state/app_scope.dart';
+import '../challenge/challenge_navigation.dart';
 import 'treasure_found_modal.dart';
 
 /// Alternative to scanning: type the treasure code manually.
@@ -32,7 +34,13 @@ class _ManualCodeScreenState extends State<ManualCodeScreen> {
     final app = AppScope.read(context);
     try {
       final result = await app.discoverByCode(code);
-      if (mounted) await handleDiscoveryResult(context, result);
+      if (!mounted) return;
+      if (result.failure == DiscoverFailure.requiresChallenge &&
+          result.treasure != null) {
+        await openChallenge(context, result.treasure!);
+      } else {
+        await handleDiscoveryResult(context, result);
+      }
     } catch (_) {
       if (mounted) showNetworkError(context);
     } finally {

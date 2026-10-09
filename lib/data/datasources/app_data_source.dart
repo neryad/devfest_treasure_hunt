@@ -44,4 +44,6 @@ abstract class AppDataSource {
   Future<List<Attempt>> loadAttempts();
 
   Future<void> saveAttempt(Attempt attempt);
+
+  Future<Set<String>> getCorrectQuestionIds(String participantId, String gymId);
 }

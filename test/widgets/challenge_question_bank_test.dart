@@ -1,6 +1,7 @@
+import 'dart:math';
+
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
-import 'package:devfest_treasure_hunt/domain/utils/challenge_question_selector.dart';
 import 'package:devfest_treasure_hunt/state/app_controller.dart';
 import 'package:devfest_treasure_hunt/state/app_scope.dart';
 import 'package:devfest_treasure_hunt/ui/screens/challenge/challenge_screen.dart';
@@ -33,21 +34,21 @@ void main() {
     final gym = controller.treasures.firstWhere(
       (item) => item.id == 'gym-android',
     );
-    final assigned = ChallengeQuestionSelector.select(
-      participantId: controller.participant!.id,
-      gymId: gym.id,
-      bank: gym.challenge!.questionBank,
-    )!;
+    final shuffled = List.of(gym.challenge!.questionBank)..shuffle(Random(17));
+    final assigned = shuffled.first;
 
     await tester.pumpWidget(
       AppScope(
         controller: controller,
-        child: MaterialApp(home: ChallengeScreen(gym: gym)),
+        child: MaterialApp(
+          home: ChallengeScreen(gym: gym, random: Random(17)),
+        ),
       ),
     );
     await tester.pump();
 
     expect(find.text(assigned.question), findsOneWidget);
+    expect(find.text('Pregunta 1 de 4'), findsOneWidget);
     expect(find.text(assigned.hint!), findsNothing);
     for (final option in assigned.options) {
       expect(find.text(option), findsOneWidget);

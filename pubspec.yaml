@@ -68,6 +68,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/medallas/
+    - web/icons/Icon-512.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -24,10 +24,15 @@ class SplashScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.explore_rounded,
-                size: 64,
-                color: AppColors.primarySoft,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Image.asset(
+                  'web/icons/Icon-512.png',
+                  key: const Key('splash-app-icon'),
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(height: 24),

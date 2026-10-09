@@ -1,10 +1,11 @@
+import 'dart:math';
+
 import 'package:devfest_treasure_hunt/core/utils/snack_bar_utils.dart';
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
 import 'package:devfest_treasure_hunt/domain/entities/attempt.dart';
 import 'package:devfest_treasure_hunt/domain/entities/participant.dart';
 import 'package:devfest_treasure_hunt/domain/entities/treasure_item.dart';
-import 'package:devfest_treasure_hunt/domain/utils/challenge_question_selector.dart';
 import 'package:devfest_treasure_hunt/state/app_controller.dart';
 import 'package:devfest_treasure_hunt/state/app_scope.dart';
 import 'package:devfest_treasure_hunt/ui/screens/challenge/challenge_screen.dart';
@@ -158,19 +159,16 @@ void main() {
     await tester.pumpWidget(
       AppScope(
         controller: controller,
-        child: MaterialApp(home: ChallengeScreen(gym: gym)),
+        child: MaterialApp(
+          home: ChallengeScreen(gym: gym, random: Random(23)),
+        ),
       ),
     );
     await tester.pump();
 
-    final assigned = ChallengeQuestionSelector.select(
-      participantId: controller.participant!.id,
-      gymId: gym.id,
-      bank: gym.challenge!.questionBank,
-    );
-    final options = assigned != null
-        ? assigned.options
-        : gym.challenge!.options!;
+    final shuffled = List.of(gym.challenge!.questionBank)..shuffle(Random(23));
+    final assigned = shuffled.first;
+    final options = assigned.options;
     await tester.tap(find.text(options.first));
     await tester.pump();
     await tester.tap(find.text('Enviar respuesta'));
@@ -216,19 +214,16 @@ void main() {
     await tester.pumpWidget(
       AppScope(
         controller: controller,
-        child: MaterialApp(home: ChallengeScreen(gym: gym)),
+        child: MaterialApp(
+          home: ChallengeScreen(gym: gym, random: Random(29)),
+        ),
       ),
     );
     await tester.pump();
 
-    final assigned = ChallengeQuestionSelector.select(
-      participantId: controller.participant!.id,
-      gymId: gym.id,
-      bank: gym.challenge!.questionBank,
-    );
-    final options = assigned != null
-        ? assigned.options
-        : gym.challenge!.options!;
+    final shuffled = List.of(gym.challenge!.questionBank)..shuffle(Random(29));
+    final assigned = shuffled.first;
+    final options = assigned.options;
     await tester.tap(find.text(options.first));
     await tester.pump();
     await tester.tap(find.text('Enviar respuesta'));

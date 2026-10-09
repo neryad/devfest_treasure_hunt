@@ -8,7 +8,18 @@ import '../../../state/app_scope.dart';
 import '../challenge/challenge_navigation.dart';
 
 class PokedexScreen extends StatelessWidget {
-  const PokedexScreen({super.key});
+  const PokedexScreen({
+    super.key,
+    this.embedded = false,
+    this.showTrainerCard = true,
+  });
+
+  /// Renders the collection inside another scroll view instead of creating
+  /// a second, nested scrollable.
+  final bool embedded;
+
+  /// The unified DevMaster dashboard already provides this overview.
+  final bool showTrainerCard;
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +35,8 @@ class PokedexScreen extends StatelessWidget {
     final name = participant?.name ?? 'Entrenador';
     final nickname = participant?.nickname ?? 'Dev';
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
-      children: [
+    final children = <Widget>[
+      if (showTrainerCard) ...[
         // --- TRAINER CARD HERO ---
         _TrainerCard(
           name: name,
@@ -37,76 +47,85 @@ class PokedexScreen extends StatelessWidget {
           points: points,
         ),
         const SizedBox(height: 24),
-
-        // --- SECTION HEADER ---
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '8 Gimnasios Tecnológicos',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Toca un gimnasio para ver su reto y ubicación',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Text(
-                '$medals / ${gyms.length}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primarySoft,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // --- BADGE GRID ---
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
-            childAspectRatio: 0.92,
-          ),
-          itemCount: gyms.length,
-          itemBuilder: (context, index) {
-            final gym = gyms[index];
-            final isEarned = discoveredIds.contains(gym.id);
-            return _GymBadgeCard(
-              gym: gym,
-              isEarned: isEarned,
-              onTap: () => _showGymDetail(context, gym, isEarned),
-            );
-          },
-        ),
       ],
+
+      // --- SECTION HEADER ---
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '8 Gimnasios Tecnológicos',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Toca un gimnasio para ver su reto y ubicación',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Text(
+              '$medals / ${gyms.length}',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primarySoft,
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+
+      // --- BADGE GRID ---
+      GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+          childAspectRatio: 0.92,
+        ),
+        itemCount: gyms.length,
+        itemBuilder: (context, index) {
+          final gym = gyms[index];
+          final isEarned = discoveredIds.contains(gym.id);
+          return _GymBadgeCard(
+            gym: gym,
+            isEarned: isEarned,
+            onTap: () => _showGymDetail(context, gym, isEarned),
+          );
+        },
+      ),
+    ];
+
+    if (embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
+      children: children,
     );
   }
 

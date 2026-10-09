@@ -46,7 +46,8 @@ class AppController extends ChangeNotifier {
     this.enableElapsedTicker = true,
     this.offline = false,
   }) : _treasureRepository = treasureRepository,
-       _participantRepository = participantRepository {
+       _participantRepository = participantRepository,
+       _attemptRepository = attemptRepository {
     _discoverUseCase = DiscoverTreasureUseCase(
       treasureRepository: treasureRepository,
       participantRepository: participantRepository,
@@ -68,6 +69,7 @@ class AppController extends ChangeNotifier {
 
   final TreasureRepository _treasureRepository;
   final ParticipantRepository _participantRepository;
+  final AttemptRepository? _attemptRepository;
   late final EventRepository _eventRepository;
   late final Future<void> Function()? _resetStore;
   final bool enableElapsedTicker;
@@ -377,16 +379,25 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> submitChallenge(String gymId, String answer) async {
+  Future<void> submitChallenge(
+    String gymId,
+    String answer, {
+    required String questionId,
+    int? miniGameScore,
+  }) async {
     final participant = _participant;
     if (participant == null || _completeChallengeUseCase == null) return;
     final result = await _completeChallengeUseCase.execute(
       participantId: participant.id,
       gymId: gymId,
+      questionId: questionId,
       answer: answer,
+      miniGameScore: miniGameScore,
     );
     _lastChallengeResult = result;
-    if (!result.isSuccess && result.cooldownRemaining != null) {
+    if (!result.isProgress &&
+        !result.isSuccess &&
+        result.cooldownRemaining != null) {
       _cooldownStart = DateTime.now();
     }
     if (result.isSuccess) {
@@ -401,6 +412,13 @@ class AppController extends ChangeNotifier {
       await _reloadLeaderboard();
     }
     notifyListeners();
+  }
+
+  Future<Set<String>> answeredQuestionIds(String gymId) async {
+    final participant = _participant;
+    final repository = _attemptRepository;
+    if (participant == null || repository == null) return const {};
+    return repository.getCorrectQuestionIds(participant.id, gymId);
   }
 
   void clearChallengeResult() {

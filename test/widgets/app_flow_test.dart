@@ -73,13 +73,19 @@ void main() {
     await registerDemoUser(tester);
 
     // Discover outer-of-order treasures through the controller.
-    final first = await controller.discoverByTreasureId('gym-speaker');
-    expect(first.isSuccess, isTrue);
+    final first = await controller.grantMedal(
+      participantId: controller.participant!.id,
+      gymId: 'gym-speaker',
+    );
+    expect(first, StaffActionResult.success);
     await tester.pump();
 
     expect(find.text('1 de 8 medallas conseguidas'), findsOneWidget);
 
-    await controller.discoverByTreasureId('gym-ia');
+    await controller.grantMedal(
+      participantId: controller.participant!.id,
+      gymId: 'gym-ia',
+    );
     await tester.pump();
 
     expect(find.text('2 de 8 medallas conseguidas'), findsOneWidget);
@@ -93,17 +99,18 @@ void main() {
     expect(find.text('2 de 8 medallas conseguidas'), findsOneWidget);
   });
 
-  testWidgets('main navigation uses DevDex and hides pistas', (tester) async {
+  testWidgets('DevMaster combines dashboard and gym collection', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await registerDemoUser(tester);
 
-    expect(find.text('DevDex'), findsOneWidget);
+    expect(find.text('DevMaster'), findsWidgets);
+    expect(find.text('Inicio'), findsNothing);
+    expect(find.text('DevDex'), findsNothing);
     expect(find.text('Retos'), findsNothing);
     expect(find.text('Pistas'), findsNothing);
-
-    await tester.tap(find.text('DevDex'));
-    await tester.pumpAndSettle();
-
     expect(find.text('8 Gimnasios Tecnológicos'), findsOneWidget);
+    expect(find.text('Ranking'), findsOneWidget);
   });
 }

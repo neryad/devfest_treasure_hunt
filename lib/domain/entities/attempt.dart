@@ -10,6 +10,7 @@ class Attempt {
     required this.answeredAt,
     required this.correct,
     this.answer,
+    this.questionId,
   });
 
   final String id;
@@ -18,6 +19,7 @@ class Attempt {
   final DateTime answeredAt;
   final bool correct;
   final String? answer;
+  final String? questionId;
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -26,6 +28,7 @@ class Attempt {
     'answeredAt': answeredAt.toIso8601String(),
     'correct': correct,
     'answer': answer,
+    'questionId': questionId,
   };
 
   factory Attempt.fromJson(Map<String, dynamic> json) => Attempt(
@@ -35,6 +38,7 @@ class Attempt {
     answeredAt: DateTime.parse(json['answeredAt'] as String),
     correct: json['correct'] as bool,
     answer: json['answer'] as String?,
+    questionId: json['questionId'] as String?,
   );
 
   static Attempt? tryFromJson(Map<String, dynamic> json) {

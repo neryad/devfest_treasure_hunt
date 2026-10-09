@@ -1,13 +1,15 @@
+import 'dart:math' as math;
+
 import '../../core/utils/id_generator.dart';
 import '../entities/attempt.dart';
 import '../entities/challenge_question.dart';
 import '../entities/participant.dart';
 import '../entities/treasure_item.dart';
-import '../utils/challenge_question_selector.dart';
 import '../repositories/attempt_repository.dart';
 import '../repositories/event_repository.dart';
 import '../repositories/participant_repository.dart';
 import '../repositories/treasure_repository.dart';
+import '../utils/challenge_question_selector.dart';
 
 enum ChallengeFailure {
   participantNotFound,
@@ -16,6 +18,8 @@ enum ChallengeFailure {
   alreadyCompleted,
   cooldownActive,
   invalidAnswer,
+  invalidQuestion,
+  questionAlreadyAnswered,
   eventPaused,
 }
 
@@ -28,6 +32,10 @@ class ChallengeResult {
     this.medals,
     this.completed = false,
     this.cooldownRemaining,
+    this.pending = false,
+    this.answeredQuestionIds = const {},
+    this.requiredQuestions = 0,
+    this.performanceBonus = 0,
   });
 
   factory ChallengeResult.success({
@@ -35,13 +43,26 @@ class ChallengeResult {
     required int pointsEarned,
     required int totalPoints,
     required int medals,
+    int performanceBonus = 0,
     bool completed = false,
   }) => ChallengeResult._(
     gym: gym,
     pointsEarned: pointsEarned,
     totalPoints: totalPoints,
     medals: medals,
+    performanceBonus: performanceBonus,
     completed: completed,
+  );
+
+  factory ChallengeResult.progress({
+    required TreasureItem gym,
+    required Set<String> answeredQuestionIds,
+    required int requiredQuestions,
+  }) => ChallengeResult._(
+    gym: gym,
+    pending: true,
+    answeredQuestionIds: Set.unmodifiable(answeredQuestionIds),
+    requiredQuestions: requiredQuestions,
   );
 
   factory ChallengeResult.failure(
@@ -57,8 +78,13 @@ class ChallengeResult {
   final int? medals;
   final bool completed;
   final Duration? cooldownRemaining;
+  final bool pending;
+  final Set<String> answeredQuestionIds;
+  final int requiredQuestions;
+  final int performanceBonus;
 
-  bool get isSuccess => failure == null;
+  bool get isProgress => failure == null && pending;
+  bool get isSuccess => failure == null && !pending;
 }
 
 class CompleteChallengeUseCase {
@@ -67,7 +93,7 @@ class CompleteChallengeUseCase {
     required ParticipantRepository participantRepository,
     required AttemptRepository attemptRepository,
     required EventRepository eventRepository,
-  }) : // Keep public constructor names without leading underscores.
+  }) : // Keep public dependency names stable for existing composition/tests.
        // ignore: prefer_initializing_formals
        _treasureRepository = treasureRepository,
        // ignore: prefer_initializing_formals
@@ -90,9 +116,10 @@ class CompleteChallengeUseCase {
   Future<ChallengeResult> execute({
     required String participantId,
     required String gymId,
+    required String questionId,
     required String answer,
+    int? miniGameScore,
   }) async {
-    // 1. Validate participant
     final participant = await _participantRepository.getParticipant(
       participantId,
     );
@@ -100,13 +127,11 @@ class CompleteChallengeUseCase {
       return ChallengeResult.failure(ChallengeFailure.participantNotFound);
     }
 
-    // 2. Check the event is not paused
     final event = await _eventRepository.getEvent();
     if (!event.active) {
       return ChallengeResult.failure(ChallengeFailure.eventPaused);
     }
 
-    // 3. Validate gym
     final gym = await _treasureRepository.getTreasure(gymId);
     if (gym == null) {
       return ChallengeResult.failure(ChallengeFailure.gymNotFound);
@@ -114,113 +139,170 @@ class CompleteChallengeUseCase {
     if (!gym.isActive) {
       return ChallengeResult.failure(ChallengeFailure.notActive);
     }
-
-    // 4. Check if already completed
     if (participant.discoveredTreasureIds.contains(gymId)) {
       return ChallengeResult.failure(ChallengeFailure.alreadyCompleted);
     }
 
-    // 5. Validate answer
-    // Never trust a question id supplied by the client. The domain selects the
-    // participant's assigned question again before validating the answer.
-    final assigned = _selectAssignedQuestion(participantId, gym);
-    final correct = _validateAnswerAgainstQuestion(assigned, gym, answer);
+    final assigned = _selectAssignedQuestions(participantId, gym);
+    if (assigned.isEmpty) {
+      return ChallengeResult.failure(ChallengeFailure.invalidQuestion);
+    }
+    final requiredQuestions = _requiredQuestionCount(gym, assigned.length);
+    if (requiredQuestions <= 0) {
+      return ChallengeResult.failure(ChallengeFailure.invalidQuestion);
+    }
+    ChallengeQuestion? question;
+    for (final candidate in assigned) {
+      if (candidate.id == questionId) {
+        question = candidate;
+        break;
+      }
+    }
+    if (question == null) {
+      return ChallengeResult.failure(ChallengeFailure.invalidQuestion);
+    }
 
-    // 6. Record attempt
-    final attempt = Attempt(
-      id: IdGenerator.discoveryId(),
-      participantId: participantId,
-      gymId: gymId,
-      answeredAt: DateTime.now(),
-      correct: correct,
-      answer: answer,
+    final storedAnswered = await _attemptRepository.getCorrectQuestionIds(
+      participantId,
+      gymId,
     );
-    await _attemptRepository.saveAttempt(attempt);
+    final assignedIds = assigned.map((item) => item.id).toSet();
+    final previouslyAnswered = storedAnswered.intersection(assignedIds);
+    if (previouslyAnswered.contains(questionId)) {
+      return ChallengeResult.failure(ChallengeFailure.questionAlreadyAnswered);
+    }
+
+    final normalizedAnswer = _normalizeAnswer(gym, answer);
+    final normalizedCorrectAnswer = _normalizeAnswer(
+      gym,
+      question.correctAnswer,
+    );
+    final correct =
+        normalizedAnswer.isNotEmpty &&
+        normalizedCorrectAnswer.isNotEmpty &&
+        normalizedAnswer == normalizedCorrectAnswer;
+
+    await _attemptRepository.saveAttempt(
+      Attempt(
+        id: IdGenerator.discoveryId(),
+        participantId: participantId,
+        gymId: gymId,
+        answeredAt: DateTime.now(),
+        correct: correct,
+        answer: answer,
+        questionId: questionId,
+      ),
+    );
 
     if (!correct) {
       return ChallengeResult.failure(ChallengeFailure.invalidAnswer);
     }
 
-    final attemptsBeforeCorrect =
-        await _attemptRepository.getAttemptCount(participantId, gymId) - 1;
-    final basePoints = gym.challenge?.points ?? gym.pointValue;
-    final attemptBonus = switch (attemptsBeforeCorrect) {
+    final answeredIds = {...previouslyAnswered, questionId};
+    if (answeredIds.length < requiredQuestions) {
+      return ChallengeResult.progress(
+        gym: gym,
+        answeredQuestionIds: answeredIds,
+        requiredQuestions: requiredQuestions,
+      );
+    }
+
+    final totalAttempts = await _attemptRepository.getAttemptCount(
+      participantId,
+      gymId,
+    );
+    final wrongAttempts = math.max(0, totalAttempts - requiredQuestions);
+    final attemptBonus = switch (wrongAttempts) {
       0 => firstAttemptBonus,
       1 => secondAttemptBonus,
       _ => 0,
     };
+    final basePoints = gym.challenge?.points ?? gym.pointValue;
 
-    // 7. Award points and mark as discovered
-    final updatedTreasures = [...participant.discoveredTreasureIds, gymId];
+    final updatedTreasures = {...participant.discoveredTreasureIds, gymId};
     final newMedals = updatedTreasures.length;
     final allTreasures = await _treasureRepository.getTreasures();
     final allCompleted = newMedals >= allTreasures.length;
     final completionBonus = allCompleted ? allMedalsBonus : 0;
-    final pointsEarned = basePoints + attemptBonus + completionBonus;
+    final performanceBonus = _performanceBonus(gym, miniGameScore);
+    final pointsEarned =
+        basePoints + attemptBonus + completionBonus + performanceBonus;
     final updatedParticipant = participant.copyWith(
-      discoveredTreasureIds: updatedTreasures,
+      discoveredTreasureIds: updatedTreasures.toList(growable: false),
       points: participant.points + pointsEarned,
       medals: newMedals,
+      status: allCompleted ? ParticipantStatus.completed : participant.status,
+      completedAt: allCompleted ? DateTime.now() : participant.completedAt,
     );
-
-    if (allCompleted) {
-      await _participantRepository.updateParticipant(
-        updatedParticipant.copyWith(
-          status: ParticipantStatus.completed,
-          completedAt: DateTime.now(),
-        ),
-      );
-    } else {
-      await _participantRepository.updateParticipant(updatedParticipant);
-    }
+    await _participantRepository.updateParticipant(updatedParticipant);
 
     return ChallengeResult.success(
       gym: gym,
       pointsEarned: pointsEarned,
       totalPoints: updatedParticipant.points,
       medals: newMedals,
+      performanceBonus: performanceBonus,
       completed: allCompleted,
     );
   }
 
-  ChallengeQuestion? _selectAssignedQuestion(
+  int _performanceBonus(TreasureItem gym, int? miniGameScore) {
+    if (gym.id != 'gym-web' || miniGameScore == null) return 0;
+    final correctAnswers = miniGameScore.clamp(0, 10);
+    return math.max(0, correctAnswers - 5) * 10;
+  }
+
+  String _normalizeAnswer(TreasureItem gym, String value) {
+    var normalized = value.trim().toLowerCase();
+    if (gym.id == 'gym-speaker') {
+      normalized = _removeSpanishDiacritics(normalized)
+          .replaceAll(RegExp(r'[^a-z0-9\s]'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+    }
+    return normalized;
+  }
+
+  String _removeSpanishDiacritics(String value) {
+    const accented = 'áàäâéèëêíìïîóòöôúùüûñç';
+    const plain = 'aaaaeeeeiiiioooouuuunc';
+    var result = value;
+    for (var index = 0; index < accented.length; index++) {
+      result = result.replaceAll(accented[index], plain[index]);
+    }
+    return result;
+  }
+
+  List<ChallengeQuestion> _selectAssignedQuestions(
     String participantId,
     TreasureItem gym,
   ) {
     final challenge = gym.challenge;
-    if (challenge == null) return null;
+    if (challenge == null) return const [];
     if (challenge.questionBank.isNotEmpty) {
-      return ChallengeQuestionSelector.select(
+      return ChallengeQuestionSelector.selectMany(
         participantId: participantId,
         gymId: gym.id,
         bank: challenge.questionBank,
+        count: challenge.questionBank.length,
       );
     }
-    // Fallback: create a synthetic question from legacy fields
-    return ChallengeQuestion(
-      id: 'legacy',
-      question: challenge.question ?? '',
-      options: challenge.options ?? const [],
-      correctAnswer: challenge.correctAnswer ?? '',
-      hint: challenge.hint,
-      codeSnippet: challenge.codeSnippet,
-    );
+    final correctAnswer = challenge.correctAnswer;
+    if (correctAnswer == null || correctAnswer.trim().isEmpty) return const [];
+    return [
+      ChallengeQuestion(
+        id: 'legacy',
+        question: challenge.question ?? '',
+        options: challenge.options ?? const [],
+        correctAnswer: correctAnswer,
+        hint: challenge.hint,
+        codeSnippet: challenge.codeSnippet,
+      ),
+    ];
   }
 
-  bool _validateAnswerAgainstQuestion(
-    ChallengeQuestion? assigned,
-    TreasureItem gym,
-    String answer,
-  ) {
-    final challenge = gym.challenge;
-    if (challenge == null) return true; // QR-only gyms auto-pass
-    if (challenge.questionBank.isNotEmpty) {
-      if (assigned == null) return false;
-      return answer.trim().toLowerCase() ==
-          assigned.correctAnswer.trim().toLowerCase();
-    }
-    if (challenge.correctAnswer == null) return true;
-    return answer.trim().toLowerCase() ==
-        challenge.correctAnswer!.trim().toLowerCase();
+  int _requiredQuestionCount(TreasureItem gym, int availableQuestions) {
+    final requested = gym.challenge?.questionsRequired ?? 1;
+    return math.min(requested, availableQuestions);
   }
 }

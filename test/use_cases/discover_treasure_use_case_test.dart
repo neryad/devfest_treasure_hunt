@@ -1,6 +1,7 @@
-import 'package:devfest_treasure_hunt/data/datasources/mock_data.dart';
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
+import 'package:devfest_treasure_hunt/domain/entities/gym_challenge.dart';
+import 'package:devfest_treasure_hunt/domain/entities/treasure_item.dart';
 import 'package:devfest_treasure_hunt/domain/use_cases/discover_treasure_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,7 +11,7 @@ void main() {
   late DiscoverTreasureUseCase useCase;
 
   setUp(() async {
-    dataSource = MockLocalDataSource();
+    dataSource = MockLocalDataSource(seedData: false);
     await dataSource.initialize();
     repository = MockAppRepository(dataSource);
     useCase = DiscoverTreasureUseCase(
@@ -20,154 +21,127 @@ void main() {
     );
   });
 
-  Future<String> createParticipant(String name) async {
-    final p = await repository.createParticipant(
+  Future<String> createParticipant() async {
+    final participant = await repository.createParticipant(
       id: 'participant-test',
-      name: name,
-      nickname: 'nick_${name.toLowerCase()}',
+      name: 'Test User',
+      nickname: 'tester',
       startedAt: DateTime.now(),
     );
-    return p.id;
+    return participant.id;
   }
 
-  test('discovers treasures in ANY order without errors', () async {
-    final pid = await createParticipant('Laura');
-
-    final r1 = await useCase.execute(participantId: pid, treasureId: 'gym-web');
-    final r2 = await useCase.execute(
-      participantId: pid,
-      treasureId: 'gym-android',
+  Future<TreasureItem> makeQrOnly(String gymId) async {
+    final original = (await repository.getTreasure(gymId))!;
+    final replacement = TreasureItem(
+      id: original.id,
+      title: original.title,
+      description: original.description,
+      code: original.code,
+      clue: original.clue,
+      locationDescription: original.locationDescription,
+      iconKey: original.iconKey,
+      order: original.order,
+      isActive: original.isActive,
+      createdAt: original.createdAt,
+      challengeType: ChallengeType.qr,
+      gymName: original.gymName,
+      track: original.track,
+      pointValue: original.pointValue,
     );
-    final r3 = await useCase.execute(
-      participantId: pid,
-      treasureId: 'gym-speaker',
-    );
-    final r4 = await useCase.execute(participantId: pid, treasureId: 'gym-ia');
-
-    expect(r1.isSuccess, isTrue);
-    expect(r2.isSuccess, isTrue);
-    expect(r3.isSuccess, isTrue);
-    expect(r4.isSuccess, isTrue);
-
-    final participant = await repository.getParticipant(pid);
-    expect(participant!.discoveredCount, 4);
-    // Discoveries were registered in the exact order attempted.
-    expect(participant.discoveredTreasureIds, [
-      'gym-web',
-      'gym-android',
-      'gym-speaker',
-      'gym-ia',
+    final treasures = await dataSource.loadTreasures();
+    await dataSource.saveTreasures([
+      for (final treasure in treasures)
+        if (treasure.id == gymId) replacement else treasure,
     ]);
-  });
+    return replacement;
+  }
 
-  test('inactive treasure is rejected and NOT registered', () async {
-    final pid = await createParticipant('Diego');
+  test(
+    'a gym with a challenge requires its challenge and grants no medal',
+    () async {
+      final participantId = await createParticipant();
 
-    await repository.setTreasureActive('gym-security', false);
+      final result = await useCase.execute(
+        participantId: participantId,
+        treasureId: 'gym-android',
+      );
+
+      expect(result.failure, DiscoverFailure.requiresChallenge);
+      expect(result.treasure?.id, 'gym-android');
+      final participant = await repository.getParticipant(participantId);
+      expect(participant!.medals, 0);
+      expect(participant.discoveredTreasureIds, isEmpty);
+    },
+  );
+
+  test('a QR-only gym still grants its medal', () async {
+    final participantId = await createParticipant();
+    await makeQrOnly('gym-android');
 
     final result = await useCase.execute(
-      participantId: pid,
-      treasureId: 'gym-security',
+      participantId: participantId,
+      treasureId: 'gym-android',
+    );
+
+    expect(result.isSuccess, isTrue);
+    expect(result.participant!.discoveredTreasureIds, ['gym-android']);
+    expect(result.participant!.medals, 1);
+  });
+
+  test('an inactive gym is rejected before challenge routing', () async {
+    final participantId = await createParticipant();
+    await repository.setTreasureActive('gym-android', false);
+
+    final result = await useCase.execute(
+      participantId: participantId,
+      treasureId: 'gym-android',
     );
 
     expect(result.failure, DiscoverFailure.notActive);
-    final participant = await repository.getParticipant(pid);
-    expect(participant!.discoveredCount, 0);
-    final discoveries = await dataSource.loadDiscoveries();
-    expect(discoveries.where((d) => d.participantId == pid), isEmpty);
   });
 
-  test('the same treasure cannot be discovered twice', () async {
-    final pid = await createParticipant('Ana');
-
-    final first = await useCase.execute(
-      participantId: pid,
-      treasureId: 'gym-startup',
-    );
-    final second = await useCase.execute(
-      participantId: pid,
-      treasureId: 'gym-startup',
-    );
-
-    expect(first.isSuccess, isTrue);
-    expect(second.failure, DiscoverFailure.alreadyDiscovered);
-    final participant = await repository.getParticipant(pid);
-    expect(participant!.discoveredCount, 1);
-  });
-
-  test('a treasure with unknown id is reported as not found', () async {
-    final pid = await createParticipant('Isaac');
-
-    final result = await useCase.execute(
-      participantId: pid,
-      treasureId: 'treasure-999',
-    );
-    expect(result.failure, DiscoverFailure.treasureNotFound);
-  });
-
-  test('unknown participant cannot discover anything', () async {
-    final result = await useCase.execute(
-      participantId: 'nobody',
+  test('a QR-only gym cannot be discovered twice', () async {
+    final participantId = await createParticipant();
+    await makeQrOnly('gym-android');
+    await useCase.execute(
+      participantId: participantId,
       treasureId: 'gym-android',
     );
-    expect(result.failure, DiscoverFailure.participantNotFound);
-  });
 
-  test('discovering every treasure completes the participant', () async {
-    final pid = await createParticipant('Carlos');
-
-    final ids = MockData.buildTreasures().map((t) => t.id).toList();
-    // Deliberately shuffled to prove the order does not matter.
-    final shuffled = [
-      'gym-speaker',
-      'gym-ia',
-      'gym-community',
-      'gym-android',
-      'gym-cloud',
-      'gym-web',
-      'gym-startup',
-      'gym-security',
-    ];
-
-    DiscoverTreasureResult? last;
-    for (final id in shuffled) {
-      last = await useCase.execute(participantId: pid, treasureId: id);
-    }
-
-    expect(last!.isSuccess, isTrue);
-    expect(last.completed, isTrue);
-    expect(last.participant!.isCompleted, isTrue);
-    expect(last.participant!.completedAt, isNotNull);
-
-    final participant = await repository.getParticipant(pid);
-    expect(participant!.discoveredCount, ids.length);
-  });
-
-  test('a successful discovery unlocks a clue on the result', () async {
-    final pid = await createParticipant('Valeria');
-
-    final result = await useCase.execute(
-      participantId: pid,
+    final duplicate = await useCase.execute(
+      participantId: participantId,
       treasureId: 'gym-android',
     );
-    expect(result.isSuccess, isTrue);
-    expect(result.clue, isNotEmpty);
+
+    expect(duplicate.failure, DiscoverFailure.alreadyDiscovered);
   });
 
-  test('paused event blocks any discovery', () async {
-    final pid = await createParticipant('Paused');
+  test('unknown treasure and participant are reported', () async {
+    final participantId = await createParticipant();
+    final missingGym = await useCase.execute(
+      participantId: participantId,
+      treasureId: 'missing',
+    );
+    final missingParticipant = await useCase.execute(
+      participantId: 'missing',
+      treasureId: 'gym-android',
+    );
+
+    expect(missingGym.failure, DiscoverFailure.treasureNotFound);
+    expect(missingParticipant.failure, DiscoverFailure.participantNotFound);
+  });
+
+  test('a paused event does not route or grant a medal', () async {
+    final participantId = await createParticipant();
     await repository.setEventActive(false);
 
     final result = await useCase.execute(
-      participantId: pid,
+      participantId: participantId,
       treasureId: 'gym-android',
     );
 
     expect(result.failure, DiscoverFailure.eventPaused);
-    expect(result.treasure, isNotNull);
-    final participant = await repository.getParticipant(pid);
-    expect(participant!.discoveredCount, 0);
-    final discoveries = await dataSource.loadDiscoveries();
-    expect(discoveries.where((d) => d.participantId == pid), isEmpty);
+    expect((await repository.getParticipant(participantId))!.medals, 0);
   });
 }

@@ -75,4 +75,67 @@ void main() {
 
     expect(selected, isNull);
   });
+
+  test('selectMany is deterministic, distinct, and bounded', () {
+    const bank = [
+      question,
+      ChallengeQuestion(
+        id: 'q2',
+        question: 'Second?',
+        options: ['C', 'D'],
+        correctAnswer: 'C',
+      ),
+      ChallengeQuestion(
+        id: 'q3',
+        question: 'Third?',
+        options: ['E', 'F'],
+        correctAnswer: 'E',
+      ),
+    ];
+
+    final first = ChallengeQuestionSelector.selectMany(
+      participantId: 'participant-42',
+      gymId: 'gym-web',
+      bank: bank,
+      count: 2,
+    );
+    final repeated = ChallengeQuestionSelector.selectMany(
+      participantId: 'participant-42',
+      gymId: 'gym-web',
+      bank: bank.reversed.toList(),
+      count: 2,
+    );
+
+    expect(first.map((item) => item.id), repeated.map((item) => item.id));
+    expect(first.map((item) => item.id).toSet(), hasLength(2));
+    expect(
+      ChallengeQuestionSelector.selectMany(
+        participantId: 'p',
+        gymId: 'g',
+        bank: bank,
+        count: 99,
+      ),
+      hasLength(3),
+    );
+    expect(
+      ChallengeQuestionSelector.selectMany(
+        participantId: 'p',
+        gymId: 'g',
+        bank: bank,
+        count: 0,
+      ),
+      isEmpty,
+    );
+  });
+
+  test('questionsRequired serializes and clamps to the bank size', () {
+    final challenge = GymChallenge.fromJson({
+      'type': 'trivia',
+      'questionsRequired': 5,
+      'questionBank': [question.toJson()],
+    });
+
+    expect(challenge.questionsRequired, 1);
+    expect(challenge.toJson()['questionsRequired'], 1);
+  });
 }

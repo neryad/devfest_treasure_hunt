@@ -11,6 +11,7 @@ enum DiscoverFailure {
   treasureNotFound,
   notActive,
   alreadyDiscovered,
+  requiresChallenge,
   eventPaused,
 }
 
@@ -99,6 +100,14 @@ class DiscoverTreasureUseCase {
     if (participant.discoveredTreasureIds.contains(treasure.id)) {
       return DiscoverTreasureResult.failure(
         DiscoverFailure.alreadyDiscovered,
+        treasure: treasure,
+        participant: participant,
+      );
+    }
+
+    if (treasure.challenge != null) {
+      return DiscoverTreasureResult.failure(
+        DiscoverFailure.requiresChallenge,
         treasure: treasure,
         participant: participant,
       );

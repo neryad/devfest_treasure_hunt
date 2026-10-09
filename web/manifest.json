@@ -1,11 +1,11 @@
 {
-    "name": "devfest_treasure_hunt",
-    "short_name": "devfest_treasure_hunt",
+    "name": "DevMaster: DevFest Quest",
+    "short_name": "DevMaster",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Conviértete en DevMaster: explora los gimnasios del DevFest Santo Domingo 2026, supera retos y colecciona todas las medallas.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
