@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../domain/entities/clue.dart';
 import '../domain/entities/event.dart';
+import '../domain/entities/finalist_result.dart';
 import '../domain/entities/leaderboard_entry.dart';
 import '../domain/entities/participant.dart';
 import '../domain/entities/treasure_item.dart';
@@ -13,6 +14,7 @@ import '../domain/repositories/participant_repository.dart';
 import '../domain/repositories/attempt_repository.dart';
 import '../domain/repositories/treasure_repository.dart';
 import '../domain/use_cases/complete_challenge_use_case.dart';
+import '../domain/use_cases/build_final_results_use_case.dart';
 import '../domain/use_cases/discover_treasure_use_case.dart';
 import '../domain/use_cases/leaderboard_use_case.dart';
 import '../domain/use_cases/start_participant_use_case.dart';
@@ -83,6 +85,8 @@ class AppController extends ChangeNotifier {
   late final DiscoverTreasureUseCase _discoverUseCase;
   late final StartParticipantUseCase _startUseCase;
   late final LeaderboardUseCase _leaderboardUseCase;
+  final BuildFinalResultsUseCase _buildFinalResultsUseCase =
+      const BuildFinalResultsUseCase();
   late final CompleteChallengeUseCase? _completeChallengeUseCase;
 
   bool _initializing = true;
@@ -108,6 +112,8 @@ class AppController extends ChangeNotifier {
   Participant? get participant => _participant;
   List<Participant> get participants => _participants;
   List<LeaderboardEntry> get leaderboard => _leaderboard;
+  List<FinalistResult> get finalResults =>
+      _buildFinalResultsUseCase.execute(_participants);
   String? get lastError => _lastError;
   ChallengeResult? get lastChallengeResult => _lastChallengeResult;
   bool get adminSignedIn => _adminSignedIn;

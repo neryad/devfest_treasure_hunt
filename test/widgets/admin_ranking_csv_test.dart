@@ -21,8 +21,8 @@ void main() {
 
     expect(
       csv,
-      'position,name,nickname,points,medals,total_medals,elapsed,status\n'
-      '1,Ada Lovelace,ada,930,8,8,00:42:05,completed',
+      'position,name,nickname,points,medals,total_medals,status\n'
+      '1,Ada Lovelace,ada,930,8,8,completed',
     );
   });
 
@@ -43,15 +43,15 @@ void main() {
 
     expect(
       csv,
-      'position,name,nickname,points,medals,total_medals,elapsed,status\n'
-      '2,"Grace, ""Bug"" Hopper","line\nbreak",300,3,8,00:00:07,active',
+      'position,name,nickname,points,medals,total_medals,status\n'
+      '2,"Grace, ""Bug"" Hopper","line\nbreak",300,3,8,active',
     );
   });
 
   test('empty ranking csv contains only headers', () {
     expect(
       buildAdminRankingCsv(const []),
-      'position,name,nickname,points,medals,total_medals,elapsed,status',
+      'position,name,nickname,points,medals,total_medals,status',
     );
   });
 }

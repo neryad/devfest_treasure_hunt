@@ -103,6 +103,24 @@ void main() {
     expect(find.text('Copiar ranking CSV'), findsOneWidget);
   });
 
+  testWidgets('staff can open final results from the dashboard', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: const MaterialApp(home: AdminDashboardScreen()),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('admin-final-results')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Resultados finales'), findsOneWidget);
+    expect(find.text('Aún no hay finalistas'), findsOneWidget);
+  });
+
   testWidgets('staff can adjust participant points from detail', (
     tester,
   ) async {

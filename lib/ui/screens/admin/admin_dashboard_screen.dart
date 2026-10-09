@@ -10,6 +10,7 @@ import '../../../core/widgets/status_pill.dart';
 import '../../../domain/entities/treasure_item.dart';
 import '../../../state/app_controller.dart';
 import '../../../state/app_scope.dart';
+import 'admin_final_results_screen.dart';
 import 'admin_ranking_csv.dart';
 
 /// Staff panel: metrics, ranking, gym availability toggles and participant ops.
@@ -31,6 +32,16 @@ class AdminDashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Panel Staff'),
         actions: [
+          IconButton(
+            key: const Key('admin-final-results'),
+            tooltip: 'Resultados finales',
+            icon: const Icon(Icons.emoji_events_rounded),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const AdminFinalResultsScreen(),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: controller.offline
                 ? 'Restablecer datos locales'
@@ -296,8 +307,8 @@ class _AdminRanking extends StatelessWidget {
                 style: const TextStyle(fontSize: 14),
               ),
               trailing: Text(
-                '${entry.discoveredCount}/${entry.totalTreasures} · '
-                '${formatElapsed(entry.elapsed)}',
+                '${entry.points} pts · '
+                '${entry.discoveredCount}/${entry.totalTreasures}',
                 style: const TextStyle(
                   fontSize: 12.5,
                   color: AppColors.textSecondary,

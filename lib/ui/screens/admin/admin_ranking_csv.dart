@@ -7,7 +7,6 @@ const _headers = [
   'points',
   'medals',
   'total_medals',
-  'elapsed',
   'status',
 ];
 
@@ -22,7 +21,6 @@ String buildAdminRankingCsv(List<LeaderboardEntry> entries) {
         entry.points.toString(),
         entry.discoveredCount.toString(),
         entry.totalTreasures.toString(),
-        entry.elapsedLabel,
         entry.status.name,
       ],
   ];

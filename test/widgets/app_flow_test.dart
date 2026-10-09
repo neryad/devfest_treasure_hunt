@@ -11,7 +11,7 @@ void main() {
   late AppController controller;
 
   setUp(() async {
-    final dataSource = MockLocalDataSource();
+    final dataSource = MockLocalDataSource(seedData: false);
     await dataSource.initialize();
     final repo = MockAppRepository(dataSource);
     controller = AppController(
@@ -112,5 +112,18 @@ void main() {
     expect(find.text('Pistas'), findsNothing);
     expect(find.text('8 Gimnasios Tecnológicos'), findsOneWidget);
     expect(find.text('Ranking'), findsOneWidget);
+    expect(find.text('Finalistas'), findsOneWidget);
+  });
+
+  testWidgets('client navbar opens final results placeholder', (tester) async {
+    await pumpApp(tester);
+    await registerDemoUser(tester);
+
+    await tester.tap(find.text('Finalistas'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Resultados finales'), findsOneWidget);
+    expect(find.text('Aún no hay finalistas'), findsOneWidget);
+    expect(find.byKey(const Key('client-finalists-empty')), findsOneWidget);
   });
 }

@@ -124,16 +124,23 @@ class MockAppRepository
     }).toList();
 
     entries.sort((a, b) {
-      if (a.points != b.points) {
-        return b.points.compareTo(a.points);
-      }
-      if (a.discoveredCount != b.discoveredCount) {
-        return b.discoveredCount.compareTo(a.discoveredCount);
-      }
-      return a.elapsed.compareTo(b.elapsed);
+      final byPoints = b.points.compareTo(a.points);
+      if (byPoints != 0) return byPoints;
+
+      // Equal scores are true ties. Alphabetical ordering only keeps the UI
+      // deterministic; it does not break the tie or change the position.
+      final byNickname = a.nickname.toLowerCase().compareTo(
+        b.nickname.toLowerCase(),
+      );
+      if (byNickname != 0) return byNickname;
+      return a.participantId.compareTo(b.participantId);
     });
 
+    var position = 0;
     for (var i = 0; i < entries.length; i++) {
+      if (i == 0 || entries[i].points != entries[i - 1].points) {
+        position = i + 1;
+      }
       entries[i] = LeaderboardEntry(
         participantId: entries[i].participantId,
         name: entries[i].name,
@@ -142,7 +149,7 @@ class MockAppRepository
         totalTreasures: entries[i].totalTreasures,
         elapsed: entries[i].elapsed,
         status: entries[i].status,
-        position: i + 1,
+        position: position,
         points: entries[i].points,
       );
     }

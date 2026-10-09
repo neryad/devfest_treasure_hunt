@@ -304,6 +304,12 @@ class _RulesCard extends StatelessWidget {
           ),
           _RuleLine('Completar los ocho gimnasios concede +100 puntos.'),
           _RuleLine(
+            'El ganador será quien complete los ocho gimnasios con la mayor puntuación.',
+          ),
+          _RuleLine(
+            'En caso de empate, gana quien haya completado los ocho primero.',
+          ),
+          _RuleLine(
             'Si un QR o un reto falla, solicita ayuda al staff.',
             isLast: true,
           ),
@@ -399,9 +405,7 @@ class _CreatorCardState extends State<_CreatorCard> {
   @override
   void initState() {
     super.initState();
-    _repositoryVisible = !DateTime.now().isBefore(
-      widget.repositoryAvailableAt,
-    );
+    _repositoryVisible = !DateTime.now().isBefore(widget.repositoryAvailableAt);
     if (!_repositoryVisible) {
       _releaseTimer = Timer(
         widget.repositoryAvailableAt.difference(DateTime.now()),

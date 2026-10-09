@@ -5,10 +5,11 @@ import '../../admin_navigation.dart';
 import '../discovery/manual_code_screen.dart';
 import '../information/information_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
+import '../results/final_results_screen.dart';
 import 'home_dashboard.dart';
 
 /// Main shell for a participant with bottom navigation:
-/// DevMaster · Ranking, plus a highlighted CTA to enter a gym code.
+/// DevMaster · Ranking · Finalistas, plus a highlighted CTA for gym codes.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -19,7 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
-  static const _titles = ['DevMaster', 'Ranking'];
+  static const _titles = ['DevMaster', 'Ranking', 'Resultados finales'];
 
   void _openFindSheet() {
     showModalBottomSheet<void>(
@@ -91,7 +92,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         body: IndexedStack(
           index: _index,
-          children: const [HomeDashboard(), LeaderboardScreen()],
+          children: const [
+            HomeDashboard(),
+            LeaderboardScreen(),
+            FinalResultsScreen(),
+          ],
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _index,
@@ -104,6 +109,10 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.leaderboard_rounded),
               label: 'Ranking',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.emoji_events_rounded),
+              label: 'Finalistas',
             ),
           ],
         ),

@@ -51,24 +51,17 @@ void main() {
     return updated;
   }
 
-  test(
-    'sorts by points desc, then discovered count, then elapsed time asc',
-    () async {
-      await add('p1', 'Ana', 30, ['a', 'b', 'c'], completeInMinutes: 20);
-      await add('p2', 'Pedro', 30, ['a', 'b', 'c'], completeInMinutes: 12);
-      await add('p3', 'Laura', 10, ['a']);
-      await add('p4', 'Sofía', 10, ['a', 'b', 'c', 'd']);
+  test('sorts by points and keeps tied scores at the same position', () async {
+    await add('p1', 'Ana', 30, ['a', 'b', 'c'], completeInMinutes: 20);
+    await add('p2', 'Pedro', 30, ['a', 'b', 'c'], completeInMinutes: 12);
+    await add('p3', 'Laura', 10, ['a']);
+    await add('p4', 'Sofía', 10, ['a', 'b', 'c', 'd']);
 
-      final board = await loadBoard();
+    final board = await loadBoard();
 
-      expect(board[0].participantId, 'p4'); // 4 treasures
-      // Both have 3; Pedro finished faster.
-      expect(board[1].participantId, 'p2');
-      expect(board[2].participantId, 'p1');
-      // Only 1 treasure.
-      expect(board[3].participantId, 'p3');
-    },
-  );
+    expect(board.map((entry) => entry.participantId), ['p4', 'p1', 'p2', 'p3']);
+    expect(board.map((entry) => entry.position), [1, 2, 2, 4]);
+  });
 
   test('positions are 1-based consecutive numbers', () async {
     await add('p1', 'Ana', 5, ['a', 'b']);
@@ -79,16 +72,12 @@ void main() {
     expect(board[1].position, 2);
   });
 
-  test(
-    'completed participants finish above in-progress ones with same count',
-    () async {
-      // Same count; a fast completion (2 min) outranks a longer running clock.
-      await add('p1', 'Ana', 20, ['a', 'b'], completeInMinutes: 2);
-      await add('p2', 'Pedro', 30, ['a', 'b']);
+  test('status and elapsed time do not break a points tie', () async {
+    await add('p1', 'Ana', 20, ['a', 'b'], completeInMinutes: 2);
+    await add('p2', 'Pedro', 30, ['a', 'b']);
 
-      final board = await loadBoard();
-      expect(board[0].participantId, 'p1');
-      expect(board[0].status, ParticipantStatus.completed);
-    },
-  );
+    final board = await loadBoard();
+    expect(board.map((entry) => entry.position), [1, 1]);
+    expect(board.map((entry) => entry.points), [200, 200]);
+  });
 }

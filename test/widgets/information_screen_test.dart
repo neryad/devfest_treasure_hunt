@@ -42,6 +42,20 @@ void main() {
     expect(find.text('Puntos y reglas'), findsOneWidget);
 
     await tester.scrollUntilVisible(
+      find.text(
+        'El ganador será quien complete los ocho gimnasios con la mayor puntuación.',
+      ),
+      300,
+      scrollable: find.byType(Scrollable),
+    );
+    expect(
+      find.text(
+        'En caso de empate, gana quien haya completado los ocho primero.',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.scrollUntilVisible(
       find.byKey(const Key('info-open-feedback')),
       500,
       scrollable: find.byType(Scrollable),

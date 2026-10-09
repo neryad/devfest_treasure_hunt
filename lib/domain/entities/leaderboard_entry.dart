@@ -1,6 +1,6 @@
 import 'participant.dart';
 
-/// Row of the ranking. Sorted by discovered count (desc) then time (asc).
+/// Row of the ranking. Equal point totals share the same position.
 class LeaderboardEntry {
   const LeaderboardEntry({
     required this.participantId,
@@ -22,7 +22,7 @@ class LeaderboardEntry {
   final Duration elapsed;
   final ParticipantStatus status;
 
-  /// 1-based position after sorting.
+  /// 1-based competition position. Tied scores reuse the same position.
   final int position;
 
   /// Points earned based on challenge difficulty.

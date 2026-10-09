@@ -66,4 +66,36 @@ void main() {
     expect(board.first.participantId, 'p2');
     expect(board.first.points, 430);
   });
+
+  test(
+    'equal points share a rank and the next rank skips tied places',
+    () async {
+      await addParticipant(
+        id: 'p1',
+        name: 'Ana',
+        points: 570,
+        discovered: ['gym-android', 'gym-web', 'gym-cloud', 'gym-ia'],
+        minutesAgo: 90,
+      );
+      await addParticipant(
+        id: 'p2',
+        name: 'Pedro',
+        points: 570,
+        discovered: ['gym-android', 'gym-web'],
+        minutesAgo: 300,
+      );
+      await addParticipant(
+        id: 'p3',
+        name: 'Laura',
+        points: 545,
+        discovered: ['gym-android', 'gym-web', 'gym-cloud', 'gym-ia'],
+        minutesAgo: 20,
+      );
+
+      final board = await loadBoard();
+
+      expect(board.map((entry) => entry.position), [1, 1, 3]);
+      expect(board.map((entry) => entry.points), [570, 570, 545]);
+    },
+  );
 }

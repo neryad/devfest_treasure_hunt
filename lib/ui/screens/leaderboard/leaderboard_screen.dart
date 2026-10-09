@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/format.dart';
 import '../../../domain/entities/leaderboard_entry.dart';
 import '../../../state/app_scope.dart';
 
-/// Live ranking. Sort: discovered count desc, then elapsed time asc.
+/// Live ranking. Sort: points desc; equal scores share a position.
 /// The current participant is highlighted.
 class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key});
@@ -51,7 +50,6 @@ class _RankRow extends StatelessWidget {
     final nickname = entry.nickname;
     final discoveredCount = entry.discoveredCount;
     final totalTreasures = entry.totalTreasures;
-    final elapsed = entry.elapsed;
     final status = entry.status;
     final points = entry.points;
 
@@ -122,13 +120,6 @@ class _RankRow extends StatelessWidget {
                   '$discoveredCount/$totalTreasures medallas',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                Text(
-                  formatElapsed(elapsed),
-                  style: const TextStyle(
-                    fontSize: 11.5,
                     color: AppColors.textSecondary,
                   ),
                 ),
