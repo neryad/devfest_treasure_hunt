@@ -1,0 +1,138 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isLiveEvent(eventId) {
+      return eventId == 'devfest-2026';
+    }
+
+    function isKnownGym(gymId) {
+      return gymId in [
+        'gym-android',
+        'gym-ia',
+        'gym-cloud',
+        'gym-security',
+        'gym-web',
+        'gym-startup',
+        'gym-speaker',
+        'gym-community'
+      ];
+    }
+
+    function validOptionalString(value, maxLength) {
+      return value == null || (value is string && value.size() <= maxLength);
+    }
+
+    function validParticipant(data, participantId) {
+      return data.keys().hasAll([
+          'id', 'name', 'nickname', 'startedAt', 'completedAt', 'status',
+          'discoveredTreasureIds', 'points', 'medals', 'avatarEmoji'
+        ])
+        && data.keys().hasOnly([
+          'id', 'name', 'nickname', 'startedAt', 'completedAt', 'status',
+          'discoveredTreasureIds', 'points', 'medals', 'avatarEmoji'
+        ])
+        && data.id == participantId
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 80
+        && data.nickname is string
+        && data.nickname.size() > 0
+        && data.nickname.size() <= 40
+        && data.startedAt is string
+        && data.startedAt.size() <= 64
+        && validOptionalString(data.completedAt, 64)
+        && data.status in ['active', 'completed']
+        && data.discoveredTreasureIds is list
+        && data.discoveredTreasureIds.size() <= 8
+        && data.discoveredTreasureIds.toSet().size()
+          == data.discoveredTreasureIds.size()
+        && data.discoveredTreasureIds.hasOnly([
+          'gym-android', 'gym-ia', 'gym-cloud', 'gym-security', 'gym-web',
+          'gym-startup', 'gym-speaker', 'gym-community'
+        ])
+        && data.points is int
+        && data.points >= 0
+        && data.points <= 2000
+        && data.medals is int
+        && data.medals == data.discoveredTreasureIds.size()
+        && validOptionalString(data.avatarEmoji, 16);
+    }
+
+    match /events/{eventId} {
+      allow read: if isLiveEvent(eventId);
+      allow create, update, delete: if false;
+
+      match /treasures/{treasureId} {
+        allow read: if isLiveEvent(eventId);
+        allow create, update, delete: if false;
+      }
+
+      match /participants/{participantId} {
+        // Public reads remain necessary for the in-app leaderboard.
+        allow read: if isLiveEvent(eventId);
+        allow create: if isLiveEvent(eventId)
+          && validParticipant(request.resource.data, participantId)
+          && request.resource.data.points == 0
+          && request.resource.data.medals == 0
+          && request.resource.data.discoveredTreasureIds.size() == 0
+          && request.resource.data.status == 'active'
+          && request.resource.data.completedAt == null;
+        allow update: if isLiveEvent(eventId)
+          && validParticipant(request.resource.data, participantId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'completedAt', 'status', 'discoveredTreasureIds', 'points', 'medals'
+          ])
+          && request.resource.data.discoveredTreasureIds.hasAll(
+            resource.data.discoveredTreasureIds
+          );
+        allow delete: if false;
+      }
+
+      match /discoveries/{discoveryId} {
+        allow read: if isLiveEvent(eventId);
+        allow create: if isLiveEvent(eventId)
+          && request.resource.data.keys().hasAll([
+            'id', 'participantId', 'treasureId', 'discoveredAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'id', 'participantId', 'treasureId', 'discoveredAt'
+          ])
+          && request.resource.data.id == discoveryId
+          && request.resource.data.participantId is string
+          && request.resource.data.treasureId is string
+          && isKnownGym(request.resource.data.treasureId)
+          && request.resource.data.discoveredAt is string
+          && exists(/databases/$(database)/documents/events/$(eventId)/participants/$(request.resource.data.participantId));
+        allow update, delete: if false;
+      }
+
+      match /attempts/{attemptId} {
+        allow read: if isLiveEvent(eventId);
+        allow create: if isLiveEvent(eventId)
+          && request.resource.data.keys().hasAll([
+            'id', 'participantId', 'gymId', 'answeredAt', 'correct', 'answer',
+            'questionId'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'id', 'participantId', 'gymId', 'answeredAt', 'correct', 'answer',
+            'questionId'
+          ])
+          && request.resource.data.id == attemptId
+          && request.resource.data.participantId is string
+          && request.resource.data.gymId is string
+          && isKnownGym(request.resource.data.gymId)
+          && request.resource.data.answeredAt is string
+          && request.resource.data.correct is bool
+          && validOptionalString(request.resource.data.answer, 500)
+          && validOptionalString(request.resource.data.questionId, 100)
+          && exists(/databases/$(database)/documents/events/$(eventId)/participants/$(request.resource.data.participantId));
+        allow update, delete: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
