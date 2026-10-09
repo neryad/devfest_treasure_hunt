@@ -655,50 +655,31 @@ class _GymBadgeCard extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 Container(
-                  width: 68,
-                  height: 80,
+                  width: 92,
+                  height: 92,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
+                    shape: BoxShape.circle,
                     color: isEarned
-                        ? trackColor.withValues(alpha: 0.15)
-                        : AppColors.surfaceAlt.withValues(alpha: 0.5),
+                        ? trackColor.withValues(alpha: 0.12)
+                        : trackColor.withValues(alpha: 0.04),
                     border: Border.all(
-                      color: isEarned ? trackColor : Colors.transparent,
-                      width: 1.5,
+                      color: isEarned
+                          ? trackColor
+                          : trackColor.withValues(alpha: 0.18),
+                      width: isEarned ? 1.5 : 1,
                     ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Padding(
-                      padding: const EdgeInsets.all(3),
-                      child: isEarned
-                          ? Image.asset(
-                              medalPath,
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, _, _) => Icon(
-                                PokedexScreen._getTrackIcon(gym.track),
-                                size: 28,
-                                color: trackColor,
-                              ),
-                            )
-                          : Opacity(
-                              opacity: 0.45,
-                              child: ColorFiltered(
-                                colorFilter: const ColorFilter.mode(
-                                  Colors.grey,
-                                  BlendMode.saturation,
-                                ),
-                                child: Image.asset(
-                                  medalPath,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, _, _) => Icon(
-                                    PokedexScreen._getTrackIcon(gym.track),
-                                    size: 28,
-                                    color: AppColors.textMuted,
-                                  ),
-                                ),
-                              ),
-                            ),
+                  padding: const EdgeInsets.all(5),
+                  child: Opacity(
+                    opacity: isEarned ? 1 : 0.42,
+                    child: Image.asset(
+                      medalPath,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => Icon(
+                        PokedexScreen._getTrackIcon(gym.track),
+                        size: 32,
+                        color: isEarned ? trackColor : AppColors.textMuted,
+                      ),
                     ),
                   ),
                 ),

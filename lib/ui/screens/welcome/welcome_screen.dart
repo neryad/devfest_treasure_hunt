@@ -267,7 +267,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Icons.admin_panel_settings_rounded,
                           size: 18,
                         ),
-                        label: const Text('Panel de Administración (Demo)'),
+                        label: const Text('Acceso del staff'),
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.textMuted,
                           textStyle: const TextStyle(fontSize: 12.5),

@@ -83,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.info_outline_rounded),
             ),
             IconButton(
-              tooltip: 'Panel admin demo',
+              tooltip: 'Panel Staff',
               onPressed: () => openAdminDemo(context),
               icon: const Icon(Icons.admin_panel_settings_rounded),
             ),

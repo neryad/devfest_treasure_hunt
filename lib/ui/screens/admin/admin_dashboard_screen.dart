@@ -33,8 +33,8 @@ class AdminDashboardScreen extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: controller.offline
-                ? 'Resetear datos demo'
-                : 'Solo disponible en modo demo',
+                ? 'Restablecer datos locales'
+                : 'Disponible solo en modo local',
             icon: const Icon(Icons.restart_alt_rounded),
             onPressed: controller.offline ? () => _confirmReset(context) : null,
           ),
@@ -80,7 +80,7 @@ class AdminDashboardScreen extends StatelessWidget {
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: AppColors.surface,
           title: const Text(
-            '¿Resetear la demo?',
+            '¿Restablecer los datos locales?',
             style: TextStyle(color: AppColors.textPrimary),
           ),
           content: Column(
@@ -88,7 +88,7 @@ class AdminDashboardScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'Se restaurarán los datos de ejemplo del evento.',
+                'Se restaurarán los datos locales del evento.',
                 style: TextStyle(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 12),

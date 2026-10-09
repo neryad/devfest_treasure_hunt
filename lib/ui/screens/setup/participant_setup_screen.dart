@@ -115,7 +115,7 @@ class _ParticipantSetupScreenState extends State<ParticipantSetupScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Demo: no se necesita cuenta ni autenticación.',
+                  'No necesitas crear una cuenta ni utilizar contraseña.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,

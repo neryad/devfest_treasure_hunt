@@ -1,147 +1,175 @@
-# DevFest Treasure Hunt
+# DevMaster: DevFest Quest
 
-MVP / demo de juego de **caza de tesoros** para eventos tecnológicos tipo
-DevFest. Los asistentes registran su participación, descubren tesoros físicos
-escaneando QR o introduciendo códigos manuales, reciben pistas, avanzan en un
-ranking en vivo y compiten por el premio final.
+Experiencia gamificada creada para **DevFest Santo Domingo 2026**. Los
+participantes recorren ocho gimnasios tecnológicos, completan trivias,
+acertijos y minijuegos, coleccionan medallas y compiten en un ranking en vivo.
 
-> **Estado:** MVP demo con datos mock 100% locales (sin servidor, sin
-> Firebase). Arquitectura preparada para migrar a Firebase sin tocar la UI.
+[Abrir demo](https://demo-dev-tesoros.netlify.app/) ·
+[Agenda día 1](https://devfest.gdgsantodomingo.org/schedule?day=1) ·
+[Agenda día 2](https://devfest.gdgsantodomingo.org/schedule?day=2) ·
+[Enviar feedback](https://docs.google.com/forms/d/e/1FAIpQLSeKLBT0vCD3AFrohM0BsSczxC-WicESU04z3HLXInMmx4YCng/viewform?usp=publish-editor)
 
-> **🔗 Demo funcional:** [demo-dev-tesoros.netlify.app](https://demo-dev-tesoros.netlify.app/)
+![DevFest Master — conquista los ocho gimnasios tecnológicos](assets/images/devfest_master_banner.png)
 
----
+## La experiencia
 
-## Características del demo
+- Registro simple mediante nombre y alias, sin contraseña para participantes.
+- Panel **DevMaster** con rango, puntos, tiempo, medallas y los ocho gimnasios.
+- Preguntas asignadas dinámicamente para que los participantes no reciban
+  siempre el mismo reto.
+- Minijuegos táctiles adaptados a teléfonos y navegador.
+- Ranking en vivo por puntos, medallas y tiempo.
+- Panel de staff para administrar el evento, participantes, medallas y puntos.
+- Modo local explícito para continuar una demostración cuando Firebase no está
+  disponible.
+- Aplicación web instalable como PWA.
+- Diseño oscuro, responsive y medallas propias para cada track.
 
-- Vista de bienvenida + registro simple (nombre + alias, sin autenticación).
-- Dashboard del participante con progreso, tiempo, posición y acciones.
-- Descubrimiento por **QR real** (`mobile_scanner`) o **código manual**,
-  ambos terminan en la misma regla `discoverTreasure()`.
-- **Modo demo de escaneo** para presentaciones en simulador o sin cámara.
-- 10 tesoros, 15 participantes ficticios, pistas y estados.
-- Descubrimiento **libre en cualquier orden** (sin secuencia obligatoria).
-- El único bloqueo real es `isActive == false` (control del administrador).
-- Ranking ordenado por nº de tesoros (desc) y tiempo (asc).
-- Pantalla de finalización al completar el reto (la posición final la define
-  el ranking oficial, no se asume ganador).
-- **Panel admin demo**: métricas, ranking, lista de participantes y toggles de
-  disponibilidad de tesoros, más "reset" de la demo.
+## Gimnasios
+
+| Gimnasio | Track | Mecánica | Cómo se completa |
+|---|---|---|---|
+| **Debug Droid** | Android / KMP | Reto de código | Responder correctamente 4 preguntas de Android y Kotlin. |
+| **Prompt Master** | IA | Trivia | Resolver 4 preguntas aleatorias sobre IA generativa, agentes y prompting. |
+| **The Hidden Exploit** | Security | Búsqueda con QR | Encontrar 5 QR físicos y reconstruir el código de seguridad dentro de la app. |
+| **Pixel Perfect** | Web / UI | Minijuego visual | Memorizar colores y acertar al menos 5 de 10 rondas; los aciertos adicionales otorgan puntos extra. |
+| **Runway Rush** | Startup | Minijuego arcade | Mover la startup entre carriles y lanzar MVPs contra oleadas aleatorias antes de perder el runway. |
+| **Scale the Cloud** | Cloud / Firebase | Trivia | Resolver 4 preguntas sobre arquitectura cloud y servicios de Firebase. |
+| **Hall of Voices** | Speakers | Adivina quién | Identificar por escrito a 2 speakers aleatorios usando pistas basadas en la agenda. |
+| **Community Signal** | Comunidad | Misión social | Unirse a GDG Santo Domingo, obtener la entrada del evento y validar ambas acciones con el staff. |
+
+Los códigos y payloads operativos de los QR se mantienen fuera de este README
+para no revelar las soluciones durante el evento.
+
+## Stack
+
+- Flutter y Dart.
+- Material 3.
+- Firebase Core y Cloud Firestore.
+- `mobile_scanner` para los retos con QR.
+- `shared_preferences` para conservar la sesión local del dispositivo.
+- `url_launcher` para agenda, comunidad, redes y feedback.
+- Web/PWA desplegable en Netlify.
+
+## Arquitectura
+
+El proyecto usa una separación por capas:
+
+```text
+UI → AppController/AppScope → casos de uso → repositorios → fuente de datos
+```
+
+```text
+lib/
+├── app/                  # composición de dependencias y arranque
+├── core/                 # tema, utilidades y widgets compartidos
+├── data/
+│   ├── datasources/      # Firestore y fuente local para modo offline
+│   ├── local/            # persistencia de sesión en el dispositivo
+│   └── repositories/     # implementación de los contratos del dominio
+├── domain/
+│   ├── entities/         # evento, participante, gimnasio, intento, etc.
+│   ├── repositories/     # interfaces de datos
+│   └── use_cases/        # registro, retos, descubrimiento y ranking
+├── state/                # controlador central e inyección hacia la UI
+└── ui/screens/           # participante, gimnasios, retos, ranking y admin
+```
+
+En producción, `DevFestRoot` inicializa `FirebaseDataSource`. Si la conexión
+falla, la pantalla de inicio permite reintentar o entrar conscientemente en
+modo local; el cambio no ocurre de forma silenciosa.
 
 ## Requisitos
 
-- Flutter **3.44+** (Dart 3.12+).
-- Xcode (iOS) y/o Android SDK (Android).
-- CocoaPods para iOS.
+- Flutter 3.44 o una versión compatible con Dart 3.12.
+- Chrome para desarrollo web.
+- Android SDK o Xcode para ejecutar en dispositivos móviles.
+- Un proyecto Firebase configurado para usar la persistencia compartida.
 
-## Instalación y ejecución
+## Ejecutar localmente
 
 ```bash
+git clone https://github.com/neryad/devfest_treasure_hunt.git
 cd devfest_treasure_hunt
 flutter pub get
-flutter run                # elige dispositivo / simulador
+flutter run
 ```
 
-## Estructura del proyecto
+Para elegir un destino específico:
 
-```
-lib/
-├── main.dart                 # composición de dependencias
-├── app/
-│   └── app.dart              # DevFestApp, MaterialApp, inyección mock
-├── core/
-│   ├── theme/app_theme.dart  # paleta y Material 3
-│   ├── utils/                # formatos, ids, iconos por tesoro
-│   ├── widgets/              # progress bar, pills, stat cards, headers
-│   └── (qr)                  # integración del scanner (en screens/discovery)
-├── domain/
-│   ├── entities/             # Event, TreasureItem, Participant, Discovery, Clue, LeaderboardEntry
-│   ├── repositories/         # interfaces (Treasure, Participant, Leaderboard, Event)
-│   └── use_cases/            # DiscoverTreasureUseCase, LeaderboardUseCase, StartParticipantUseCase
-├── data/
-│   ├── datasources/          # AppDataSource (abstracción) + MockLocalDataSource + MockData
-│   ├── local/                # AppLocalStorage (abstracción) + SharedPrefsLocalStorage
-│   └── repositories/         # MockAppRepository (implementa las 4 interfaces)
-├── state/
-│   ├── app_controller.dart   # ChangeNotifier central (ViewModel)
-│   └── app_scope.dart        # InheritedWidget propio (sin terceros)
-└── ui/
-    ├── screens/              # welcome, setup, home, discovery, treasures, clues, leaderboard, completion, admin
-    └── admin_navigation.dart # acceso al panel admin
+```bash
+flutter devices
+flutter run -d chrome
+flutter run -d <device-id>
 ```
 
-Capas: **UI → AppScope (InheritedWidget) → Use Cases → Repositories → MockDataSource**.
-La UI nunca toca almacenamiento.
+Para probar en un teléfono físico, la opción recomendada es conectarlo por USB,
+habilitar el modo de desarrollo y ejecutarlo directamente con `flutter run`.
+El acceso a la cámara desde una web requiere un contexto seguro (`https` o
+`localhost`), por lo que los QR deben validarse desde el build publicado o una
+instalación móvil.
 
-## Cómo probar el flujo demo (5–10 min)
+## Firebase y persistencia
 
-1. Abre la app → pantalla de bienvenida.
-2. "Comenzar aventura" → regístrate (nombre + alias).
-3. Dashboard 0/10 con progreso vacío.
-4. FAB **"Encontrar tesoro"** → "Escanear QR" → cambia a **Demo** y toca un
-   tesoro (o usa "Introducir código").
-5. Modal de tesoro encontrado → revela la pista.
-6. "Mis tesoros" (bottom nav) → consulta encontrados/pendientes.
-7. Descubre otro tesoro **fuera de orden** (p. ej. Tesoro #7 y luego #2).
-8. "Ranking" → comprueba tu posición (los seed data están más arriba).
-9. **Panel admin** (icono de admin en el AppBar o desde bienvenida):
-   - Desactiva un tesoro, vuelve e intenta descubrirlo → "No disponible".
-   - Reactívalo.
-   - Consulta métricas, ranking y participantes.
-10. Activa el Tesoro #3 y completa el resto → pantalla de finalización.
+La fuente activa normal es Firestore, bajo el evento `devfest-2026`:
 
-### Códigos de ejemplo (código manual)
+```text
+events/devfest-2026
+├── treasures
+├── participants
+├── discoveries
+└── attempts
+```
 
-| Tesoro | Código manual | QR value |
-|---|---|---|
-| El Punto de Encuentro | `DEVFEST-001` | `DEVFEST-TREASURE-001` |
-| El Escenario Principal | `DEVFEST-002` | `DEVFEST-TREASURE-002` |
-| El Rincón del Café | `DEVFEST-003` *(inactivo por defecto)* | `DEVFEST-TREASURE-003` |
-| ... | `DEVFEST-004` … `DEVFEST-010` | `DEVFEST-TREASURE-004` … `-010` |
+La definición base de los ocho gimnasios se encuentra en
+`lib/data/datasources/mock_data.dart` y se utiliza para inicializar o migrar el
+contenido del evento. La identificación de la sesión actual se conserva en el
+dispositivo mediante `SharedPreferences`.
 
-> El modo demo del escáner permite simular cualquier QR desde el listado.
+> Antes de publicar una instancia propia, configura reglas de Firestore que
+> impidan escrituras no autorizadas. Este repositorio no incluye un archivo
+> `firestore.rules`.
 
-## Capturas
-
-Registro de participante | Dashboard del participante | Modal de tesoro encontrado
-|---|---|---|
-| ![Registro](assets/screenShootDemo/register.png) | ![Dashboard](assets/screenShootDemo/home.png) | ![Tesoro encontrado](assets/screenShootDemo/find-modal.png) |
-
-Mis tesoros | Pistas desbloqueadas | Ranking en vivo
-|---|---|---|
-| ![Mis tesoros](assets/screenShootDemo/tesoros.png) | ![Pistas](assets/screenShootDemo/pistas.png) | ![Ranking](assets/screenShootDemo/ranking.png) |
-
-Panel admin
-|---|
-| ![Panel admin](assets/screenShootDemo/admin-panel.png) |
-
-## Tests
+## Pruebas
 
 ```bash
 flutter analyze
 flutter test
 ```
 
-- `test/use_cases/` → reglas centrales: orden libre, `isActive`, duplicados,
-  completado, orden/tiempo del ranking.
-- `test/widgets/` → registro → dashboard, descubrimientos fuera de orden y
-  pistas desbloqueadas.
+La suite cubre casos de uso, persistencia, selección de preguntas, respuestas
+incorrectas, administración y los principales flujos de widgets y minijuegos.
 
-## Persistencia
+## Build web y Netlify
 
-El estado del demo (participante actual, descubrimientos y toggles del admin)
-se guarda con `shared_preferences`, siempre **detrás** de la abstracción
-`AppLocalStorage`. Con `MockLocalDataSource()` sin storage todo queda en
-memoria.
+Genera la versión de producción con:
 
-## Migración a Firebase
+```bash
+flutter build web --release
+```
 
-Ver [docs/FIREBASE_MIGRATION.md](docs/FIREBASE_MIGRATION.md).
+Publica el contenido de `build/web`. Para evitar mostrar una versión anterior
+después de reemplazar el deploy, realiza una recarga completa o limpia los datos
+de la PWA instalada.
 
-## Script de demo para organizadores
+## Enlaces
 
-Ver [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+- [Repositorio](https://github.com/neryad/devfest_treasure_hunt)
+- [DevFest Santo Domingo](https://devfest.gdgsantodomingo.org/)
+- [GDG Santo Domingo en Instagram](https://www.instagram.com/gdgsantodomingo/)
+- [GDG Santo Domingo en LinkedIn](https://www.linkedin.com/company/gdgsantodomingo/)
+- [Código de conducta](https://devfest.gdgsantodomingo.org/code-of-conduct)
 
-## Roadmap
+## Créditos
 
-Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+Creado con amor por y para la comunidad por **Dayern Gomez (Neryad)**, Mobile
+Developer — “Edad de senior, corazón de junior y curiosidad de trainee”.
+
+Gracias al equipo de **GDG Santo Domingo** y a **Eury Pérez** por la oportunidad
+de convertir esta idea en una experiencia para DevFest Santo Domingo 2026.
+
+[GitHub](https://github.com/neryad) ·
+[LinkedIn](https://www.linkedin.com/in/dayern-gomez) ·
+[YouTube](https://www.youtube.com/@neryad) ·
+[X / Twitter](https://x.com/NeryadG) ·
+[Instagram](https://www.instagram.com/neryad_dev/)

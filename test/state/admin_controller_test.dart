@@ -32,7 +32,7 @@ void main() {
     expect(controller.signInAdmin('admin', 'wrong'), isFalse);
     expect(controller.adminSignedIn, isFalse);
 
-    expect(controller.signInAdmin('admin', 'devfest2026'), isTrue);
+    expect(controller.signInAdmin('admin', 'CafecitoConCodigo!2026'), isTrue);
     expect(controller.adminSignedIn, isTrue);
   });
 

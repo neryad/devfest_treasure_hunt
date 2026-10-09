@@ -19,7 +19,7 @@ import '../domain/use_cases/start_participant_use_case.dart';
 
 const _cooldownDuration = Duration(minutes: 5);
 const _adminUser = 'admin';
-const _adminPassword = 'devfest2026';
+const _adminPassword = 'CafecitoConCodigo!2026';
 
 enum StaffActionResult {
   success,

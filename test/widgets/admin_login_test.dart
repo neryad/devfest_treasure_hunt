@@ -57,7 +57,7 @@ void main() {
 
     await tester.enterText(
       find.widgetWithText(TextField, 'Contraseña'),
-      'devfest2026',
+      'CafecitoConCodigo!2026',
     );
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();

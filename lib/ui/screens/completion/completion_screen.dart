@@ -93,7 +93,7 @@ class CompletionScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: StatCard(
-                          label: 'Posición demo',
+                          label: 'Posición actual',
                           value: '#$position',
                           icon: Icons.leaderboard_rounded,
                           accent: AppColors.primarySoft,

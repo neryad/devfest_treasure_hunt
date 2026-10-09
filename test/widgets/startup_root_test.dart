@@ -61,9 +61,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('¡Comenzar aventura!'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Panel de Administración (Demo)'));
+    await tester.ensureVisible(find.text('Acceso del staff'));
     await tester.pump();
-    await tester.tap(find.text('Panel de Administración (Demo)'));
+    await tester.tap(find.text('Acceso del staff'));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

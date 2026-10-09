@@ -254,16 +254,18 @@ class _PokedexPreview extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 3),
                   child: AspectRatio(
-                    aspectRatio: 0.85,
+                    aspectRatio: 1,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
+                        shape: BoxShape.circle,
                         color: isEarned
-                            ? color.withValues(alpha: 0.18)
-                            : AppColors.surfaceAlt.withValues(alpha: 0.5),
+                            ? color.withValues(alpha: 0.14)
+                            : color.withValues(alpha: 0.035),
                         border: Border.all(
-                          color: isEarned ? color : Colors.transparent,
-                          width: 1.2,
+                          color: isEarned
+                              ? color
+                              : color.withValues(alpha: 0.14),
+                          width: isEarned ? 1.2 : 0.8,
                         ),
                         boxShadow: isEarned
                             ? [
@@ -275,38 +277,19 @@ class _PokedexPreview extends StatelessWidget {
                               ]
                             : null,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(2),
-                          child: isEarned
-                              ? Image.asset(
-                                  medalPath,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, _, _) => Icon(
-                                    Icons.star_rounded,
-                                    size: 14,
-                                    color: color,
-                                  ),
-                                )
-                              : Opacity(
-                                  opacity: 0.35,
-                                  child: ColorFiltered(
-                                    colorFilter: const ColorFilter.mode(
-                                      Colors.grey,
-                                      BlendMode.saturation,
-                                    ),
-                                    child: Image.asset(
-                                      medalPath,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, _, _) => const Icon(
-                                        Icons.lock_outline_rounded,
-                                        size: 14,
-                                        color: AppColors.textMuted,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                      padding: const EdgeInsets.all(2),
+                      child: Opacity(
+                        opacity: isEarned ? 1 : 0.35,
+                        child: Image.asset(
+                          medalPath,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, _, _) => Icon(
+                            isEarned
+                                ? Icons.star_rounded
+                                : Icons.lock_outline_rounded,
+                            size: 14,
+                            color: isEarned ? color : AppColors.textMuted,
+                          ),
                         ),
                       ),
                     ),

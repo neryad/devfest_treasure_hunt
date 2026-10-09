@@ -30,7 +30,7 @@ void main() {
       enableElapsedTicker: false,
     );
     await controller.initialize();
-    controller.signInAdmin('admin', 'devfest2026');
+    controller.signInAdmin('admin', 'CafecitoConCodigo!2026');
   });
 
   tearDown(() => controller.dispose());
