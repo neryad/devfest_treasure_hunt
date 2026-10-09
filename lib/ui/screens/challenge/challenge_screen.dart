@@ -1063,7 +1063,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         ? _textController.text.trim().isNotEmpty
         : true;
 
-    return Padding(
+    return SingleChildScrollView(
+      key: const Key('challenge-screen-scroll'),
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1209,44 +1210,45 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
 
           // Opciones
           if (displayedOptions.isNotEmpty)
-            Expanded(
-              child: ListView.separated(
-                itemCount: displayedOptions.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (context, index) =>
-                    _buildOption(displayedOptions[index]),
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var index = 0; index < displayedOptions.length; index++)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == displayedOptions.length - 1 ? 0 : 10,
+                    ),
+                    child: _buildOption(displayedOptions[index]),
+                  ),
+              ],
             ),
 
           // Respuesta de texto
           if (c?.requiresInput == true)
-            Expanded(
-              child: TextField(
-                key: gym.id == 'gym-speaker'
-                    ? const Key('speaker-answer-field')
-                    : null,
-                controller: _textController,
-                onChanged: (_) => setState(() {}),
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: gym.id == 'gym-speaker'
-                      ? 'Escribe el nombre completo del speaker...'
-                      : c?.type == ChallengeType.social
-                      ? 'Escribe el código recibido por DM...'
-                      : 'Escribe tu respuesta o código final...',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+            TextField(
+              key: gym.id == 'gym-speaker'
+                  ? const Key('speaker-answer-field')
+                  : null,
+              controller: _textController,
+              onChanged: (_) => setState(() {}),
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: gym.id == 'gym-speaker'
+                    ? 'Escribe el nombre completo del speaker...'
+                    : c?.type == ChallengeType.social
+                    ? 'Escribe el código recibido por DM...'
+                    : 'Escribe tu respuesta o código final...',
+                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                filled: true,
+                fillColor: AppColors.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
               ),
             ),
 
           const SizedBox(height: 16),
-
           ElevatedButton(
             onPressed: canSubmit && !_submitting ? _handleSubmit : null,
             child: _submitting

@@ -71,4 +71,77 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump();
   });
+
+  testWidgets('the whole challenge scrolls on a phone-sized viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final dataSource = MockLocalDataSource(seedData: false);
+    await dataSource.initialize();
+    final repository = MockAppRepository(dataSource);
+    final controller = AppController(
+      treasureRepository: repository,
+      participantRepository: repository,
+      leaderboardRepository: repository,
+      eventRepository: repository,
+      attemptRepository: repository,
+      enableElapsedTicker: false,
+    );
+    addTearDown(controller.dispose);
+    await controller.initialize();
+    await controller.startParticipant(name: 'Nery', nickname: 'mobile_test');
+
+    final gym = controller.treasures.firstWhere(
+      (item) => item.id == 'gym-android',
+    );
+    final shuffled = List.of(gym.challenge!.questionBank)..shuffle(Random(17));
+    final assigned = shuffled.first;
+
+    await tester.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: MaterialApp(
+          home: ChallengeScreen(gym: gym, random: Random(17)),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(assigned.question), findsOneWidget);
+    final questionCounterTop = tester
+        .getTopLeft(find.text('Pregunta 1 de 4'))
+        .dy;
+
+    await tester.fling(
+      find.byKey(const Key('challenge-screen-scroll')),
+      const Offset(0, -500),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enviar respuesta'), findsOneWidget);
+    final challengeScrollable = find
+        .descendant(
+          of: find.byKey(const Key('challenge-screen-scroll')),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    expect(
+      tester.state<ScrollableState>(challengeScrollable).position.pixels,
+      greaterThan(0),
+    );
+    expect(
+      tester.getTopLeft(find.text('Pregunta 1 de 4')).dy,
+      lessThan(questionCounterTop),
+    );
+    expect(
+      tester.getBottomRight(find.text('Enviar respuesta')).dy,
+      lessThan(640),
+    );
+    expect(tester.takeException(), isNull);
+  });
 }
