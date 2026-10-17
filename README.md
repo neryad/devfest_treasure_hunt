@@ -2,7 +2,8 @@
 
 Experiencia gamificada creada para **DevFest Santo Domingo 2026**. Los
 participantes recorren ocho gimnasios tecnológicos, completan trivias,
-acertijos y minijuegos, coleccionan medallas y compiten en un ranking en vivo.
+acertijos y minijuegos, coleccionan medallas y aparecen en el ranking del
+evento.
 
 [Abrir demo](https://demo-dev-tesoros.netlify.app/) ·
 [Agenda día 1](https://devfest.gdgsantodomingo.org/schedule?day=1) ·
@@ -18,7 +19,7 @@ acertijos y minijuegos, coleccionan medallas y compiten en un ranking en vivo.
 - Preguntas asignadas dinámicamente para que los participantes no reciban
   siempre el mismo reto.
 - Minijuegos táctiles adaptados a teléfonos y navegador.
-- Ranking en vivo por puntos, medallas y tiempo.
+- Ranking precargado por puntos, medallas y tiempo.
 - Panel de staff para administrar el evento, participantes, medallas y puntos.
 - Demo local precargado con el ranking del evento; los cambios se guardan solo
   en el navegador o dispositivo actual.
@@ -113,7 +114,21 @@ instalación móvil.
 
 El demo usa `assets/demo/devfest-2026.json` como datos iniciales y
 `SharedPreferences` para guardar los cambios en el navegador o dispositivo
-actual. Los datos no se sincronizan entre visitantes.
+actual. Los datos no se sincronizan entre visitantes; cada navegador o
+dispositivo mantiene su propia copia y sus propios cambios.
+
+Para probarlo como participante, abre la demo, escribe cualquier nombre y un
+alias en el formulario de registro y selecciona **Iniciar aventura**. Los
+participantes no tienen cuenta ni contraseña. La lista precargada del ranking
+es una instantánea histórica del evento, no un ranking compartido en vivo.
+
+El archivo de demo reemplaza los nombres y apodos, pero conserva datos
+históricos como identificadores, puntuaciones, progreso, fechas y respuestas a
+retos. Se incluye en la aplicación web publicada y cualquier visitante puede
+descargarlo. Antes de reutilizar o redistribuir esos datos, verifica que tienes
+autorización para publicarlos. Para restaurar la instantánea inicial del demo,
+entra al panel Staff, pulsa el botón de restablecer y escribe `RESET`; esto solo
+afecta el navegador o dispositivo actual.
 
 El panel Staff del demo es solo una barrera de navegación pública; no protege
 información remota. Credenciales:
@@ -195,9 +210,21 @@ Publica la carpeta `build/web` completa en un deploy nuevo. No mezcles archivos
 de builds distintos ni reemplaces solamente `main.dart.js`, porque los plugins
 de Flutter Web pueden quedar desincronizados.
 
-Después de reemplazar el deploy, realiza una recarga completa o limpia los datos
-de la PWA instalada. Si habilitas Firebase, agrega el dominio publicado a
-**Authentication > Settings > Authorized domains** en tu propio proyecto.
+Para actualizar el demo en Netlify mediante despliegue manual:
+
+1. Ejecuta `flutter build web --release` sin `--dart-define-from-file`; así se
+   compila el modo demo local.
+2. En Netlify, crea un deploy manual subiendo el contenido completo de
+   `build/web` (no la carpeta del repositorio ni solo `main.dart.js`).
+3. Espera a que el deploy termine y recarga el sitio con una recarga completa.
+   Si instalaste la PWA o sigue apareciendo el error de conexión de la versión
+   anterior, actualiza la PWA o borra los datos del sitio y vuelve a abrirlo.
+
+Para publicar una instancia conectada a tu Firebase, compila usando
+`--dart-define-from-file=firebase-config.json` como se describe arriba y publica
+ese build en un sitio separado o en el destino que corresponda. Agrega el
+dominio publicado a **Authentication > Settings > Authorized domains** en tu
+proyecto Firebase.
 
 ## Enlaces
 
