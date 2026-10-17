@@ -147,15 +147,11 @@ sus datos locales. No reutilices esta cuenta para producción.
 
 ### Conectar un proyecto Firebase propio
 
-1. Crea un proyecto Firebase y registra una app para cada plataforma que uses.
+1. Crea un proyecto Firebase y registra una app por cada plataforma destino.
 2. Copia `firebase-config.example.json` a `firebase-config.json` y completa los
-   valores de configuración de Firebase de tu proyecto. Este archivo está
-   ignorado por Git. La configuración Firebase de cliente no es una contraseña;
-   la seguridad de los datos depende de las reglas de Firestore y
-   Authentication.
-3. Activa Firestore y el proveedor de correo/contraseña de Firebase
-   Authentication. Crea las cuentas staff en Firebase Console y configura
-   reglas de Firestore antes de publicar.
+   valores de configuración del proyecto. Este archivo está ignorado por Git.
+3. Activa Firestore y, si vas a usar el panel Staff con cuentas, habilita
+   correo/contraseña en Firebase Authentication y crea las cuentas Staff.
 4. Ejecuta con Firebase explícitamente habilitado:
 
    ```bash
@@ -174,23 +170,14 @@ Firestore; sin esa opción, la app permanece en modo demo local. Una base nueva
 se inicializa con los gimnasios del proyecto. El JSON de resultados del demo
 no se carga automáticamente en Firebase.
 
-Al habilitar Firebase, la fuente Firestore usa el evento `devfest-2026`:
-
-```text
-events/devfest-2026
-├── treasures
-├── participants
-├── discoveries
-└── attempts
-```
-
-La definición base de los gimnasios se encuentra en
-`lib/data/datasources/mock_data.dart`. La identificación de sesión se conserva
-en el dispositivo mediante `SharedPreferences`.
-
-> Antes de publicar una instancia propia, configura reglas de Firestore que
-> impidan escrituras no autorizadas. Este repositorio no incluye un archivo
-> `firestore.rules`.
+La configuración cliente de Firebase no es una contraseña, pero tampoco
+protege Firestore. El modelo actual permite al cliente consultar datos de
+participantes e intentos y no separa de forma segura los permisos de staff.
+**No publiques una instancia con datos reales antes de implementar y probar
+reglas de Firestore y autorización de staff.** Revisa
+[la guía detallada de Firebase](docs/FIREBASE_MIGRATION.md), que documenta las
+colecciones, campos, inicialización, límites de seguridad y la opción para
+migrar datos.
 
 ## Pruebas
 
