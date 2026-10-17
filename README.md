@@ -130,6 +130,10 @@ autorización para publicarlos. Para restaurar la instantánea inicial del demo,
 entra al panel Staff, pulsa el botón de restablecer y escribe `RESET`; esto solo
 afecta el navegador o dispositivo actual.
 
+El [informe agregado de métricas del evento](docs/reports/informe-metricas-devfest-2026.pdf)
+resume participación, actividad y resultados por gimnasio. Es una instantánea
+histórica, no un dashboard en vivo.
+
 El panel Staff del demo es solo una barrera de navegación pública; no protege
 información remota. Credenciales:
 
