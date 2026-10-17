@@ -14,15 +14,8 @@ No se agregara edicion de preguntas/respuestas desde staff. Las preguntas y resp
 
 ## Configuracion Firebase
 
-Config web:
-
-```text
-apiKey: AIzaSyBhx7Ey7uBA_RevDx1iMZ_S02Vhd1dk29I
-projectId: devfest-master
-storageBucket: devfest-master.firebasestorage.app
-messagingSenderId: 949131407676
-appId: 1:949131407676:web:5b7e3caa205d25b25bee39
-```
+Cada instalacion debe configurar su propio proyecto Firebase localmente; no
+guardar configuracion de proyecto en este documento.
 
 Firestore:
 

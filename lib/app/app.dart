@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/theme/app_theme.dart';
 import '../data/datasources/firebase_data_source.dart';
+import '../data/datasources/demo_data_seed.dart';
 import '../data/datasources/mock_local_data_source.dart';
 import '../data/local/shared_prefs_local_storage.dart';
 import '../data/repositories/mock_app_repository.dart';
@@ -13,25 +15,30 @@ import '../state/app_scope.dart';
 import '../ui/screens/root/session_gate.dart';
 import '../ui/screens/root/splash_screen.dart';
 import '../ui/screens/root/startup_error_screen.dart';
+import 'demo_admin_credentials.dart';
 
-/// Everything main() needs to compose the app, kept behind one small factory
-/// so Firebase wiring can later replace it in a single place.
 class AppDependencies {
   const AppDependencies({
     required this.repository,
     required this.resetStore,
     this.offline = false,
+    this.adminAuthenticator,
   });
 
   final MockAppRepository repository;
   final Future<void> Function() resetStore;
+  final AdminAuthenticator? adminAuthenticator;
 
-  /// True when the user explicitly chose local mode after a connection failure.
+  /// True when the app uses local, per-browser/device demo data.
   final bool offline;
 }
 
-/// Connects to Firebase. Throws on any failure — callers decide what to show.
-Future<AppDependencies> buildAppDependencies() async {
+const _useFirebase = bool.fromEnvironment('USE_FIREBASE');
+
+Future<AppDependencies> buildDefaultDependencies() =>
+    _useFirebase ? buildFirebaseDependencies() : buildDemoDependencies();
+
+Future<AppDependencies> buildFirebaseDependencies() async {
   try {
     final storage = SharedPrefsLocalStorage();
     if (Firebase.apps.isEmpty) {
@@ -47,6 +54,12 @@ Future<AppDependencies> buildAppDependencies() async {
       repository: MockAppRepository(dataSource),
       resetStore: dataSource.reset,
       offline: false,
+      adminAuthenticator: (email, password) async {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      },
     );
   } catch (e, st) {
     debugPrint('BOOT FAILURE: $e\n$st');
@@ -54,15 +67,23 @@ Future<AppDependencies> buildAppDependencies() async {
   }
 }
 
-/// Explicit local mode chosen by the user. Never silent.
-Future<AppDependencies> buildOfflineDependencies() async {
+Future<AppDependencies> buildDemoDependencies() async {
   final storage = SharedPrefsLocalStorage();
-  final dataSource = MockLocalDataSource(storage: storage);
+  final seed = DemoDataSeed.fromJson(
+    await rootBundle.loadString('assets/demo/devfest-2026.json'),
+  );
+  final dataSource = MockLocalDataSource(storage: storage, initialData: seed);
   await dataSource.initialize();
   return AppDependencies(
     repository: MockAppRepository(dataSource),
     resetStore: dataSource.reset,
     offline: true,
+    adminAuthenticator: (email, password) async {
+      if (email.trim().toLowerCase() != demoAdminEmail ||
+          password != demoAdminPassword) {
+        throw const AdminAuthenticationException();
+      }
+    },
   );
 }
 
@@ -90,14 +111,7 @@ class _DevFestAppState extends State<DevFestApp> {
       attemptRepository: repo,
       resetStore: widget.repository.resetStore,
       offline: widget.repository.offline,
-      adminAuthenticator: widget.repository.offline
-          ? null
-          : (email, password) async {
-              await FirebaseAuth.instance.signInWithEmailAndPassword(
-                email: email,
-                password: password,
-              );
-            },
+      adminAuthenticator: widget.repository.adminAuthenticator,
     );
     _controller.initialize();
   }
@@ -142,7 +156,7 @@ class _DevFestAppState extends State<DevFestApp> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Sin conexión — datos locales, no se sincronizan',
+                      'Demo local — los cambios solo se guardan aquí',
                       style: TextStyle(
                         color: Colors.black87,
                         fontSize: 12,
@@ -162,11 +176,12 @@ class _DevFestAppState extends State<DevFestApp> {
 }
 
 /// Root widget owning the startup state machine:
-/// connecting → error (retry / continue offline) → app ready.
+/// starting → error (retry / continue in demo mode) → app ready.
 class DevFestRoot extends StatefulWidget {
   const DevFestRoot({super.key, this.connect, this.connectOffline});
 
-  /// Injectable for tests. Defaults to the real Firebase connection.
+  /// Injectable for tests. Defaults to the local demo unless Firebase is
+  /// explicitly enabled with `USE_FIREBASE`.
   final Future<AppDependencies> Function()? connect;
   final Future<AppDependencies> Function()? connectOffline;
 
@@ -180,18 +195,18 @@ class _DevFestRootState extends State<DevFestRoot> {
   @override
   void initState() {
     super.initState();
-    _startup = (widget.connect ?? buildAppDependencies)();
+    _startup = (widget.connect ?? buildDefaultDependencies)();
   }
 
   void _retry() {
     setState(() {
-      _startup = (widget.connect ?? buildAppDependencies)();
+      _startup = (widget.connect ?? buildDefaultDependencies)();
     });
   }
 
   void _continueOffline() {
     setState(() {
-      _startup = (widget.connectOffline ?? buildOfflineDependencies)();
+      _startup = (widget.connectOffline ?? buildDemoDependencies)();
     });
   }
 

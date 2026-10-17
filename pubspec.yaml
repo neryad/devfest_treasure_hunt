@@ -69,6 +69,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/medallas/
+    - assets/demo/
     - web/icons/Icon-512.png
 
 

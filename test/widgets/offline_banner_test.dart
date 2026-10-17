@@ -29,7 +29,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Sin conexión — datos locales, no se sincronizan'),
+      find.text('Demo local — los cambios solo se guardan aquí'),
       findsOneWidget,
     );
     expect(find.text('¡Comenzar aventura!'), findsOneWidget);

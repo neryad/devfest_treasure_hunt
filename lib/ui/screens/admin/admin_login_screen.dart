@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../state/app_controller.dart';
 import '../../../state/app_scope.dart';
 import 'admin_dashboard_screen.dart';
 
@@ -37,6 +38,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
+    } on AdminAuthenticationException {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Credenciales inválidas';
+        _submitting = false;
+      });
+      return;
     } on FirebaseAuthException catch (error) {
       debugPrint('ADMIN AUTH FAILURE [${error.code}]: ${error.message}');
       if (!mounted) return;
@@ -121,6 +129,18 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
+                  if (controller.offline) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Demo público: demo@devfest.test / devfest-demo. '
+                      'Solo modifica los datos locales de este dispositivo.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   TextField(
                     controller: _emailController,

@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:devfest_treasure_hunt/data/datasources/mock_local_data_source.dart';
 import 'package:devfest_treasure_hunt/data/repositories/mock_app_repository.dart';
 import 'package:devfest_treasure_hunt/state/app_controller.dart';
@@ -21,7 +20,7 @@ void main() {
       eventRepository: repo,
       adminAuthenticator: (email, password) async {
         if (email != 'staff@example.com' || password != 'valid-password') {
-          throw FirebaseAuthException(code: 'invalid-credential');
+          throw const AdminAuthenticationException();
         }
       },
       resetStore: dataSource.reset,

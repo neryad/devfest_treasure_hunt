@@ -20,8 +20,8 @@ acertijos y minijuegos, coleccionan medallas y compiten en un ranking en vivo.
 - Minijuegos táctiles adaptados a teléfonos y navegador.
 - Ranking en vivo por puntos, medallas y tiempo.
 - Panel de staff para administrar el evento, participantes, medallas y puntos.
-- Modo local explícito para continuar una demostración cuando Firebase no está
-  disponible.
+- Demo local precargado con el ranking del evento; los cambios se guardan solo
+  en el navegador o dispositivo actual.
 - Aplicación web instalable como PWA.
 - Diseño oscuro, responsive y medallas propias para cada track.
 
@@ -45,7 +45,8 @@ para no revelar las soluciones durante el evento.
 
 - Flutter y Dart.
 - Material 3.
-- Firebase Authentication, Firebase Core y Cloud Firestore.
+- Cloud Firestore y Firebase Authentication opcionales para conectar un
+  proyecto propio.
 - `mobile_scanner` para los retos con QR.
 - `shared_preferences` para conservar la sesión local del dispositivo.
 - `url_launcher` para agenda, comunidad, redes y feedback.
@@ -75,18 +76,15 @@ lib/
 └── ui/screens/           # participante, gimnasios, retos, ranking y admin
 ```
 
-En producción, `DevFestRoot` inicializa `FirebaseDataSource`. Si la conexión
-falla, la pantalla de inicio permite reintentar o entrar conscientemente en
-modo local; el cambio no ocurre de forma silenciosa.
+Por defecto, `DevFestRoot` inicia un demo local con nombres y apodos
+reemplazados. No se conecta a ningún servicio de Firebase.
 
 ## Requisitos
 
 - Flutter 3.44 o una versión compatible con Dart 3.12.
 - Chrome para desarrollo web.
 - Android SDK o Xcode para ejecutar en dispositivos móviles.
-- Un proyecto Firebase configurado para usar la persistencia compartida.
-- Firebase Authentication con el proveedor de correo/contraseña habilitado y
-  las cuentas del staff creadas en Firebase Console.
+- (Opcional) Un proyecto Firebase propio para habilitar sincronización remota.
 
 ## Ejecutar localmente
 
@@ -113,7 +111,51 @@ instalación móvil.
 
 ## Firebase y persistencia
 
-La fuente activa normal es Firestore, bajo el evento `devfest-2026`:
+El demo usa `assets/demo/devfest-2026.json` como datos iniciales y
+`SharedPreferences` para guardar los cambios en el navegador o dispositivo
+actual. Los datos no se sincronizan entre visitantes.
+
+El panel Staff del demo es solo una barrera de navegación pública; no protege
+información remota. Credenciales:
+
+```text
+Usuario: demo@devfest.test
+Contraseña: devfest-demo
+```
+
+Cualquier persona puede encontrarlas en el código y los cambios solo afectan
+sus datos locales. No reutilices esta cuenta para producción.
+
+### Conectar un proyecto Firebase propio
+
+1. Crea un proyecto Firebase y registra una app para cada plataforma que uses.
+2. Copia `firebase-config.example.json` a `firebase-config.json` y completa los
+   valores de configuración de Firebase de tu proyecto. Este archivo está
+   ignorado por Git. La configuración Firebase de cliente no es una contraseña;
+   la seguridad de los datos depende de las reglas de Firestore y
+   Authentication.
+3. Activa Firestore y el proveedor de correo/contraseña de Firebase
+   Authentication. Crea las cuentas staff en Firebase Console y configura
+   reglas de Firestore antes de publicar.
+4. Ejecuta con Firebase explícitamente habilitado:
+
+   ```bash
+   flutter run -d chrome --dart-define-from-file=firebase-config.json
+   ```
+
+   Para publicar, compila con los mismos defines:
+
+   ```bash
+   flutter build web --release \
+     --dart-define-from-file=firebase-config.json
+   ```
+
+El archivo de configuración debe incluir `"USE_FIREBASE": "true"` para usar
+Firestore; sin esa opción, la app permanece en modo demo local. Una base nueva
+se inicializa con los gimnasios del proyecto. El JSON de resultados del demo
+no se carga automáticamente en Firebase.
+
+Al habilitar Firebase, la fuente Firestore usa el evento `devfest-2026`:
 
 ```text
 events/devfest-2026
@@ -123,14 +165,9 @@ events/devfest-2026
 └── attempts
 ```
 
-La definición base de los ocho gimnasios se encuentra en
-`lib/data/datasources/mock_data.dart` y se utiliza para inicializar o migrar el
-contenido del evento. La identificación de la sesión actual se conserva en el
-dispositivo mediante `SharedPreferences`.
-
-El panel Staff valida correo y contraseña con Firebase Authentication. Crea
-únicamente cuentas autorizadas para el staff en Firebase Console; el modo local
-no permite iniciar sesión en el panel.
+La definición base de los gimnasios se encuentra en
+`lib/data/datasources/mock_data.dart`. La identificación de sesión se conserva
+en el dispositivo mediante `SharedPreferences`.
 
 > Antes de publicar una instancia propia, configura reglas de Firestore que
 > impidan escrituras no autorizadas. Este repositorio no incluye un archivo
@@ -158,12 +195,9 @@ Publica la carpeta `build/web` completa en un deploy nuevo. No mezcles archivos
 de builds distintos ni reemplaces solamente `main.dart.js`, porque los plugins
 de Flutter Web pueden quedar desincronizados.
 
-En Firebase Console, agrega el dominio desplegado en **Authentication >
-Settings > Authorized domains**. Para producción debe estar autorizado
-`devfestmaster.netlify.app`.
-
 Después de reemplazar el deploy, realiza una recarga completa o limpia los datos
-de la PWA instalada.
+de la PWA instalada. Si habilitas Firebase, agrega el dominio publicado a
+**Authentication > Settings > Authorized domains** en tu propio proyecto.
 
 ## Enlaces
 

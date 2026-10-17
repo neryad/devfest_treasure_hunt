@@ -24,6 +24,10 @@ const _cooldownDuration = Duration(minutes: 5);
 typedef AdminAuthenticator =
     Future<void> Function(String email, String password);
 
+class AdminAuthenticationException implements Exception {
+  const AdminAuthenticationException();
+}
+
 enum StaffActionResult {
   success,
   participantNotFound,

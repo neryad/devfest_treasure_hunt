@@ -5,6 +5,7 @@ import '../../domain/entities/participant.dart';
 import '../../domain/entities/treasure_item.dart';
 import '../local/app_local_storage.dart';
 import 'app_data_source.dart';
+import 'demo_data_seed.dart';
 import 'mock_data.dart';
 
 /// Local implementation of [AppDataSource].
@@ -15,12 +16,17 @@ import 'mock_data.dart';
 ///
 /// A future `FirebaseDataSource` replicates this contract against Firestore.
 class MockLocalDataSource implements AppDataSource {
-  MockLocalDataSource({AppLocalStorage? storage, this.seedData = true})
+  MockLocalDataSource({
+    AppLocalStorage? storage,
+    this.seedData = true,
+    this.initialData,
+  })
     // Keep the public parameter name `storage` instead of exposing `_storage`.
     // ignore: prefer_initializing_formals
     : _storage = storage;
 
   final AppLocalStorage? _storage;
+  final DemoDataSeed? initialData;
 
   /// When `false`, starts with no participants/discoveries (used by tests and
   /// demos that want a clean slate while keeping the seeded treasures).
@@ -46,25 +52,40 @@ class MockLocalDataSource implements AppDataSource {
   Future<void> initialize() async {
     if (_loaded) return;
     _loaded = true;
-    _event = MockData.buildEvent();
+    _event = initialData?.event ?? MockData.buildEvent();
     _treasures = await _restore(
       _treasuresKey,
-      MockData.buildTreasures(),
+      initialData?.treasures ?? MockData.buildTreasures(),
       TreasureItem.listFromJson,
       TreasureItem.listToJson,
     );
+    if (initialData != null &&
+        await _storage?.read(_challengeContentVersionKey) == null) {
+      await _storage?.write(
+        _challengeContentVersionKey,
+        initialData!.challengeContentVersion.toString(),
+      );
+    }
     await _migrateChallengeContent();
     _participants = await _restore(
       _participantsKey,
-      seedData ? MockData.buildSeedParticipants() : <Participant>[],
+      initialData?.participants ??
+          (seedData ? MockData.buildSeedParticipants() : <Participant>[]),
       Participant.listFromJson,
       Participant.listToJson,
     );
     _discoveries = await _restore(
       _discoveriesKey,
-      seedData ? _seedDiscoveries(_participants) : <Discovery>[],
+      initialData?.discoveries ??
+          (seedData ? _seedDiscoveries(_participants) : <Discovery>[]),
       Discovery.listFromJson,
       Discovery.listToJson,
+    );
+    _attempts = await _restore(
+      _kAttempts,
+      initialData?.attempts ?? <Attempt>[],
+      Attempt.listFromJson,
+      Attempt.listToJson,
     );
     _currentParticipantId = await _storage?.read(_currentParticipantKey);
   }
@@ -236,13 +257,15 @@ class MockLocalDataSource implements AppDataSource {
 
   @override
   Future<void> reset() async {
-    _event = MockData.buildEvent();
-    _treasures = MockData.buildTreasures();
-    _participants = seedData
-        ? MockData.buildSeedParticipants()
-        : <Participant>[];
-    _discoveries = seedData ? _seedDiscoveries(_participants) : <Discovery>[];
-    _attempts = [];
+    _event = initialData?.event ?? MockData.buildEvent();
+    _treasures = initialData?.treasures ?? MockData.buildTreasures();
+    _participants =
+        initialData?.participants ??
+        (seedData ? MockData.buildSeedParticipants() : <Participant>[]);
+    _discoveries =
+        initialData?.discoveries ??
+        (seedData ? _seedDiscoveries(_participants) : <Discovery>[]);
+    _attempts = initialData?.attempts ?? [];
     _currentParticipantId = null;
     final storage = _storage;
     if (storage == null) return;

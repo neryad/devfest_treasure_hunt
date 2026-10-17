@@ -4,24 +4,42 @@ import 'package:flutter/foundation.dart'
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
-    if (kIsWeb) return web;
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-      case TargetPlatform.windows:
-      case TargetPlatform.linux:
-      case TargetPlatform.fuchsia:
-        return web;
+    final platformAppId = switch (defaultTargetPlatform) {
+      TargetPlatform.android => const String.fromEnvironment(
+        'FIREBASE_ANDROID_APP_ID',
+      ),
+      TargetPlatform.iOS || TargetPlatform.macOS =>
+        const String.fromEnvironment('FIREBASE_IOS_APP_ID'),
+      TargetPlatform.windows ||
+      TargetPlatform.linux ||
+      TargetPlatform.fuchsia => const String.fromEnvironment(
+        'FIREBASE_WEB_APP_ID',
+      ),
+    };
+    final appId = kIsWeb
+        ? const String.fromEnvironment('FIREBASE_WEB_APP_ID')
+        : platformAppId;
+    final apiKey = const String.fromEnvironment('FIREBASE_API_KEY');
+    final projectId = const String.fromEnvironment('FIREBASE_PROJECT_ID');
+    final senderId = const String.fromEnvironment(
+      'FIREBASE_MESSAGING_SENDER_ID',
+    );
+    if (apiKey.isEmpty ||
+        appId.isEmpty ||
+        projectId.isEmpty ||
+        senderId.isEmpty) {
+      throw StateError(
+        'Firebase está habilitado, pero falta configuración. '
+        'Completa firebase-config.json usando firebase-config.example.json.',
+      );
     }
+    return FirebaseOptions(
+      apiKey: apiKey,
+      appId: appId,
+      messagingSenderId: senderId,
+      projectId: projectId,
+      authDomain: const String.fromEnvironment('FIREBASE_AUTH_DOMAIN'),
+      storageBucket: const String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
+    );
   }
-
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBhx7Ey7uBA_RevDx1iMZ_S02Vhd1dk29I',
-    authDomain: 'devfest-master.firebaseapp.com',
-    projectId: 'devfest-master',
-    storageBucket: 'devfest-master.firebasestorage.app',
-    messagingSenderId: '949131407676',
-    appId: '1:949131407676:web:5b7e3caa205d25b25bee39',
-  );
 }
